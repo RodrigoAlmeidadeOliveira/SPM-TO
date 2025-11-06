@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Finalizar Avaliação - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-success shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Avaliação Completa!
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+                        <h5 class="mt-3">Todas as {{ total_questoes }} questões foram respondidas</h5>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Dados da Avaliação
+                        </h6>
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Paciente:</dt>
+                            <dd class="col-sm-8">{{ avaliacao.paciente.nome }}</dd>
+
+                            <dt class="col-sm-4">Instrumento:</dt>
+                            <dd class="col-sm-8">{{ avaliacao.instrumento.nome }}</dd>
+
+                            <dt class="col-sm-4">Data:</dt>
+                            <dd class="col-sm-8">{{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}</dd>
+
+                            <dt class="col-sm-4">Respondente:</dt>
+                            <dd class="col-sm-8">{{ avaliacao.relacionamento_respondente }}</dd>
+                        </dl>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Próximo Passo
+                        </h6>
+                        <p class="mb-0">
+                            Ao clicar em "Finalizar e Calcular Resultados", o sistema irá:
+                        </p>
+                        <ol class="mb-0 mt-2">
+                            <li>Calcular os escores de cada domínio</li>
+                            <li>Converter os escores brutos em T-scores</li>
+                            <li>Classificar os resultados (Típico, Provável Disfunção, Disfunção Definitiva)</li>
+                            <li>Gerar o relatório completo da avaliação</li>
+                        </ol>
+                    </div>
+
+                    <form method="POST">
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('avaliacoes.visualizar', id=avaliacao.id) }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Revisar Respostas
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-calculator me-1"></i>
+                                Finalizar e Calcular Resultados
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

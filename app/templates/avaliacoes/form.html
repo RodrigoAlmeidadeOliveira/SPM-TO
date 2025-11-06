@@ -1,34 +1,57 @@
 {% extends "base.html" %}
 
-{% block title %}{{ titulo }} - SPM-TO{% endblock %}
+{% block title %}Nova Avaliação - {{ super() }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h4><i class="fas fa-clipboard-list"></i> {{ titulo }}</h4>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">
+                    <i class="bi bi-clipboard-plus me-2"></i>
+                    Nova Avaliação
+                </h1>
+                <a href="{{ url_for('pacientes.visualizar', id=paciente.id) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Voltar
+                </a>
+            </div>
+
+            <!-- Informações do Paciente -->
+            <div class="card mb-4 bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">Paciente</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Nome:</strong> {{ paciente.nome }}</p>
+                            <p class="mb-0"><strong>Identificação:</strong> <code>{{ paciente.identificacao }}</code></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Idade:</strong> {{ paciente.calcular_idade() }} anos</p>
+                            <p class="mb-0"><strong>Sexo:</strong>
+                                {% if paciente.sexo == 'M' %}Masculino
+                                {% elif paciente.sexo == 'F' %}Feminino
+                                {% else %}Outro{% endif %}
+                            </p>
+                        </div>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Formulário de Criação -->
+            <div class="card">
                 <div class="card-body">
                     <form method="POST" novalidate>
                         {{ form.hidden_tag() }}
 
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                {{ form.paciente_id.label(class="form-label") }}
-                                {{ form.paciente_id(class="form-select" + (" is-invalid" if form.paciente_id.errors else "")) }}
-                                {% if form.paciente_id.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.paciente_id.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
+                        <!-- Seleção de Instrumento -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">Seleção do Instrumento</h5>
 
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                {{ form.instrumento_id.label(class="form-label") }}
+                            <div class="mb-3">
+                                <label for="instrumento_id" class="form-label">
+                                    {{ form.instrumento_id.label.text }} <span class="text-danger">*</span>
+                                </label>
                                 {{ form.instrumento_id(class="form-select" + (" is-invalid" if form.instrumento_id.errors else "")) }}
                                 {% if form.instrumento_id.errors %}
                                     <div class="invalid-feedback">
@@ -36,14 +59,41 @@
                                     </div>
                                 {% endif %}
                                 <small class="form-text text-muted">
-                                    O instrumento apropriado será determinado pela idade do paciente
+                                    Apenas instrumentos adequados para a idade do paciente são exibidos
                                 </small>
                             </div>
+
+                            {% if instrumentos %}
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Instrumentos Disponíveis
+                                </h6>
+                                <ul class="mb-0">
+                                    {% for inst in instrumentos %}
+                                    <li>
+                                        <strong>{{ inst.nome }}</strong> ({{ inst.contexto }})
+                                        - Faixa etária: {{ inst.idade_minima }} a {{ inst.idade_maxima }} anos
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Nenhum instrumento disponível para a idade do paciente ({{ paciente.calcular_idade() }} anos)
+                            </div>
+                            {% endif %}
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ form.data_avaliacao.label(class="form-label") }}
+                        <!-- Dados da Avaliação -->
+                        <h5 class="border-bottom pb-2 mb-3">Dados da Avaliação</h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="data_avaliacao" class="form-label">
+                                    {{ form.data_avaliacao.label.text }} <span class="text-danger">*</span>
+                                </label>
                                 {{ form.data_avaliacao(class="form-control" + (" is-invalid" if form.data_avaliacao.errors else "")) }}
                                 {% if form.data_avaliacao.errors %}
                                     <div class="invalid-feedback">
@@ -52,45 +102,60 @@
                                 {% endif %}
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                {{ form.relacionamento_respondente.label(class="form-label") }}
+                            <div class="col-md-6">
+                                <label for="relacionamento_respondente" class="form-label">
+                                    {{ form.relacionamento_respondente.label.text }} <span class="text-danger">*</span>
+                                </label>
                                 {{ form.relacionamento_respondente(class="form-select" + (" is-invalid" if form.relacionamento_respondente.errors else "")) }}
                                 {% if form.relacionamento_respondente.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in form.relacionamento_respondente.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                {{ form.comentarios.label(class="form-label") }}
-                                {{ form.comentarios(class="form-control", rows=4) }}
                                 <small class="form-text text-muted">
-                                    Comentários sobre comportamento e funcionamento da criança
+                                    Quem está respondendo o questionário
                                 </small>
                             </div>
                         </div>
 
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i>
-                            <strong>Próximo passo:</strong> Após criar a avaliação, você será direcionado
-                            para responder as questões do instrumento selecionado.
+                        <div class="mb-3">
+                            <label for="comentarios" class="form-label">
+                                {{ form.comentarios.label.text }}
+                            </label>
+                            {{ form.comentarios(class="form-control") }}
+                            <small class="form-text text-muted">
+                                Observações sobre o contexto, comportamento recente, etc.
+                            </small>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-save"></i> {{ form.submit.label.text }}
-                                </button>
-                                <a href="{{ url_for('avaliacoes.listar') }}" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Cancelar
-                                </a>
-                            </div>
+                        <!-- Botões -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('pacientes.visualizar', id=paciente.id) }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary" {% if not instrumentos %}disabled{% endif %}>
+                                <i class="bi bi-check-circle me-1"></i>
+                                Criar Avaliação e Começar
+                            </button>
                         </div>
                     </form>
                 </div>
+            </div>
+
+            <!-- Instruções -->
+            <div class="alert alert-success mt-4">
+                <h6 class="alert-heading">
+                    <i class="bi bi-lightbulb me-1"></i>
+                    Próximos Passos
+                </h6>
+                <ol class="mb-0">
+                    <li>Selecione o instrumento adequado e preencha os dados</li>
+                    <li>Após criar a avaliação, você será direcionado para responder as questões</li>
+                    <li>As questões são apresentadas uma por vez</li>
+                    <li>Você pode pausar e continuar depois</li>
+                    <li>Ao concluir todas as questões, os escores serão calculados automaticamente</li>
+                </ol>
             </div>
         </div>
     </div>

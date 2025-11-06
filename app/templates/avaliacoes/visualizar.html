@@ -1,185 +1,320 @@
 {% extends "base.html" %}
 
-{% block title %}Avaliação {{ avaliacao.id }} - SPM-TO{% endblock %}
+{% block title %}Avaliação - {{ super() }}{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container-fluid py-4">
     <!-- Cabeçalho -->
     <div class="row mb-4">
-        <div class="col-md-8">
-            <h1><i class="fas fa-clipboard-check"></i> Avaliação #{{ avaliacao.id }}</h1>
-            <p class="lead">
-                <a href="{{ url_for('pacientes.visualizar', id=avaliacao.paciente.id) }}">
-                    {{ avaliacao.paciente.nome }}
-                </a>
-            </p>
-        </div>
-        <div class="col-md-4 text-end">
-            {% if avaliacao.status != 'concluida' %}
-            <a href="{{ url_for('avaliacoes.responder', id=avaliacao.id) }}"
-               class="btn btn-primary">
-                <i class="fas fa-edit"></i> Continuar Respondendo
-            </a>
-            {% else %}
-            <a href="{{ url_for('relatorios.avaliacao', id=avaliacao.id) }}"
-               class="btn btn-success">
-                <i class="fas fa-file-pdf"></i> Gerar Relatório
-            </a>
-            {% endif %}
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">
+                        <i class="bi bi-clipboard-data me-2"></i>
+                        Avaliação #{{ avaliacao.id }}
+                    </h1>
+                    <p class="text-muted mb-0">
+                        <small>{{ avaliacao.instrumento.nome }} - {{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}</small>
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('pacientes.visualizar', id=avaliacao.paciente_id) }}" class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Voltar
+                    </a>
+                    {% if avaliacao.status == 'em_andamento' %}
+                    <a href="{{ url_for('avaliacoes.responder', id=avaliacao.id) }}" class="btn btn-primary me-2">
+                        <i class="bi bi-play-circle me-1"></i>
+                        Continuar
+                    </a>
+                    {% endif %}
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir">
+                        <i class="bi bi-trash me-1"></i>
+                        Excluir
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Status e Progresso -->
     <div class="row mb-4">
-        <div class="col-md-12">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="mb-1">
+                        {% if avaliacao.status == 'concluida' %}
+                            <span class="badge bg-success">Concluída</span>
+                        {% elif avaliacao.status == 'em_andamento' %}
+                            <span class="badge bg-warning text-dark">Em Andamento</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ avaliacao.status }}</span>
+                        {% endif %}
+                    </h3>
+                    <p class="text-muted mb-0">Status</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-primary mb-1">{{ questoes_respondidas }}/{{ total_questoes }}</h3>
+                    <p class="text-muted mb-0">Questões</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <h6>Status</h6>
-                            {% if avaliacao.status == 'concluida' %}
-                                <span class="badge bg-success fs-6">Concluída</span>
-                            {% elif avaliacao.status == 'em_andamento' %}
-                                <span class="badge bg-warning fs-6">Em Andamento</span>
-                            {% else %}
-                                <span class="badge bg-secondary fs-6">{{ avaliacao.status }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-3">
-                            <h6>Data da Avaliação</h6>
-                            <p>{{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}</p>
-                        </div>
-                        <div class="col-md-3">
-                            <h6>Instrumento</h6>
-                            <p>{{ avaliacao.instrumento.nome }}</p>
-                        </div>
-                        <div class="col-md-3">
-                            <h6>Respondente</h6>
-                            <p>{{ avaliacao.relacionamento_respondente|capitalize }}</p>
+                    <h6 class="card-title mb-2">Progresso</h6>
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar {% if progresso == 100 %}bg-success{% endif %}"
+                             role="progressbar"
+                             style="width: {{ progresso }}%">
+                            {{ progresso }}%
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <h6>Progresso</h6>
-                            <div class="progress">
-                                <div class="progress-bar {% if progresso >= 100 %}bg-success{% endif %}"
-                                     role="progressbar"
-                                     style="width: {{ progresso }}%"
-                                     aria-valuenow="{{ progresso }}"
-                                     aria-valuemin="0"
-                                     aria-valuemax="100">
-                                    {{ progresso|round|int }}% ({{ total_respostas }}/{{ total_questoes }} questões)
+    <div class="row">
+        <!-- Coluna Principal -->
+        <div class="col-lg-8">
+            <!-- Informações da Avaliação -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Informações da Avaliação
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Paciente:</dt>
+                        <dd class="col-sm-8">
+                            <a href="{{ url_for('pacientes.visualizar', id=avaliacao.paciente_id) }}">
+                                {{ avaliacao.paciente.nome }}
+                            </a>
+                        </dd>
+
+                        <dt class="col-sm-4">Instrumento:</dt>
+                        <dd class="col-sm-8">{{ avaliacao.instrumento.nome }}</dd>
+
+                        <dt class="col-sm-4">Data da Avaliação:</dt>
+                        <dd class="col-sm-8">{{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}</dd>
+
+                        <dt class="col-sm-4">Avaliador:</dt>
+                        <dd class="col-sm-8">{{ avaliacao.avaliador.nome_completo if avaliacao.avaliador else '-' }}</dd>
+
+                        <dt class="col-sm-4">Respondente:</dt>
+                        <dd class="col-sm-8">{{ avaliacao.relacionamento_respondente }}</dd>
+
+                        {% if avaliacao.comentarios %}
+                        <dt class="col-sm-4">Comentários:</dt>
+                        <dd class="col-sm-8">{{ avaliacao.comentarios }}</dd>
+                        {% endif %}
+
+                        {% if avaliacao.data_conclusao %}
+                        <dt class="col-sm-4">Concluída em:</dt>
+                        <dd class="col-sm-8">{{ avaliacao.data_conclusao.strftime('%d/%m/%Y %H:%M') }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Respostas por Domínio -->
+            {% if respostas_por_dominio %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-check me-2"></i>
+                        Respostas por Domínio
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="accordionDominios">
+                        {% for dominio, respostas in respostas_por_dominio.items() %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+                                    <strong>{{ dominio }}</strong>
+                                    <span class="badge bg-primary ms-2">{{ respostas|length }} questões</span>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+                                 data-bs-parent="#accordionDominios">
+                                <div class="accordion-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th width="60">#</th>
+                                                    <th>Questão</th>
+                                                    <th width="120">Resposta</th>
+                                                    <th width="80" class="text-end">Pontos</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for resposta in respostas %}
+                                                <tr>
+                                                    <td>{{ resposta.questao.numero_global }}</td>
+                                                    <td>{{ resposta.questao.texto }}</td>
+                                                    <td>
+                                                        <span class="badge {% if resposta.valor == 'SEMPRE' %}bg-danger
+                                                                           {% elif resposta.valor == 'FREQUENTE' %}bg-warning
+                                                                           {% elif resposta.valor == 'OCASIONAL' %}bg-info
+                                                                           {% else %}bg-success{% endif %}">
+                                                            {{ resposta.valor }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-end">{{ resposta.pontuacao }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
 
-                    {% if avaliacao.comentarios %}
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <h6>Comentários</h6>
-                            <p class="text-muted">{{ avaliacao.comentarios }}</p>
-                        </div>
+        <!-- Coluna Lateral - Resultados -->
+        <div class="col-lg-4">
+            {% if avaliacao.status == 'concluida' %}
+            <!-- Escores Calculados -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Escores
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">Escores Brutos</h6>
+                    {% if avaliacao.escore_soc is not none %}
+                    <div class="mb-2">
+                        <strong>Participação Social:</strong> {{ avaliacao.escore_soc }}
                     </div>
+                    {% endif %}
+                    {% if avaliacao.escore_vis is not none %}
+                    <div class="mb-2">
+                        <strong>Visão:</strong> {{ avaliacao.escore_vis }}
+                    </div>
+                    {% endif %}
+                    {% if avaliacao.escore_hea is not none %}
+                    <div class="mb-2">
+                        <strong>Audição:</strong> {{ avaliacao.escore_hea }}
+                    </div>
+                    {% endif %}
+                    {% if avaliacao.escore_tou is not none %}
+                    <div class="mb-2">
+                        <strong>Tato:</strong> {{ avaliacao.escore_tou }}
+                    </div>
+                    {% endif %}
+                    {% if avaliacao.escore_bod is not none %}
+                    <div class="mb-2">
+                        <strong>Consciência Corporal:</strong> {{ avaliacao.escore_bod }}
+                    </div>
+                    {% endif %}
+                    {% if avaliacao.escore_bal is not none %}
+                    <div class="mb-2">
+                        <strong>Equilíbrio e Movimento:</strong> {{ avaliacao.escore_bal }}
+                    </div>
+                    {% endif %}
+                    {% if avaliacao.escore_pla is not none %}
+                    <div class="mb-2">
+                        <strong>Planejamento e Ideação:</strong> {{ avaliacao.escore_pla }}
+                    </div>
+                    {% endif %}
+                    {% if avaliacao.escore_olf is not none %}
+                    <div class="mb-2">
+                        <strong>Olfato e Paladar:</strong> {{ avaliacao.escore_olf }}
+                    </div>
+                    {% endif %}
+                    <hr>
+                    <div class="mb-2">
+                        <strong>Total:</strong> <span class="badge bg-primary">{{ avaliacao.escore_total }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classificações -->
+            {% if avaliacao.classificacao_soc or avaliacao.classificacao_vis %}
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clipboard-check me-2"></i>
+                        Classificações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted d-block mb-2">Status por domínio</small>
+                    {% for dominio in ['soc', 'vis', 'hea', 'tou', 'bod', 'bal', 'pla', 'olf'] %}
+                        {% set classificacao = avaliacao['classificacao_' + dominio] %}
+                        {% if classificacao %}
+                        <div class="mb-2">
+                            <span class="badge {% if classificacao == 'TIPICO' %}bg-success
+                                               {% elif classificacao == 'PROVAVEL_DISFUNCAO' %}bg-warning text-dark
+                                               {% elif classificacao == 'DISFUNCAO_DEFINITIVA' %}bg-danger
+                                               {% else %}bg-secondary{% endif %} w-100 text-start">
+                                {{ dominio|upper }}: {{ classificacao|replace('_', ' ') }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center text-muted">
+                    <i class="bi bi-hourglass-split" style="font-size: 3rem;"></i>
+                    <p class="mt-3">Os resultados serão calculados após todas as questões serem respondidas.</p>
+                    {% if avaliacao.status == 'em_andamento' %}
+                    <a href="{{ url_for('avaliacoes.responder', id=avaliacao.id) }}" class="btn btn-primary">
+                        <i class="bi bi-play-circle me-1"></i>
+                        Continuar Respondendo
+                    </a>
                     {% endif %}
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Resultados (se concluída) -->
-    {% if avaliacao.status == 'concluida' %}
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5><i class="fas fa-chart-bar"></i> Resultados por Domínio</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Domínio</th>
-                                    <th>Escore Bruto</th>
-                                    <th>T-Score</th>
-                                    <th>Classificação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% set dominios_info = [
-                                    ('SOC', 'Participação Social', avaliacao.escore_soc, avaliacao.t_score_soc, avaliacao.classificacao_soc),
-                                    ('VIS', 'Visão', avaliacao.escore_vis, avaliacao.t_score_vis, avaliacao.classificacao_vis),
-                                    ('HEA', 'Audição', avaliacao.escore_hea, avaliacao.t_score_hea, avaliacao.classificacao_hea),
-                                    ('TOU', 'Tato', avaliacao.escore_tou, avaliacao.t_score_tou, avaliacao.classificacao_tou),
-                                    ('BOD', 'Consciência Corporal', avaliacao.escore_bod, avaliacao.t_score_bod, avaliacao.classificacao_bod),
-                                    ('BAL', 'Equilíbrio e Movimento', avaliacao.escore_bal, avaliacao.t_score_bal, avaliacao.classificacao_bal),
-                                    ('PLA', 'Planejamento e Ideação', avaliacao.escore_pla, avaliacao.t_score_pla, avaliacao.classificacao_pla),
-                                    ('OLF', 'Olfato e Paladar', avaliacao.escore_olf, avaliacao.t_score_olf, avaliacao.classificacao_olf)
-                                ] %}
-
-                                {% for codigo, nome, escore, t_score, classificacao in dominios_info %}
-                                {% if escore is not none %}
-                                <tr>
-                                    <td><strong>{{ nome }}</strong></td>
-                                    <td>{{ escore }}</td>
-                                    <td>{{ t_score if t_score else 'N/A' }}</td>
-                                    <td>
-                                        {% if classificacao == 'DISFUNCAO_DEFINITIVA' %}
-                                            <span class="badge badge-disfuncao-definitiva">Disfunção Definitiva</span>
-                                        {% elif classificacao == 'PROVAVEL_DISFUNCAO' %}
-                                            <span class="badge badge-provavel-disfuncao">Provável Disfunção</span>
-                                        {% elif classificacao == 'TIPICO' %}
-                                            <span class="badge badge-tipico">Típico</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">{{ classificacao or 'N/A' }}</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endif %}
-                                {% endfor %}
-
-                                <tr class="table-info">
-                                    <td><strong>TOTAL</strong></td>
-                                    <td><strong>{{ avaliacao.escore_total }}</strong></td>
-                                    <td colspan="2"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="mt-3 text-center">
-                        <form method="POST" action="{{ url_for('avaliacoes.recalcular', id=avaliacao.id) }}"
-                              style="display: inline;">
-                            <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-calculator"></i> Recalcular Escores
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Ações -->
-    <div class="row">
-        <div class="col-md-12">
-            <a href="{{ url_for('pacientes.visualizar', id=avaliacao.paciente.id) }}"
-               class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Voltar para Paciente
-            </a>
-
-            {% if current_user.is_admin() or avaliacao.avaliador_id == current_user.id %}
-            <form method="POST" action="{{ url_for('avaliacoes.excluir', id=avaliacao.id) }}"
-                  style="display: inline;"
-                  onsubmit="return confirm('Tem certeza que deseja excluir esta avaliação?');">
-                <button type="submit" class="btn btn-danger">
-                    <i class="fas fa-trash"></i> Excluir Avaliação
-                </button>
-            </form>
             {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="modalExcluir" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                    Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir esta avaliação?</p>
+                <p class="mb-0"><strong>Esta ação não pode ser desfeita!</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('avaliacoes.excluir', id=avaliacao.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>
+                        Excluir Permanentemente
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>

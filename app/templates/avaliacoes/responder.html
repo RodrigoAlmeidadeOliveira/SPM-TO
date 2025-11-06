@@ -1,235 +1,214 @@
 {% extends "base.html" %}
 
-{% block title %}Responder Avaliação - SPM-TO{% endblock %}
-
-{% block extra_css %}
-<style>
-    .questao-card {
-        margin-bottom: 1rem;
-        border-left: 4px solid #0d6efd;
-    }
-    .questao-card.respondida {
-        border-left-color: #198754;
-        background-color: #f8f9fa;
-    }
-    .dominio-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 15px;
-        border-radius: 5px;
-        margin-top: 20px;
-        margin-bottom: 15px;
-    }
-    .radio-group {
-        display: flex;
-        justify-content: space-around;
-        gap: 10px;
-    }
-    .radio-option {
-        flex: 1;
-        text-align: center;
-    }
-    .radio-option input[type="radio"] {
-        display: none;
-    }
-    .radio-option label {
-        display: block;
-        padding: 10px;
-        border: 2px solid #dee2e6;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .radio-option input[type="radio"]:checked + label {
-        background-color: #0d6efd;
-        color: white;
-        border-color: #0d6efd;
-    }
-    .radio-option label:hover {
-        border-color: #0d6efd;
-    }
-    .progress-bar-custom {
-        position: sticky;
-        top: 70px;
-        z-index: 100;
-        background: white;
-        padding: 15px 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-</style>
-{% endblock %}
+{% block title %}Respondendo Avaliação - {{ super() }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container py-4">
     <!-- Barra de Progresso -->
-    <div class="progress-bar-custom">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h5>
-                        <i class="fas fa-user"></i> {{ avaliacao.paciente.nome }}
-                        <small class="text-muted"> - {{ avaliacao.instrumento.nome }}</small>
-                    </h5>
-                </div>
-                <div class="col-md-4 text-end">
-                    <button type="button" class="btn btn-success" id="btn-salvar">
-                        <i class="fas fa-save"></i> Salvar Progresso
-                    </button>
+    <div class="card mb-4 border-primary">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Progresso da Avaliação</h5>
+                <span class="badge bg-primary">
+                    {{ questoes_respondidas }} de {{ total_questoes }} questões
+                </span>
+            </div>
+            <div class="progress" style="height: 25px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                     role="progressbar"
+                     style="width: {{ progresso }}%"
+                     aria-valuenow="{{ progresso }}"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                    {{ progresso }}%
                 </div>
             </div>
-            <div class="progress mt-2">
-                <div class="progress-bar" role="progressbar" id="progress-bar"
-                     style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                    0%
+            <small class="text-muted mt-2 d-block">
+                <i class="bi bi-info-circle me-1"></i>
+                Questão {{ questao_idx + 1 }} de {{ total_questoes }}
+            </small>
+        </div>
+    </div>
+
+    <!-- Informações da Avaliação -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title mb-2">
+                        <i class="bi bi-person-circle me-1"></i>
+                        {{ avaliacao.paciente.nome }}
+                    </h6>
+                    <small class="text-muted">
+                        <strong>Instrumento:</strong> {{ avaliacao.instrumento.nome }} |
+                        <strong>Data:</strong> {{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}
+                    </small>
                 </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-grid gap-2">
+                <a href="{{ url_for('avaliacoes.visualizar', id=avaliacao.id) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-pause-circle me-1"></i>
+                    Pausar e Salvar
+                </a>
             </div>
         </div>
     </div>
 
-    <!-- Formulário de Questões -->
-    <div class="container mt-4">
-        <form id="form-respostas">
-            {% for item in dominios_questoes %}
-            <div class="dominio-header">
-                <h4>
-                    <i class="fas fa-th-list"></i>
-                    {{ item.dominio.nome }}
-                    {% if item.dominio.escala_invertida %}
-                    <small class="badge bg-warning">Escala Invertida</small>
-                    {% endif %}
-                </h4>
-                <p class="mb-0">{{ item.questoes|length }} questões</p>
+    <!-- Questão Atual -->
+    <div class="card border-primary shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-chat-square-text me-2"></i>
+                    Domínio: {{ questao.dominio.nome }}
+                </h5>
+                <span class="badge bg-light text-primary">
+                    Questão #{{ questao.numero_global }}
+                </span>
             </div>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST">
+                {{ form.hidden_tag() }}
 
-            {% for questao in item.questoes %}
-            <div class="card questao-card {% if questao.id in respostas_existentes %}respondida{% endif %}"
-                 id="questao-{{ questao.id }}">
-                <div class="card-body">
-                    <h6>
-                        <span class="badge bg-primary">{{ questao.numero_global }}</span>
+                <!-- Texto da Questão -->
+                <div class="mb-4">
+                    <h4 class="text-center mb-4 p-3 bg-light rounded">
                         {{ questao.texto }}
-                    </h6>
+                    </h4>
+                </div>
 
-                    <div class="radio-group mt-3">
-                        <div class="radio-option">
-                            <input type="radio"
-                                   name="questao_{{ questao.id }}"
-                                   value="NUNCA"
-                                   id="q{{ questao.id }}_nunca"
-                                   {% if respostas_existentes.get(questao.id) == 'NUNCA' %}checked{% endif %}>
-                            <label for="q{{ questao.id }}_nunca">
-                                <i class="fas fa-times-circle"></i><br>
-                                <strong>Nunca</strong>
-                            </label>
+                <!-- Escala de Resposta -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold mb-3">Selecione a frequência:</label>
+
+                    <div class="row g-3">
+                        {% for subfield in form.valor %}
+                        <div class="col-6 col-md-3">
+                            <div class="card h-100 resposta-option {{ 'border-primary' if resposta_existente and resposta_existente.valor == subfield.data else '' }}"
+                                 onclick="document.getElementById('{{ subfield.id }}').click()">
+                                <div class="card-body text-center p-3">
+                                    <div class="form-check d-flex justify-content-center">
+                                        {{ subfield(class="form-check-input me-2", style="transform: scale(1.5);") }}
+                                    </div>
+                                    <label class="form-check-label d-block mt-2 fw-bold" for="{{ subfield.id }}">
+                                        {{ subfield.label.text }}
+                                    </label>
+                                    <small class="text-muted d-block mt-1">
+                                        {% if subfield.data == 'NUNCA' %}
+                                            Não observado
+                                        {% elif subfield.data == 'OCASIONAL' %}
+                                            Às vezes
+                                        {% elif subfield.data == 'FREQUENTE' %}
+                                            Muitas vezes
+                                        {% elif subfield.data == 'SEMPRE' %}
+                                            Constantemente
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
                         </div>
-                        <div class="radio-option">
-                            <input type="radio"
-                                   name="questao_{{ questao.id }}"
-                                   value="OCASIONAL"
-                                   id="q{{ questao.id }}_ocasional"
-                                   {% if respostas_existentes.get(questao.id) == 'OCASIONAL' %}checked{% endif %}>
-                            <label for="q{{ questao.id }}_ocasional">
-                                <i class="fas fa-adjust"></i><br>
-                                <strong>Ocasional</strong>
-                            </label>
+                        {% endfor %}
+                    </div>
+
+                    {% if form.valor.errors %}
+                        <div class="alert alert-danger mt-3">
+                            {% for error in form.valor.errors %}{{ error }}{% endfor %}
                         </div>
-                        <div class="radio-option">
-                            <input type="radio"
-                                   name="questao_{{ questao.id }}"
-                                   value="FREQUENTE"
-                                   id="q{{ questao.id }}_frequente"
-                                   {% if respostas_existentes.get(questao.id) == 'FREQUENTE' %}checked{% endif %}>
-                            <label for="q{{ questao.id }}_frequente">
-                                <i class="fas fa-clock"></i><br>
-                                <strong>Frequente</strong>
-                            </label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio"
-                                   name="questao_{{ questao.id }}"
-                                   value="SEMPRE"
-                                   id="q{{ questao.id }}_sempre"
-                                   {% if respostas_existentes.get(questao.id) == 'SEMPRE' %}checked{% endif %}>
-                            <label for="q{{ questao.id }}_sempre">
-                                <i class="fas fa-check-circle"></i><br>
-                                <strong>Sempre</strong>
-                            </label>
-                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Botões de Navegação -->
+                <div class="d-flex justify-content-between mt-4">
+                    <div>
+                        {% if pode_voltar %}
+                        <a href="{{ url_for('avaliacoes.responder', id=avaliacao.id, q=questao_idx - 1) }}"
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Questão Anterior
+                        </a>
+                        {% else %}
+                        <button type="button" class="btn btn-outline-secondary" disabled>
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Questão Anterior
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            {% if questao_idx == total_questoes - 1 %}
+                                <i class="bi bi-check-circle me-1"></i>
+                                Responder e Finalizar
+                            {% else %}
+                                <i class="bi bi-arrow-right me-1"></i>
+                                Próxima Questão
+                            {% endif %}
+                        </button>
                     </div>
                 </div>
-            </div>
-            {% endfor %}
-            {% endfor %}
 
-            <div class="text-center mt-4 mb-5">
-                <button type="submit" class="btn btn-success btn-lg">
-                    <i class="fas fa-check"></i> Concluir e Calcular Escores
-                </button>
-                <a href="{{ url_for('avaliacoes.visualizar', id=avaliacao.id) }}"
-                   class="btn btn-secondary btn-lg">
-                    <i class="fas fa-arrow-left"></i> Voltar
-                </a>
-            </div>
-        </form>
+                <!-- Navegação Direta -->
+                {% if pode_avancar %}
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('avaliacoes.responder', id=avaliacao.id, q=questao_idx + 1) }}"
+                       class="btn btn-sm btn-link">
+                        <i class="bi bi-skip-forward me-1"></i>
+                        Pular esta questão (responder depois)
+                    </a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Dica -->
+    <div class="alert alert-info mt-4">
+        <i class="bi bi-lightbulb me-2"></i>
+        <strong>Dica:</strong> Responda baseado no comportamento observado nos últimos 30 dias.
+        Você pode pausar a qualquer momento e continuar depois.
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
+<style>
+.resposta-option {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.resposta-option:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.resposta-option.border-primary {
+    border-width: 3px !important;
+    background-color: #e7f1ff;
+}
+</style>
+
 <script>
-$(document).ready(function() {
-    // Atualizar progresso
-    function atualizarProgresso() {
-        var totalQuestoes = $('input[type="radio"]').length / 4; // 4 opções por questão
-        var questoesRespondidas = $('input[type="radio"]:checked').length;
-        var progresso = Math.round((questoesRespondidas / totalQuestoes) * 100);
+// Auto-submit quando clicar em uma opção (opcional)
+const opcoes = document.querySelectorAll('.resposta-option');
+opcoes.forEach(opcao => {
+    opcao.addEventListener('click', function() {
+        opcoes.forEach(o => o.classList.remove('border-primary', 'bg-light'));
+        this.classList.add('border-primary');
+    });
+});
 
-        $('#progress-bar').css('width', progresso + '%')
-                         .attr('aria-valuenow', progresso)
-                         .text(progresso + '%');
-
-        // Marcar card como respondida
-        $('input[type="radio"]:checked').each(function() {
-            $(this).closest('.questao-card').addClass('respondida');
-        });
+// Atalhos de teclado
+document.addEventListener('keydown', function(e) {
+    if (e.key >= '1' && e.key <= '4') {
+        const radioButtons = document.querySelectorAll('input[type="radio"][name="valor"]');
+        const index = parseInt(e.key) - 1;
+        if (radioButtons[index]) {
+            radioButtons[index].checked = true;
+            radioButtons[index].closest('.resposta-option').classList.add('border-primary');
+        }
     }
-
-    // Atualizar progresso ao carregar
-    atualizarProgresso();
-
-    // Atualizar progresso ao mudar resposta
-    $('input[type="radio"]').change(function() {
-        atualizarProgresso();
-    });
-
-    // Salvar progresso
-    $('#btn-salvar, #form-respostas').submit(function(e) {
-        e.preventDefault();
-
-        var respostas = {};
-        $('input[type="radio"]:checked').each(function() {
-            var name = $(this).attr('name');
-            var questaoId = name.replace('questao_', '');
-            respostas[questaoId] = $(this).val();
-        });
-
-        $.ajax({
-            url: '{{ url_for("avaliacoes.responder", id=avaliacao.id) }}',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(respostas),
-            success: function(response) {
-                if (response.redirect) {
-                    window.location.href = response.redirect;
-                } else {
-                    alert('Progresso salvo com sucesso!');
-                }
-            },
-            error: function() {
-                alert('Erro ao salvar respostas. Tente novamente.');
-            }
-        });
-    });
 });
 </script>
 {% endblock %}

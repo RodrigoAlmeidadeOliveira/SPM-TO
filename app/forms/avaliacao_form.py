@@ -1,0 +1,89 @@
+"""
+Formulário de criação e resposta de avaliações
+"""
+from flask_wtf import FlaskForm
+from wtforms import SelectField, DateField, TextAreaField, HiddenField, RadioField
+from wtforms.validators import DataRequired, Optional, ValidationError
+from datetime import date
+
+
+class AvaliacaoForm(FlaskForm):
+    """Formulário para criar uma nova avaliação"""
+
+    paciente_id = HiddenField('Paciente ID', validators=[DataRequired()])
+
+    instrumento_id = SelectField(
+        'Instrumento de Avaliação',
+        coerce=int,
+        validators=[DataRequired(message='Selecione o instrumento de avaliação')],
+        render_kw={'class': 'form-select'}
+    )
+
+    contexto = SelectField(
+        'Contexto da Avaliação',
+        choices=[
+            ('', 'Selecione o contexto...'),
+            ('casa', 'Casa - Avaliação pelos pais/responsáveis'),
+            ('escola', 'Escola - Avaliação por professores/educadores')
+        ],
+        validators=[DataRequired(message='Selecione o contexto da avaliação')],
+        render_kw={'class': 'form-select'}
+    )
+
+    data_avaliacao = DateField(
+        'Data da Avaliação',
+        validators=[DataRequired(message='A data da avaliação é obrigatória')],
+        default=date.today,
+        format='%Y-%m-%d',
+        render_kw={'class': 'form-control'}
+    )
+
+    relacionamento_respondente = SelectField(
+        'Relacionamento do Respondente',
+        choices=[
+            ('', 'Selecione...'),
+            ('Mãe', 'Mãe'),
+            ('Pai', 'Pai'),
+            ('Avô/Avó', 'Avô/Avó'),
+            ('Responsável Legal', 'Responsável Legal'),
+            ('Professor(a)', 'Professor(a)'),
+            ('Coordenador(a)', 'Coordenador(a)'),
+            ('Terapeuta', 'Terapeuta'),
+            ('Outro', 'Outro')
+        ],
+        validators=[DataRequired(message='Especifique o relacionamento do respondente')],
+        render_kw={'class': 'form-select'}
+    )
+
+    comentarios = TextAreaField(
+        'Comentários Iniciais',
+        validators=[Optional()],
+        render_kw={
+            'placeholder': 'Observações sobre o contexto da avaliação, comportamento recente, etc.',
+            'class': 'form-control',
+            'rows': 3
+        }
+    )
+
+    def validate_data_avaliacao(self, field):
+        """Valida se a data da avaliação não é futura"""
+        if field.data > date.today():
+            raise ValidationError('A data da avaliação não pode ser futura')
+
+
+class RespostaForm(FlaskForm):
+    """Formulário para responder uma questão"""
+
+    questao_id = HiddenField('Questão ID', validators=[DataRequired()])
+
+    valor = RadioField(
+        'Resposta',
+        choices=[
+            ('NUNCA', 'Nunca'),
+            ('OCASIONAL', 'Ocasionalmente'),
+            ('FREQUENTE', 'Frequentemente'),
+            ('SEMPRE', 'Sempre')
+        ],
+        validators=[DataRequired(message='Selecione uma resposta')],
+        render_kw={'class': 'form-check-input'}
+    )

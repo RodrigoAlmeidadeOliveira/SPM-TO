@@ -1,15 +1,14 @@
 """
-Blueprint de Avaliações
+Rotas para gerenciamento de avaliações
 """
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
-from app.models.avaliacao import Avaliacao, Resposta
-from app.models.paciente import Paciente
-from app.models.instrumento import Instrumento, Questao
-from app.forms.avaliacao_forms import AvaliacaoForm
+from app import db
+from app.models import Avaliacao, Paciente, Instrumento, Questao, Resposta, Dominio
+from app.forms import AvaliacaoForm, RespostaForm
 from app.services.calculo_service import CalculoService
 from app.services.classificacao_service import ClassificacaoService
-from app import db
+from sqlalchemy import func
 from datetime import datetime
 
 avaliacoes_bp = Blueprint('avaliacoes', __name__)
@@ -18,204 +17,325 @@ avaliacoes_bp = Blueprint('avaliacoes', __name__)
 @avaliacoes_bp.route('/')
 @login_required
 def listar():
-    """Lista avaliações"""
-    page = request.args.get('page', 1, type=int)
-    per_page = 20
-
-    # Filtros
+    """Lista todas as avaliações com filtros"""
+    # Parâmetros de busca
+    status_filtro = request.args.get('status', '').strip()
     paciente_id = request.args.get('paciente_id', type=int)
-    status = request.args.get('status', '')
+    page = request.args.get('page', 1, type=int)
+    per_page = 15
 
-    query = Avaliacao.query
+    # Query base
+    query = Avaliacao.query.join(Paciente).join(Instrumento)
 
+    # Filtrar por paciente se especificado
     if paciente_id:
-        query = query.filter_by(paciente_id=paciente_id)
+        query = query.filter(Avaliacao.paciente_id == paciente_id)
 
-    if status:
-        query = query.filter_by(status=status)
+    # Filtrar por status
+    if status_filtro and status_filtro in ['em_andamento', 'concluida', 'revisao']:
+        query = query.filter(Avaliacao.status == status_filtro)
 
-    avaliacoes = query.order_by(db.desc(Avaliacao.data_avaliacao)).paginate(
-        page=page, per_page=per_page, error_out=False
+    # Ordenar por data mais recente
+    query = query.order_by(Avaliacao.data_avaliacao.desc())
+
+    # Paginar
+    paginacao = query.paginate(page=page, per_page=per_page, error_out=False)
+    avaliacoes = paginacao.items
+
+    return render_template(
+        'avaliacoes/listar.html',
+        avaliacoes=avaliacoes,
+        paginacao=paginacao,
+        status_filtro=status_filtro,
+        paciente_id=paciente_id
     )
-
-    return render_template('avaliacoes/listar.html',
-                          avaliacoes=avaliacoes,
-                          paciente_id=paciente_id,
-                          status=status)
 
 
 @avaliacoes_bp.route('/nova', methods=['GET', 'POST'])
 @login_required
 def nova():
-    """Nova avaliação"""
+    """Cria uma nova avaliação"""
+    # Obter paciente_id da query string
+    paciente_id = request.args.get('paciente_id', type=int)
+    instrumento_id = request.args.get('instrumento_id', type=int)
+
+    if not paciente_id:
+        flash('Paciente não especificado!', 'danger')
+        return redirect(url_for('pacientes.listar'))
+
+    paciente = Paciente.query.get_or_404(paciente_id)
+
+    # Calcular idade para filtrar instrumentos
+    idade = paciente.calcular_idade()
+
     form = AvaliacaoForm()
+    form.paciente_id.data = paciente_id
 
-    # Preencher choices de pacientes e instrumentos
-    form.paciente_id.choices = [('', 'Selecione um paciente')] + [
-        (p.id, f'{p.nome} - {p.calcular_idade()[0]} anos')
-        for p in Paciente.query.filter_by(ativo=True).order_by(Paciente.nome).all()
+    # Buscar instrumentos adequados para a idade
+    instrumentos = Instrumento.query.filter(
+        Instrumento.ativo == True,
+        Instrumento.idade_minima <= idade,
+        Instrumento.idade_maxima >= idade
+    ).all()
+
+    # Popular choices do select de instrumentos
+    form.instrumento_id.choices = [(0, 'Selecione o instrumento...')] + [
+        (i.id, f"{i.nome} ({i.contexto})") for i in instrumentos
     ]
 
-    form.instrumento_id.choices = [('', 'Selecione um instrumento')] + [
-        (i.id, i.nome)
-        for i in Instrumento.query.filter_by(ativo=True).order_by(Instrumento.nome).all()
-    ]
+    # Se instrumento foi pré-selecionado
+    if instrumento_id and request.method == 'GET':
+        form.instrumento_id.data = instrumento_id
 
     if form.validate_on_submit():
-        avaliacao = Avaliacao(
-            paciente_id=form.paciente_id.data,
-            instrumento_id=form.instrumento_id.data,
-            avaliador_id=current_user.id,
-            data_avaliacao=form.data_avaliacao.data,
-            relacionamento_respondente=form.relacionamento_respondente.data,
-            comentarios=form.comentarios.data,
-            status='em_andamento'
-        )
+        try:
+            instrumento = Instrumento.query.get(form.instrumento_id.data)
 
-        db.session.add(avaliacao)
-        db.session.commit()
+            if not instrumento:
+                flash('Instrumento inválido!', 'danger')
+                return render_template('avaliacoes/form.html', form=form, paciente=paciente)
 
-        flash('Avaliação criada com sucesso! Agora responda as questões.', 'success')
-        return redirect(url_for('avaliacoes.responder', id=avaliacao.id))
+            # Verificar se instrumento é adequado para a idade
+            if idade < instrumento.idade_minima or idade > instrumento.idade_maxima:
+                flash(f'Este instrumento não é adequado para a idade do paciente ({idade} anos)!', 'danger')
+                return render_template('avaliacoes/form.html', form=form, paciente=paciente)
 
-    # Preencher data padrão
-    if not form.data_avaliacao.data:
-        form.data_avaliacao.data = datetime.now().date()
+            # Criar nova avaliação
+            avaliacao = Avaliacao(
+                paciente_id=paciente_id,
+                instrumento_id=instrumento.id,
+                avaliador_id=current_user.id,
+                data_avaliacao=form.data_avaliacao.data,
+                relacionamento_respondente=form.relacionamento_respondente.data,
+                comentarios=form.comentarios.data,
+                status='em_andamento'
+            )
 
-    return render_template('avaliacoes/form.html', form=form, titulo='Nova Avaliação')
+            db.session.add(avaliacao)
+            db.session.commit()
+
+            flash(f'Avaliação criada com sucesso! Agora você pode responder às questões.', 'success')
+            return redirect(url_for('avaliacoes.responder', id=avaliacao.id))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao criar avaliação: {str(e)}', 'danger')
+
+    return render_template('avaliacoes/form.html', form=form, paciente=paciente, instrumentos=instrumentos)
 
 
 @avaliacoes_bp.route('/<int:id>')
 @login_required
 def visualizar(id):
-    """Visualizar avaliação"""
+    """Visualiza detalhes de uma avaliação"""
     avaliacao = Avaliacao.query.get_or_404(id)
 
-    # Calcular estatísticas de progresso
-    total_questoes = 0
-    for dominio in avaliacao.instrumento.dominios:
-        total_questoes += dominio.questoes.filter_by(ativo=True).count()
+    # Buscar respostas agrupadas por domínio
+    respostas = (
+        Resposta.query
+        .join(Questao)
+        .join(Dominio)
+        .filter(Resposta.avaliacao_id == id)
+        .order_by(Dominio.ordem, Questao.numero)
+        .all()
+    )
 
-    total_respostas = avaliacao.respostas.count()
-    progresso = (total_respostas / total_questoes * 100) if total_questoes > 0 else 0
+    # Agrupar respostas por domínio
+    respostas_por_dominio = {}
+    for resposta in respostas:
+        dominio_nome = resposta.questao.dominio.nome
+        if dominio_nome not in respostas_por_dominio:
+            respostas_por_dominio[dominio_nome] = []
+        respostas_por_dominio[dominio_nome].append(resposta)
 
-    return render_template('avaliacoes/visualizar.html',
-                          avaliacao=avaliacao,
-                          total_questoes=total_questoes,
-                          total_respostas=total_respostas,
-                          progresso=progresso)
+    # Calcular progresso
+    total_questoes = Questao.query.join(Dominio).filter(
+        Dominio.instrumento_id == avaliacao.instrumento_id
+    ).count()
+    questoes_respondidas = len(respostas)
+    progresso = int((questoes_respondidas / total_questoes * 100)) if total_questoes > 0 else 0
+
+    return render_template(
+        'avaliacoes/visualizar.html',
+        avaliacao=avaliacao,
+        respostas_por_dominio=respostas_por_dominio,
+        total_questoes=total_questoes,
+        questoes_respondidas=questoes_respondidas,
+        progresso=progresso
+    )
 
 
 @avaliacoes_bp.route('/<int:id>/responder', methods=['GET', 'POST'])
 @login_required
 def responder(id):
-    """Interface para responder avaliação"""
+    """Interface para responder questões da avaliação"""
     avaliacao = Avaliacao.query.get_or_404(id)
 
-    if request.method == 'POST':
-        # Processar respostas em lote (JSON)
-        data = request.get_json()
+    if avaliacao.status == 'concluida':
+        flash('Esta avaliação já foi concluída!', 'info')
+        return redirect(url_for('avaliacoes.visualizar', id=id))
 
-        if data:
-            for questao_id, valor in data.items():
-                questao = Questao.query.get(int(questao_id))
-                if not questao:
-                    continue
+    # Buscar todas as questões do instrumento, ordenadas por domínio e número
+    questoes = (
+        Questao.query
+        .join(Dominio)
+        .filter(Dominio.instrumento_id == avaliacao.instrumento_id)
+        .filter(Questao.ativo == True)
+        .order_by(Dominio.ordem, Questao.numero)
+        .all()
+    )
 
-                # Calcular pontuação
-                pontuacao = CalculoService.calcular_pontuacao_resposta(
-                    valor,
-                    questao.dominio.escala_invertida
+    if not questoes:
+        flash('Este instrumento não possui questões cadastradas!', 'warning')
+        return redirect(url_for('avaliacoes.visualizar', id=id))
+
+    # Buscar respostas já dadas
+    respostas_existentes = {
+        r.questao_id: r for r in Resposta.query.filter_by(avaliacao_id=id).all()
+    }
+
+    # Obter índice da questão atual (ou primeira não respondida)
+    questao_idx = request.args.get('q', 0, type=int)
+
+    # Se não especificado, buscar primeira questão não respondida
+    if questao_idx == 0:
+        for idx, questao in enumerate(questoes):
+            if questao.id not in respostas_existentes:
+                questao_idx = idx
+                break
+
+    # Validar índice
+    if questao_idx < 0 or questao_idx >= len(questoes):
+        questao_idx = 0
+
+    questao_atual = questoes[questao_idx]
+    resposta_existente = respostas_existentes.get(questao_atual.id)
+
+    # Criar formulário
+    form = RespostaForm()
+    form.questao_id.data = questao_atual.id
+
+    # Preencher com resposta existente
+    if resposta_existente and request.method == 'GET':
+        form.valor.data = resposta_existente.valor
+
+    if form.validate_on_submit():
+        try:
+            # Calcular pontuação
+            pontuacao = CalculoService.calcular_pontuacao_resposta(
+                form.valor.data,
+                questao_atual.dominio.escala_invertida
+            )
+
+            if resposta_existente:
+                # Atualizar resposta existente
+                resposta_existente.valor = form.valor.data
+                resposta_existente.pontuacao = pontuacao
+            else:
+                # Criar nova resposta
+                resposta = Resposta(
+                    avaliacao_id=id,
+                    questao_id=questao_atual.id,
+                    valor=form.valor.data,
+                    pontuacao=pontuacao
                 )
-
-                # Verificar se já existe resposta
-                resposta = Resposta.query.filter_by(
-                    avaliacao_id=avaliacao.id,
-                    questao_id=questao.id
-                ).first()
-
-                if resposta:
-                    resposta.valor = valor
-                    resposta.pontuacao = pontuacao
-                else:
-                    resposta = Resposta(
-                        avaliacao_id=avaliacao.id,
-                        questao_id=questao.id,
-                        valor=valor,
-                        pontuacao=pontuacao
-                    )
-                    db.session.add(resposta)
+                db.session.add(resposta)
 
             db.session.commit()
 
-            # Se completou todas as questões, calcular escores
-            if avaliacao.esta_completa():
-                CalculoService.atualizar_escores_avaliacao(avaliacao)
-                ClassificacaoService.classificar_avaliacao(avaliacao)
+            # Verificar se é a última questão
+            if questao_idx == len(questoes) - 1:
+                flash('Todas as questões foram respondidas!', 'success')
+                return redirect(url_for('avaliacoes.finalizar', id=id))
+            else:
+                # Ir para próxima questão
+                return redirect(url_for('avaliacoes.responder', id=id, q=questao_idx + 1))
 
-                avaliacao.status = 'concluida'
-                avaliacao.data_conclusao = datetime.utcnow()
-                db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao salvar resposta: {str(e)}', 'danger')
 
-                flash('Avaliação concluída com sucesso!', 'success')
-                return jsonify({'redirect': url_for('avaliacoes.visualizar', id=avaliacao.id)})
+    # Calcular progresso
+    total_questoes = len(questoes)
+    questoes_respondidas = len(respostas_existentes)
+    progresso = int((questoes_respondidas / total_questoes * 100)) if total_questoes > 0 else 0
 
-            return jsonify({'success': True})
+    return render_template(
+        'avaliacoes/responder.html',
+        avaliacao=avaliacao,
+        questao=questao_atual,
+        questao_idx=questao_idx,
+        total_questoes=total_questoes,
+        questoes_respondidas=questoes_respondidas,
+        progresso=progresso,
+        form=form,
+        pode_voltar=questao_idx > 0,
+        pode_avancar=questao_idx < total_questoes - 1,
+        resposta_existente=resposta_existente
+    )
 
-    # GET - Carregar questões e respostas existentes
-    dominios_questoes = []
-    respostas_existentes = {}
 
-    # Obter respostas já preenchidas
-    for resposta in avaliacao.respostas:
-        respostas_existentes[resposta.questao_id] = resposta.valor
+@avaliacoes_bp.route('/<int:id>/finalizar', methods=['GET', 'POST'])
+@login_required
+def finalizar(id):
+    """Finaliza uma avaliação e calcula os escores"""
+    avaliacao = Avaliacao.query.get_or_404(id)
 
-    # Organizar questões por domínio
-    for dominio in avaliacao.instrumento.dominios.order_by('ordem'):
-        questoes = dominio.questoes.filter_by(ativo=True).order_by('numero').all()
-        if questoes:
-            dominios_questoes.append({
-                'dominio': dominio,
-                'questoes': questoes
-            })
+    # Verificar se todas as questões foram respondidas
+    total_questoes = Questao.query.join(Dominio).filter(
+        Dominio.instrumento_id == avaliacao.instrumento_id,
+        Questao.ativo == True
+    ).count()
 
-    return render_template('avaliacoes/responder.html',
-                          avaliacao=avaliacao,
-                          dominios_questoes=dominios_questoes,
-                          respostas_existentes=respostas_existentes)
+    questoes_respondidas = Resposta.query.filter_by(avaliacao_id=id).count()
+
+    if questoes_respondidas < total_questoes:
+        flash(f'Ainda faltam {total_questoes - questoes_respondidas} questão(ões) para responder!', 'warning')
+        return redirect(url_for('avaliacoes.responder', id=id))
+
+    if request.method == 'POST':
+        try:
+            # Calcular escores
+            CalculoService.atualizar_escores_avaliacao(id)
+
+            # Classificar resultados
+            ClassificacaoService.classificar_avaliacao(id)
+
+            # Atualizar status e data de conclusão
+            avaliacao.status = 'concluida'
+            avaliacao.data_conclusao = datetime.utcnow()
+
+            db.session.commit()
+
+            flash('Avaliação finalizada com sucesso! Escores calculados e classificados.', 'success')
+            return redirect(url_for('avaliacoes.visualizar', id=id))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao finalizar avaliação: {str(e)}', 'danger')
+
+    return render_template('avaliacoes/finalizar.html', avaliacao=avaliacao, total_questoes=total_questoes)
 
 
 @avaliacoes_bp.route('/<int:id>/excluir', methods=['POST'])
 @login_required
 def excluir(id):
-    """Excluir avaliação"""
+    """Exclui uma avaliação"""
     avaliacao = Avaliacao.query.get_or_404(id)
-
-    # Verificar permissão (apenas admin ou quem criou)
-    if not current_user.is_admin() and avaliacao.avaliador_id != current_user.id:
-        flash('Você não tem permissão para excluir esta avaliação', 'danger')
-        return redirect(url_for('avaliacoes.visualizar', id=id))
-
     paciente_id = avaliacao.paciente_id
-    db.session.delete(avaliacao)
-    db.session.commit()
 
-    flash('Avaliação excluída com sucesso!', 'success')
-    return redirect(url_for('pacientes.visualizar', id=paciente_id))
+    try:
+        # Excluir respostas associadas
+        Resposta.query.filter_by(avaliacao_id=id).delete()
 
+        # Excluir avaliação
+        db.session.delete(avaliacao)
+        db.session.commit()
 
-@avaliacoes_bp.route('/<int:id>/recalcular', methods=['POST'])
-@login_required
-def recalcular(id):
-    """Recalcular escores da avaliação"""
-    avaliacao = Avaliacao.query.get_or_404(id)
+        flash('Avaliação excluída com sucesso!', 'success')
+        return redirect(url_for('pacientes.visualizar', id=paciente_id))
 
-    if avaliacao.esta_completa():
-        CalculoService.atualizar_escores_avaliacao(avaliacao)
-        ClassificacaoService.classificar_avaliacao(avaliacao)
-
-        flash('Escores recalculados com sucesso!', 'success')
-    else:
-        flash('Avaliação incompleta. Complete todas as questões primeiro.', 'warning')
-
-    return redirect(url_for('avaliacoes.visualizar', id=id))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir avaliação: {str(e)}', 'danger')
+        return redirect(url_for('avaliacoes.visualizar', id=id))
