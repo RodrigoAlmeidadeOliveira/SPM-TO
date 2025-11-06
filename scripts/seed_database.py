@@ -76,41 +76,55 @@ def seed_database():
     for config in instrumentos_config:
         print(f"\nProcessando {config['nome']}...")
 
-        # Criar instrumento
-        instrumento = Instrumento(
-            codigo=config['codigo'],
-            nome=config['nome'],
-            idade_minima=config['idade_minima'],
-            idade_maxima=config['idade_maxima'],
-            contexto=config['contexto'],
-            instrucoes='Por favor, responda as perguntas deste formulário de acordo com a frequência.'
-        )
-        db.session.add(instrumento)
-        db.session.flush()
-
-        # Determinar conjunto de domínios
+        instrumento = Instrumento.query.filter_by(codigo=config['codigo']).first()
+        if instrumento:
+            instrumento.nome = config['nome']
+            instrumento.idade_minima = config['idade_minima']
+            instrumento.idade_maxima = config['idade_maxima']
+            instrumento.contexto = config['contexto']
+            instrumento.instrucoes = 'Por favor, responda as perguntas deste formulário de acordo com a frequência.'
+            print("  -> Instrumento já existia, atualizado.")
+        else:
+            instrumento = Instrumento(
+                codigo=config['codigo'],
+                nome=config['nome'],
+                idade_minima=config['idade_minima'],
+                idade_maxima=config['idade_maxima'],
+                contexto=config['contexto'],
+                instrucoes='Por favor, responda as perguntas deste formulário de acordo com a frequência.'
+            )
+            db.session.add(instrumento)
+            db.session.flush()
         dominio_set = 'SPM_P_3_5' if 'SPM_P_3_5' in config['codigo'] else 'SPM_5_12'
 
-        # Criar domínios
         dominios_criados = []
         for dom_config in dominios_config[dominio_set]:
-            dominio = Dominio(
-                instrumento_id=instrumento.id,
-                codigo=dom_config['codigo'],
-                nome=dom_config['nome'],
-                ordem=dom_config['ordem'],
-                escala_invertida=dom_config['escala_invertida']
-            )
-            db.session.add(dominio)
-            db.session.flush()
+            dominio = Dominio.query.filter_by(instrumento_id=instrumento.id, codigo=dom_config['codigo']).first()
+            if dominio:
+                dominio.nome = dom_config['nome']
+                dominio.ordem = dom_config['ordem']
+                dominio.escala_invertida = dom_config['escala_invertida']
+                print(f"  -> Domínio atualizado: {dom_config['nome']}")
+            else:
+                dominio = Dominio(
+                    instrumento_id=instrumento.id,
+                    codigo=dom_config['codigo'],
+                    nome=dom_config['nome'],
+                    ordem=dom_config['ordem'],
+                    escala_invertida=dom_config['escala_invertida']
+                )
+                db.session.add(dominio)
+                db.session.flush()
+                print(f"  - Domínio criado: {dom_config['nome']}")
             dominios_criados.append(dominio)
-
-            print(f"  - Domínio criado: {dom_config['nome']}")
 
         # Ler questões da planilha
         try:
             planilha_path = doctos_path / config['planilha']
             extrair_questoes_planilha(planilha_path, instrumento, dominios_criados)
+
+            PlanoTemplateItem.query.filter_by(instrumento_id=instrumento.id).delete()
+            db.session.flush()
             extrair_plano_planilha(planilha_path, instrumento, dominios_criados)
 
             # Extrair tabela de referência (se houver)
@@ -187,13 +201,21 @@ def extrair_questoes_planilha(planilha_path, instrumento, dominios_criados):
             continue
 
         if dominio_atual and len(texto) > 3:
-            questao = Questao(
-                dominio_id=dominio_atual.id,
-                numero=numero_questao_dominio,
-                numero_global=numero_questao,
-                texto=texto
-            )
-            db.session.add(questao)
+            questao = Questao.query.join(Dominio).filter(
+                Questao.dominio_id == dominio_atual.id,
+                Questao.numero == numero_questao_dominio
+            ).first()
+
+            if questao:
+                questao.texto = texto
+            else:
+                questao = Questao(
+                    dominio_id=dominio_atual.id,
+                    numero=numero_questao_dominio,
+                    numero_global=numero_questao,
+                    texto=texto
+                )
+                db.session.add(questao)
 
             numero_questao += 1
             numero_questao_dominio += 1
