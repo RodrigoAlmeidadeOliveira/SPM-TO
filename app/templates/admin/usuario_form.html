@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - SPM-TO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1><i class="fas fa-user-edit"></i> {{ titulo }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <!-- Nome de Usuário -->
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label") }}
+                            {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+                            {% if form.username.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.username.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Usado para fazer login no sistema (mínimo 3 caracteres)
+                            </small>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), type="email") }}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Nome Completo -->
+                        <div class="mb-3">
+                            {{ form.nome_completo.label(class="form-label") }}
+                            {{ form.nome_completo(class="form-control" + (" is-invalid" if form.nome_completo.errors else "")) }}
+                            {% if form.nome_completo.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.nome_completo.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Tipo de Usuário -->
+                        <div class="mb-3">
+                            {{ form.tipo.label(class="form-label") }}
+                            {{ form.tipo(class="form-select" + (" is-invalid" if form.tipo.errors else "")) }}
+                            {% if form.tipo.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.tipo.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                <strong>Administrador:</strong> Acesso total ao sistema<br>
+                                <strong>Terapeuta:</strong> Pode gerenciar pacientes e avaliações<br>
+                                <strong>Professor:</strong> Pode visualizar avaliações de seus alunos<br>
+                                <strong>Familiar:</strong> Pode visualizar avaliações de familiares
+                            </small>
+                        </div>
+
+                        <hr>
+
+                        <!-- Senha -->
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+                            {% if form.password.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.password.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                {% if usuario %}
+                                Deixe em branco para manter a senha atual
+                                {% else %}
+                                Mínimo 6 caracteres
+                                {% endif %}
+                            </small>
+                        </div>
+
+                        <!-- Confirmar Senha -->
+                        <div class="mb-3">
+                            {{ form.password_confirm.label(class="form-label") }}
+                            {{ form.password_confirm(class="form-control" + (" is-invalid" if form.password_confirm.errors else "")) }}
+                            {% if form.password_confirm.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.password_confirm.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <hr>
+
+                        <!-- Usuário Ativo -->
+                        <div class="mb-3 form-check">
+                            {{ form.ativo(class="form-check-input") }}
+                            {{ form.ativo.label(class="form-check-label") }}
+                            <small class="form-text text-muted d-block">
+                                Usuários inativos não podem fazer login no sistema
+                            </small>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{{ url_for('admin.listar_usuarios') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

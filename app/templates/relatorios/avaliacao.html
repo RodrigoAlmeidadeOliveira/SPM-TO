@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório - Avaliação {{ avaliacao.id }} - SPM-TO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1><i class="fas fa-file-alt"></i> Relatório de Avaliação</h1>
+            <h3>{{ avaliacao.paciente.nome }}</h3>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('relatorios.avaliacao_pdf', id=avaliacao.id) }}"
+               class="btn btn-danger" target="_blank">
+                <i class="fas fa-file-pdf"></i> Download PDF
+            </a>
+            <a href="{{ url_for('avaliacoes.visualizar', id=avaliacao.id) }}"
+               class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Informações Gerais -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="fas fa-user"></i> Dados do Paciente</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Nome:</th>
+                            <td>{{ avaliacao.paciente.nome }}</td>
+                        </tr>
+                        <tr>
+                            <th>Data de Nascimento:</th>
+                            <td>{{ avaliacao.paciente.data_nascimento.strftime('%d/%m/%Y') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Sexo:</th>
+                            <td>{{ 'Masculino' if avaliacao.paciente.sexo == 'M' else 'Feminino' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5><i class="fas fa-clipboard-check"></i> Dados da Avaliação</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Data:</th>
+                            <td>{{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Instrumento:</th>
+                            <td>{{ avaliacao.instrumento.nome }}</td>
+                        </tr>
+                        <tr>
+                            <th>Respondente:</th>
+                            <td>{{ avaliacao.relacionamento_respondente|capitalize }}</td>
+                        </tr>
+                        <tr>
+                            <th>Avaliador:</th>
+                            <td>{{ avaliacao.avaliador.nome_completo }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if avaliacao.status == 'concluida' %}
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        {% if grafico_radar %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="fas fa-chart-area"></i> Perfil Sensorial</h5>
+                </div>
+                <div class="card-body">
+                    {{ grafico_radar|safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if grafico_barras %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5><i class="fas fa-chart-bar"></i> Escores por Domínio</h5>
+                </div>
+                <div class="card-body">
+                    {{ grafico_barras|safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tabela de Resultados -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5><i class="fas fa-table"></i> Resultados Detalhados</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Domínio</th>
+                                    <th>Escore Bruto</th>
+                                    <th>T-Score</th>
+                                    <th>Percentil</th>
+                                    <th>Classificação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set dominios_info = [
+                                    ('Participação Social', avaliacao.escore_soc, avaliacao.t_score_soc, avaliacao.classificacao_soc),
+                                    ('Visão', avaliacao.escore_vis, avaliacao.t_score_vis, avaliacao.classificacao_vis),
+                                    ('Audição', avaliacao.escore_hea, avaliacao.t_score_hea, avaliacao.classificacao_hea),
+                                    ('Tato', avaliacao.escore_tou, avaliacao.t_score_tou, avaliacao.classificacao_tou),
+                                    ('Consciência Corporal', avaliacao.escore_bod, avaliacao.t_score_bod, avaliacao.classificacao_bod),
+                                    ('Equilíbrio e Movimento', avaliacao.escore_bal, avaliacao.t_score_bal, avaliacao.classificacao_bal),
+                                    ('Planejamento e Ideação', avaliacao.escore_pla, avaliacao.t_score_pla, avaliacao.classificacao_pla)
+                                ] %}
+
+                                {% if avaliacao.escore_olf %}
+                                    {% set _ = dominios_info.insert(3, ('Olfato e Paladar', avaliacao.escore_olf, avaliacao.t_score_olf, avaliacao.classificacao_olf)) %}
+                                {% endif %}
+
+                                {% for nome, escore, t_score, classificacao in dominios_info %}
+                                {% if escore is not none %}
+                                <tr>
+                                    <td><strong>{{ nome }}</strong></td>
+                                    <td>{{ escore }}</td>
+                                    <td>{{ t_score if t_score else 'N/A' }}</td>
+                                    <td>-</td>
+                                    <td>
+                                        {% if classificacao == 'DISFUNCAO_DEFINITIVA' %}
+                                            <span class="badge badge-disfuncao-definitiva">Disfunção Definitiva</span>
+                                        {% elif classificacao == 'PROVAVEL_DISFUNCAO' %}
+                                            <span class="badge badge-provavel-disfuncao">Provável Disfunção</span>
+                                        {% elif classificacao == 'TIPICO' %}
+                                            <span class="badge badge-tipico">Típico</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ classificacao or 'N/A' }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+
+                                <tr class="table-info">
+                                    <td><strong>TOTAL</strong></td>
+                                    <td><strong>{{ avaliacao.escore_total }}</strong></td>
+                                    <td colspan="3"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interpretação -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5><i class="fas fa-lightbulb"></i> Interpretação</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Os escores obtidos na avaliação SPM refletem o padrão de processamento sensorial
+                        da criança em diferentes domínios. Escores mais altos indicam maior presença de
+                        dificuldades de processamento sensorial.
+                    </p>
+
+                    <h6>Classificações:</h6>
+                    <ul>
+                        <li><strong>Típico:</strong> Processamento sensorial dentro da normalidade.</li>
+                        <li><strong>Provável Disfunção:</strong> Sugere possível disfunção, requer monitoramento próximo.</li>
+                        <li><strong>Disfunção Definitiva:</strong> Indica disfunção clara, requer intervenção especializada.</li>
+                    </ul>
+
+                    {% if avaliacao.comentarios %}
+                    <h6 class="mt-3">Comentários do Avaliador:</h6>
+                    <p class="text-muted">{{ avaliacao.comentarios }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Links Úteis -->
+    <div class="row">
+        <div class="col-md-12">
+            <a href="{{ url_for('relatorios.pei', avaliacao_id=avaliacao.id) }}"
+               class="btn btn-info">
+                <i class="fas fa-file-medical-alt"></i> Ver Plano PEI
+            </a>
+            <a href="{{ url_for('relatorios.evolucao', paciente_id=avaliacao.paciente.id) }}"
+               class="btn btn-success">
+                <i class="fas fa-chart-line"></i> Ver Evolução
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        Esta avaliação ainda não foi concluída. Complete todas as questões para ver os resultados.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
