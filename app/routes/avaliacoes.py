@@ -66,16 +66,16 @@ def nova():
     paciente = Paciente.query.get_or_404(paciente_id)
 
     # Calcular idade para filtrar instrumentos
-    idade = paciente.calcular_idade()
+    idade_anos, idade_meses = paciente.calcular_idade()
 
     form = AvaliacaoForm()
     form.paciente_id.data = paciente_id
 
     # Buscar instrumentos adequados para a idade
     instrumentos = Instrumento.query.filter(
-        Instrumento.ativo == True,
-        Instrumento.idade_minima <= idade,
-        Instrumento.idade_maxima >= idade
+        Instrumento.ativo.is_(True),
+        Instrumento.idade_minima <= idade_anos,
+        Instrumento.idade_maxima >= idade_anos
     ).all()
 
     # Popular choices do select de instrumentos
@@ -96,8 +96,8 @@ def nova():
                 return render_template('avaliacoes/form.html', form=form, paciente=paciente)
 
             # Verificar se instrumento é adequado para a idade
-            if idade < instrumento.idade_minima or idade > instrumento.idade_maxima:
-                flash(f'Este instrumento não é adequado para a idade do paciente ({idade} anos)!', 'danger')
+            if idade_anos < instrumento.idade_minima or idade_anos > instrumento.idade_maxima:
+                flash(f'Este instrumento não é adequado para a idade do paciente ({idade_anos} anos)!', 'danger')
                 return render_template('avaliacoes/form.html', form=form, paciente=paciente)
 
             # Criar nova avaliação
