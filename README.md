@@ -173,6 +173,15 @@ Baseado em T-scores e percentis:
 
 ## Deploy no Fly.io
 
+**📖 Para instruções detalhadas, consulte: [DEPLOY.md](DEPLOY.md)**
+
+**🚀 Deploy Rápido (Automatizado):**
+```bash
+./deploy.sh
+```
+
+**📝 Deploy Manual (Passo a Passo):**
+
 ### 1. Instale o Fly CLI
 
 ```bash
