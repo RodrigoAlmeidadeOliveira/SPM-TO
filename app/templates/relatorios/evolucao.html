@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Evolução - {{ paciente.nome }} - SPM-TO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1><i class="fas fa-chart-line"></i> Evolução do Paciente</h1>
+            <h3>{{ paciente.nome }}</h3>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('pacientes.visualizar', id=paciente.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Resumo -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Total de Avaliações Concluídas:</strong> {{ avaliacoes|length }}
+                {% if avaliacoes %}
+                | <strong>Período:</strong>
+                {{ avaliacoes[0].data_avaliacao.strftime('%d/%m/%Y') }} a
+                {{ avaliacoes[-1].data_avaliacao.strftime('%d/%m/%Y') }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Evolução -->
+    {% if grafico_evolucao %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="fas fa-chart-area"></i> Gráfico de Evolução Temporal</h5>
+                </div>
+                <div class="card-body">
+                    {{ grafico_evolucao|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                Não há avaliações concluídas suficientes para gerar o gráfico de evolução.
+                São necessárias pelo menos 1 avaliação concluída.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Lista de Avaliações -->
+    {% if avaliacoes %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5><i class="fas fa-list"></i> Histórico de Avaliações</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Instrumento</th>
+                                    <th>Contexto</th>
+                                    <th>Escore Total</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for avaliacao in avaliacoes %}
+                                <tr>
+                                    <td>{{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ avaliacao.instrumento.nome }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if avaliacao.instrumento.contexto == 'casa' %}info{% else %}warning{% endif %}">
+                                            {{ avaliacao.instrumento.contexto|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td><strong>{{ avaliacao.escore_total }}</strong></td>
+                                    <td>
+                                        <a href="{{ url_for('avaliacoes.visualizar', id=avaliacao.id) }}"
+                                           class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </a>
+                                        <a href="{{ url_for('relatorios.avaliacao', id=avaliacao.id) }}"
+                                           class="btn btn-sm btn-success">
+                                            <i class="fas fa-file-alt"></i> Relatório
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

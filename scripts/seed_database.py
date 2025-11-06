@@ -1,5 +1,5 @@
 """
-Script para popular o banco de dados com instrumentos e questões das planilhas SPM
+Script para popular o banco de dados com instrumentos, questões e tabelas de referência das planilhas SPM
 """
 import openpyxl
 from pathlib import Path
@@ -109,8 +109,11 @@ def seed_database():
         try:
             planilha_path = doctos_path / config['planilha']
             extrair_questoes_planilha(planilha_path, instrumento)
+
+            # Extrair tabela de referência (se houver)
+            extrair_tabela_referencia(planilha_path, instrumento)
         except Exception as e:
-            print(f"  AVISO: Erro ao ler questões da planilha: {e}")
+            print(f"  AVISO: Erro ao ler planilha: {e}")
 
     db.session.commit()
     print('\n✓ Banco de dados populado com sucesso!')
@@ -179,3 +182,128 @@ def extrair_questoes_planilha(planilha_path, instrumento):
                     numero_questao_dominio += 1
 
     print(f"    Total de questões extraídas: {numero_questao - 1}")
+
+
+def extrair_tabela_referencia(planilha_path, instrumento):
+    """
+    Extrai tabela de referência da planilha Excel
+
+    Args:
+        planilha_path: Caminho para a planilha
+        instrumento: Instância de Instrumento
+    """
+    wb = openpyxl.load_workbook(planilha_path)
+
+    # Verificar se tem aba TAB. REFERÊNCIA
+    if 'TAB. REFERÊNCIA' not in wb.sheetnames:
+        print(f"    AVISO: Planilha não tem aba 'TAB. REFERÊNCIA'")
+        return
+
+    ws = wb['TAB. REFERÊNCIA']
+
+    # Encontrar cabeçalho (linha 3 geralmente tem: %TILE, T, SOC, VIS, HEA, TOU, BOD, BAL, PLA)
+    # Mapeamento de colunas
+    col_map = {}
+    for idx, cell in enumerate(ws[3], 1):
+        if cell.value:
+            valor = str(cell.value).strip().upper()
+            if valor == 'T':
+                col_map['T'] = idx
+            elif valor == '%TILE':
+                col_map['PERCENTIL'] = idx
+            elif valor in ['SOC', 'VIS', 'HEA', 'TOU', 'BOD', 'BAL', 'PLA', 'OLF']:
+                col_map[valor] = idx
+
+    print(f"    Extraindo tabela de referência...")
+    print(f"    Colunas encontradas: {list(col_map.keys())}")
+
+    # Percorrer linhas da tabela
+    classificacao_atual = None
+    count_refs = 0
+
+    for row_idx in range(4, ws.max_row + 1):
+        row = ws[row_idx]
+
+        # Coluna B geralmente tem a classificação
+        celula_b = row[1].value
+        if celula_b:
+            celula_b_str = str(celula_b).strip().upper()
+            if 'DISFUNÇÃO DEFINITIVA' in celula_b_str or 'DISFUNCAO DEFINITIVA' in celula_b_str:
+                classificacao_atual = 'DISFUNCAO_DEFINITIVA'
+            elif 'PROVÁVEL DISFUNÇÃO' in celula_b_str or 'PROVAVEL DISFUNCAO' in celula_b_str:
+                classificacao_atual = 'PROVAVEL_DISFUNCAO'
+            elif 'TÍPICO' in celula_b_str or 'TIPICO' in celula_b_str:
+                classificacao_atual = 'TIPICO'
+
+        if not classificacao_atual or 'T' not in col_map:
+            continue
+
+        # Obter T-score
+        t_score_cell = row[col_map['T'] - 1].value
+        if not t_score_cell or not str(t_score_cell).strip().isdigit():
+            continue
+
+        t_score = int(t_score_cell)
+
+        # Obter percentil
+        percentil_min = None
+        percentil_max = None
+        if 'PERCENTIL' in col_map:
+            percentil_cell = row[col_map['PERCENTIL'] - 1].value
+            if percentil_cell:
+                percentil_str = str(percentil_cell).strip()
+                if percentil_str and percentil_str != '':
+                    # Pode ser um número ou range (ex: ">99", "95-97")
+                    if '>' in percentil_str:
+                        percentil_min = 99
+                        percentil_max = 100
+                    elif '-' in percentil_str:
+                        parts = percentil_str.split('-')
+                        percentil_min = int(parts[0].strip())
+                        percentil_max = int(parts[1].strip())
+                    elif percentil_str.isdigit():
+                        percentil_min = percentil_max = int(percentil_str)
+
+        # Processar cada domínio
+        for dominio_codigo in ['SOC', 'VIS', 'HEA', 'TOU', 'BOD', 'BAL', 'PLA', 'OLF']:
+            if dominio_codigo not in col_map:
+                continue
+
+            cell_value = row[col_map[dominio_codigo] - 1].value
+            if not cell_value:
+                continue
+
+            # Parse do valor (pode ser "37-40", "35-36", "33", etc.)
+            value_str = str(cell_value).strip()
+            if not value_str or value_str == '':
+                continue
+
+            escore_min = escore_max = None
+
+            if '-' in value_str:
+                parts = value_str.split('-')
+                try:
+                    escore_min = int(parts[0].strip())
+                    escore_max = int(parts[1].strip())
+                except:
+                    continue
+            elif value_str.isdigit():
+                escore_min = escore_max = int(value_str)
+            else:
+                continue
+
+            # Criar entrada na tabela de referência
+            ref = TabelaReferencia(
+                instrumento_id=instrumento.id,
+                dominio_codigo=dominio_codigo,
+                t_score=t_score,
+                percentil_min=percentil_min,
+                percentil_max=percentil_max,
+                escore_min=escore_min,
+                escore_max=escore_max,
+                classificacao=classificacao_atual
+            )
+            db.session.add(ref)
+            count_refs += 1
+
+    print(f"    Total de referências extraídas: {count_refs}")
