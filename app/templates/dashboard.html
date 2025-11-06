@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SPM-TO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">
+        <i class="fas fa-home"></i> Dashboard
+    </h1>
+
+    <div class="row">
+        <!-- Card: Total de Pacientes -->
+        <div class="col-md-3 mb-4">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-uppercase mb-0">Pacientes</h6>
+                            <h2 class="mt-2 mb-0">0</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-users fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('pacientes.listar') }}" class="text-white text-decoration-none">
+                        Ver todos <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Total de Avaliações -->
+        <div class="col-md-3 mb-4">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-uppercase mb-0">Avaliações</h6>
+                            <h2 class="mt-2 mb-0">0</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-clipboard-list fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('avaliacoes.listar') }}" class="text-white text-decoration-none">
+                        Ver todas <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Avaliações Pendentes -->
+        <div class="col-md-3 mb-4">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-uppercase mb-0">Pendentes</h6>
+                            <h2 class="mt-2 mb-0">0</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-clock fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="text-white">Avaliações em andamento</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Relatórios Gerados -->
+        <div class="col-md-3 mb-4">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-uppercase mb-0">Relatórios</h6>
+                            <h2 class="mt-2 mb-0">0</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-file-pdf fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="text-white">Este mês</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h3>Ações Rápidas</h3>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('pacientes.novo') }}" class="btn btn-primary btn-lg w-100 mb-3">
+                <i class="fas fa-user-plus"></i><br>
+                Novo Paciente
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('avaliacoes.nova') }}" class="btn btn-success btn-lg w-100 mb-3">
+                <i class="fas fa-plus-circle"></i><br>
+                Nova Avaliação
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('instrumentos.listar') }}" class="btn btn-info btn-lg w-100 mb-3">
+                <i class="fas fa-tasks"></i><br>
+                Instrumentos
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('relatorios.evolucao', paciente_id=0) }}" class="btn btn-warning btn-lg w-100 mb-3">
+                <i class="fas fa-chart-line"></i><br>
+                Relatórios
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
