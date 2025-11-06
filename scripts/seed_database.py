@@ -130,59 +130,73 @@ def extrair_questoes_planilha(planilha_path, instrumento, dominios_criados):
         planilha_path: Caminho para a planilha
         instrumento: Instância de Instrumento
     """
-    wb = openpyxl.load_workbook(planilha_path)
+    wb = openpyxl.load_workbook(planilha_path, data_only=True)
     ws = wb['Entrada de Dados']
 
     # Mapeamento de domínios
-    dominios = {d.codigo: d for d in dominios_criados}
+    dominios_por_nome = {d.nome.lower(): d for d in dominios_criados}
 
     # Variáveis de controle
     dominio_atual = None
     numero_questao = 1
     numero_questao_dominio = 1
 
+    def extrair_texto(row):
+        """Retorna o texto relevante da linha (considerando colunas mescladas)."""
+        valores = [cell.value for cell in row]
+        preferencia = [1, 2, 0, 3, 4, 5]
+
+        for idx in preferencia:
+            if idx < len(valores):
+                valor = valores[idx]
+                if isinstance(valor, str) and valor.strip():
+                    return valor.strip()
+
+        for valor in valores:
+            if isinstance(valor, str) and valor.strip():
+                return valor.strip()
+
+        return None
+
     # Percorrer linhas da planilha (aproximadamente linhas 31 em diante)
-    for row_idx in range(31, min(200, ws.max_row)):
-        row = ws[row_idx]
-        celula_b = row[1].value  # Coluna B
+    for row in ws.iter_rows(min_row=25, max_row=ws.max_row):
+        texto = extrair_texto(row)
+        if not texto:
+            continue
 
-        if celula_b:
-            celula_b_str = str(celula_b).strip()
+        texto = texto.replace('\xa0', ' ').strip()
+        texto_lower = texto.lower()
 
-            # Detectar início de domínio (ex: "1. Participação Social")
-            if celula_b_str and celula_b_str[0].isdigit() and '.' in celula_b_str[:3]:
-                # É um cabeçalho de domínio
-                nome_dominio = celula_b_str.split('.', 1)[1].strip()
+        if texto_lower.startswith('esta criança'):
+            continue
 
-                # Encontrar domínio correspondente
-                for codigo, dom in dominios.items():
-                    if dom.nome.lower() in nome_dominio.lower():
-                        dominio_atual = dom
-                        numero_questao_dominio = 1
-                        print(f"    Processando questões do domínio: {dom.nome}")
-                        break
+        if texto_lower.startswith('score'):
+            dominio_atual = None
+            continue
 
-            # Linha SCORE indica fim do domínio
-            elif celula_b_str.upper() == 'SCORE':
-                dominio_atual = None
+        if texto[0].isdigit() and '.' in texto[:5]:
+            _, possivel_nome = texto.split('.', 1)
+            possivel_nome = possivel_nome.strip()
+        else:
+            possivel_nome = texto
 
-            # Se tem domínio atual e a célula contém texto de questão
-            elif dominio_atual and len(celula_b_str) > 20:
-                # Extrair número da questão se houver (ex: "1.Brinca com amigos...")
-                texto_questao = celula_b_str
+        if possivel_nome.lower() in dominios_por_nome:
+            dominio_atual = dominios_por_nome[possivel_nome.lower()]
+            numero_questao_dominio = 1
+            print(f"    Processando questões do domínio: {dominio_atual.nome}")
+            continue
 
-                # Verificar se já não é um cabeçalho (linhas como "Esta criança:")
-                if not texto_questao.lower().startswith('esta criança'):
-                    questao = Questao(
-                        dominio_id=dominio_atual.id,
-                        numero=numero_questao_dominio,
-                        numero_global=numero_questao,
-                        texto=texto_questao
-                    )
-                    db.session.add(questao)
+        if dominio_atual and len(texto) > 3:
+            questao = Questao(
+                dominio_id=dominio_atual.id,
+                numero=numero_questao_dominio,
+                numero_global=numero_questao,
+                texto=texto
+            )
+            db.session.add(questao)
 
-                    numero_questao += 1
-                    numero_questao_dominio += 1
+            numero_questao += 1
+            numero_questao_dominio += 1
 
     print(f"    Total de questões extraídas: {numero_questao - 1}")
 
