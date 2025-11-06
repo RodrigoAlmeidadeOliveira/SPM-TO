@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - SPM-TO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4><i class="fas fa-user-plus"></i> {{ titulo }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.nome.label(class="form-label") }}
+                                {{ form.nome(class="form-control" + (" is-invalid" if form.nome.errors else "")) }}
+                                {% if form.nome.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.nome.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.identificacao.label(class="form-label") }}
+                                {{ form.identificacao(class="form-control") }}
+                                <small class="form-text text-muted">Opcional</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                {{ form.sexo.label(class="form-label") }}
+                                {{ form.sexo(class="form-select" + (" is-invalid" if form.sexo.errors else "")) }}
+                                {% if form.sexo.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.sexo.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.data_nascimento.label(class="form-label") }}
+                                {{ form.data_nascimento(class="form-control" + (" is-invalid" if form.data_nascimento.errors else "")) }}
+                                {% if form.data_nascimento.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.data_nascimento.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                {{ form.raca_etnia.label(class="form-label") }}
+                                {{ form.raca_etnia(class="form-control") }}
+                                <small class="form-text text-muted">Opcional</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.observacoes.label(class="form-label") }}
+                                {{ form.observacoes(class="form-control", rows=4) }}
+                                <small class="form-text text-muted">Observações gerais sobre o paciente</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> {{ form.submit.label.text }}
+                                </button>
+                                <a href="{{ url_for('pacientes.listar') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Avaliação {{ avaliacao.id }} - SPM-TO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1><i class="fas fa-clipboard-check"></i> Avaliação #{{ avaliacao.id }}</h1>
+            <p class="lead">
+                <a href="{{ url_for('pacientes.visualizar', id=avaliacao.paciente.id) }}">
+                    {{ avaliacao.paciente.nome }}
+                </a>
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if avaliacao.status != 'concluida' %}
+            <a href="{{ url_for('avaliacoes.responder', id=avaliacao.id) }}"
+               class="btn btn-primary">
+                <i class="fas fa-edit"></i> Continuar Respondendo
+            </a>
+            {% else %}
+            <a href="{{ url_for('relatorios.avaliacao', id=avaliacao.id) }}"
+               class="btn btn-success">
+                <i class="fas fa-file-pdf"></i> Gerar Relatório
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Status e Progresso -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6>Status</h6>
+                            {% if avaliacao.status == 'concluida' %}
+                                <span class="badge bg-success fs-6">Concluída</span>
+                            {% elif avaliacao.status == 'em_andamento' %}
+                                <span class="badge bg-warning fs-6">Em Andamento</span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">{{ avaliacao.status }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <h6>Data da Avaliação</h6>
+                            <p>{{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>Instrumento</h6>
+                            <p>{{ avaliacao.instrumento.nome }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>Respondente</h6>
+                            <p>{{ avaliacao.relacionamento_respondente|capitalize }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <h6>Progresso</h6>
+                            <div class="progress">
+                                <div class="progress-bar {% if progresso >= 100 %}bg-success{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ progresso }}%"
+                                     aria-valuenow="{{ progresso }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                    {{ progresso|round|int }}% ({{ total_respostas }}/{{ total_questoes }} questões)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if avaliacao.comentarios %}
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <h6>Comentários</h6>
+                            <p class="text-muted">{{ avaliacao.comentarios }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados (se concluída) -->
+    {% if avaliacao.status == 'concluida' %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5><i class="fas fa-chart-bar"></i> Resultados por Domínio</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Domínio</th>
+                                    <th>Escore Bruto</th>
+                                    <th>T-Score</th>
+                                    <th>Classificação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set dominios_info = [
+                                    ('SOC', 'Participação Social', avaliacao.escore_soc, avaliacao.t_score_soc, avaliacao.classificacao_soc),
+                                    ('VIS', 'Visão', avaliacao.escore_vis, avaliacao.t_score_vis, avaliacao.classificacao_vis),
+                                    ('HEA', 'Audição', avaliacao.escore_hea, avaliacao.t_score_hea, avaliacao.classificacao_hea),
+                                    ('TOU', 'Tato', avaliacao.escore_tou, avaliacao.t_score_tou, avaliacao.classificacao_tou),
+                                    ('BOD', 'Consciência Corporal', avaliacao.escore_bod, avaliacao.t_score_bod, avaliacao.classificacao_bod),
+                                    ('BAL', 'Equilíbrio e Movimento', avaliacao.escore_bal, avaliacao.t_score_bal, avaliacao.classificacao_bal),
+                                    ('PLA', 'Planejamento e Ideação', avaliacao.escore_pla, avaliacao.t_score_pla, avaliacao.classificacao_pla),
+                                    ('OLF', 'Olfato e Paladar', avaliacao.escore_olf, avaliacao.t_score_olf, avaliacao.classificacao_olf)
+                                ] %}
+
+                                {% for codigo, nome, escore, t_score, classificacao in dominios_info %}
+                                {% if escore is not none %}
+                                <tr>
+                                    <td><strong>{{ nome }}</strong></td>
+                                    <td>{{ escore }}</td>
+                                    <td>{{ t_score if t_score else 'N/A' }}</td>
+                                    <td>
+                                        {% if classificacao == 'DISFUNCAO_DEFINITIVA' %}
+                                            <span class="badge badge-disfuncao-definitiva">Disfunção Definitiva</span>
+                                        {% elif classificacao == 'PROVAVEL_DISFUNCAO' %}
+                                            <span class="badge badge-provavel-disfuncao">Provável Disfunção</span>
+                                        {% elif classificacao == 'TIPICO' %}
+                                            <span class="badge badge-tipico">Típico</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ classificacao or 'N/A' }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+
+                                <tr class="table-info">
+                                    <td><strong>TOTAL</strong></td>
+                                    <td><strong>{{ avaliacao.escore_total }}</strong></td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <form method="POST" action="{{ url_for('avaliacoes.recalcular', id=avaliacao.id) }}"
+                              style="display: inline;">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-calculator"></i> Recalcular Escores
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Ações -->
+    <div class="row">
+        <div class="col-md-12">
+            <a href="{{ url_for('pacientes.visualizar', id=avaliacao.paciente.id) }}"
+               class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar para Paciente
+            </a>
+
+            {% if current_user.is_admin() or avaliacao.avaliador_id == current_user.id %}
+            <form method="POST" action="{{ url_for('avaliacoes.excluir', id=avaliacao.id) }}"
+                  style="display: inline;"
+                  onsubmit="return confirm('Tem certeza que deseja excluir esta avaliação?');">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Excluir Avaliação
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
