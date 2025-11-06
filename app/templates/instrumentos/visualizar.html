@@ -1,23 +1,143 @@
 {% extends "base.html" %}
 
-{% block title %}Instrumento - {{ super() }}{% endblock %}
+{% block title %}{{ instrumento.nome }} - {{ super() }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h2 mb-0">
-            <i class="bi bi-clipboard-check me-2"></i>
-            Detalhes do Instrumento
-        </h1>
-        <a href="{{ url_for('instrumentos.listar') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>
-            Voltar
-        </a>
+        <div>
+            <h1 class="h2 mb-1">
+                <i class="bi bi-clipboard-check me-2"></i>
+                {{ instrumento.nome }}
+            </h1>
+            <p class="text-muted mb-0">
+                Código: <code>{{ instrumento.codigo }}</code> &middot;
+                Contexto: {{ 'Casa' if instrumento.contexto == 'casa' else 'Escola' }}
+            </p>
+        </div>
+        <div class="btn-group">
+            <a href="{{ url_for('instrumentos.listar') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Voltar
+            </a>
+            <a href="{{ url_for('instrumentos.editar', id=instrumento.id) }}" class="btn btn-outline-warning">
+                <i class="bi bi-pencil-square me-1"></i>
+                Editar
+            </a>
+            <form method="POST"
+                  action="{{ url_for('instrumentos.alterar_status', id=instrumento.id) }}"
+                  class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="btn {% if instrumento.ativo %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                    {% if instrumento.ativo %}
+                        <i class="bi bi-slash-circle me-1"></i> Desativar
+                    {% else %}
+                        <i class="bi bi-check-circle me-1"></i> Reativar
+                    {% endif %}
+                </button>
+            </form>
+        </div>
     </div>
 
-    <div class="alert alert-warning">
-        <i class="bi bi-exclamation-triangle me-2"></i>
-        Os detalhes do instrumento ainda não foram implementados.
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i> Informações Gerais</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Código:</dt>
+                        <dd class="col-sm-7"><code>{{ instrumento.codigo }}</code></dd>
+
+                        <dt class="col-sm-5">Nome:</dt>
+                        <dd class="col-sm-7">{{ instrumento.nome }}</dd>
+
+                        <dt class="col-sm-5">Contexto:</dt>
+                        <dd class="col-sm-7">{{ 'Casa' if instrumento.contexto == 'casa' else 'Escola' }}</dd>
+
+                        <dt class="col-sm-5">Faixa etária:</dt>
+                        <dd class="col-sm-7">{{ instrumento.idade_minima }} a {{ instrumento.idade_maxima }} anos</dd>
+
+                        <dt class="col-sm-5">Status:</dt>
+                        <dd class="col-sm-7">
+                            {% if instrumento.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inativo</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-5">Cadastrado em:</dt>
+                        <dd class="col-sm-7">{{ instrumento.data_criacao.strftime('%d/%m/%Y %H:%M') }}</dd>
+
+                        <dt class="col-sm-5">Atualizado em:</dt>
+                        <dd class="col-sm-7">{{ instrumento.data_atualizacao.strftime('%d/%m/%Y %H:%M') }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            {% if instrumento.instrucoes %}
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i> Instruções</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ instrumento.instrucoes }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i> Domínios</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if dominios %}
+                    <div class="list-group list-group-flush">
+                        {% for dominio in dominios %}
+                        <a href="{{ url_for('instrumentos.listar_questoes', id=instrumento.id) }}#dominio-{{ dominio.id }}"
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ dominio.codigo }}</strong> &middot; {{ dominio.nome }}
+                                {% if dominio.escala_invertida %}
+                                    <span class="badge bg-warning text-dark ms-2">Escala invertida</span>
+                                {% endif %}
+                            </div>
+                            <span class="badge bg-primary rounded-pill">
+                                {{ dominio.questoes.count() }} questões
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="p-3">
+                        <div class="alert alert-info mb-0">
+                            Nenhum domínio cadastrado para este instrumento.
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Ações rápidas</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('instrumentos.listar_questoes', id=instrumento.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-list-check me-1"></i>
+                            Ver lista de questões
+                        </a>
+                    </div>
+                    <small class="text-muted d-block mt-3">
+                        Utilize o cadastro de avaliação para vincular este instrumento e registrar respostas.
+                    </small>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

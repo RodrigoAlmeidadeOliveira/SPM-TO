@@ -1,23 +1,76 @@
 {% extends "base.html" %}
 
-{% block title %}Questões do Instrumento - {{ super() }}{% endblock %}
+{% block title %}Questões - {{ instrumento.nome }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h2 mb-0">
-            <i class="bi bi-list-check me-2"></i>
-            Questões do Instrumento
-        </h1>
-        <a href="{{ url_for('instrumentos.listar') }}" class="btn btn-outline-secondary">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-list-check me-2"></i>
+                Questões do Instrumento
+            </h1>
+            <p class="text-muted mb-0">
+                {{ instrumento.nome }} &middot; <code>{{ instrumento.codigo }}</code>
+            </p>
+        </div>
+        <a href="{{ url_for('instrumentos.visualizar', id=instrumento.id) }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>
             Voltar
         </a>
     </div>
 
+{% if dominios %}
+        {% for bloco in dominios %}
+        {% set dominio = bloco.dominio %}
+        <div class="card mb-4" id="dominio-{{ dominio.id }}">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    {{ dominio.codigo }} &middot; {{ dominio.nome }}
+                </h5>
+                <span class="badge bg-light text-primary">
+                    {{ bloco.questoes|length }} questões
+                </span>
+            </div>
+            <div class="card-body p-0">
+                {% if bloco.questoes %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 8rem;">Número</th>
+                                <th>Descrição</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for questao in bloco.questoes %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ questao.numero }} / {{ questao.numero_global }}
+                                    </span>
+                                </td>
+                                <td>{{ questao.texto }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-3">
+                    <div class="alert alert-info mb-0">
+                        Nenhuma questão cadastrada para este domínio.
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
     <div class="alert alert-info">
         <i class="bi bi-info-circle me-2"></i>
-        A gestão das questões do instrumento ainda não está disponível.
+        Nenhum domínio ou questão encontrado para este instrumento.
     </div>
+    {% endif %}
 </div>
 {% endblock %}

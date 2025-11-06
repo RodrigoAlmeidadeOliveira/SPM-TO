@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2 mb-0">
+                    <i class="bi bi-clipboard-plus me-2"></i>
+                    {{ titulo }}
+                </h1>
+                <a href="{{ url_for('instrumentos.listar') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Voltar
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label for="{{ form.codigo.id }}" class="form-label">
+                                {{ form.codigo.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.codigo(class="form-control" + (" is-invalid" if form.codigo.errors else "")) }}
+                            {% if form.codigo.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.codigo.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Use letras maiúsculas e sem espaços. Ex: <code>SPM_P_3_5_CASA</code>
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.nome.id }}" class="form-label">
+                                {{ form.nome.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.nome(class="form-control" + (" is-invalid" if form.nome.errors else "")) }}
+                            {% if form.nome.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.nome.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.contexto.id }}" class="form-label">
+                                    {{ form.contexto.label.text }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.contexto(class="form-select" + (" is-invalid" if form.contexto.errors else "")) }}
+                                {% if form.contexto.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.contexto.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.idade_minima.id }}" class="form-label">
+                                    {{ form.idade_minima.label.text }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.idade_minima(class="form-control" + (" is-invalid" if form.idade_minima.errors else "")) }}
+                                {% if form.idade_minima.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.idade_minima.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.idade_maxima.id }}" class="form-label">
+                                    {{ form.idade_maxima.label.text }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.idade_maxima(class="form-control" + (" is-invalid" if form.idade_maxima.errors else "")) }}
+                                {% if form.idade_maxima.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.idade_maxima.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3 mt-3">
+                            <label for="{{ form.instrucoes.id }}" class="form-label">
+                                {{ form.instrucoes.label.text }}
+                            </label>
+                            {{ form.instrucoes(class="form-control" + (" is-invalid" if form.instrucoes.errors else "")) }}
+                            {% if form.instrucoes.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.instrucoes.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-check mb-4">
+                            {{ form.ativo(class="form-check-input") }}
+                            <label class="form-check-label" for="{{ form.ativo.id }}">
+                                {{ form.ativo.label.text }}
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('instrumentos.listar') }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>
+                                {{ form.submit.label.text }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
