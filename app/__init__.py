@@ -1,0 +1,75 @@
+"""
+Application Factory para SPM-TO
+Implementa o padrão Application Factory para criar instâncias da aplicação Flask
+"""
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_login import LoginManager
+import os
+
+# Inicializar extensões
+db = SQLAlchemy()
+migrate = Migrate()
+login_manager = LoginManager()
+
+
+def create_app(config_name=None):
+    """
+    Application Factory Pattern
+
+    Args:
+        config_name: Nome da configuração ('development', 'production', 'testing')
+
+    Returns:
+        Flask app instance
+    """
+    app = Flask(__name__)
+
+    # Configuração
+    if config_name is None:
+        config_name = os.environ.get('FLASK_ENV', 'development')
+
+    from app.config import config
+    app.config.from_object(config[config_name])
+
+    # Inicializar extensões
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login_manager.init_app(app)
+
+    # Configurar login manager
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Por favor, faça login para acessar esta página.'
+    login_manager.login_message_category = 'info'
+
+    # Registrar blueprints
+    from app.routes.main import main_bp
+    from app.routes.auth import auth_bp
+    from app.routes.pacientes import pacientes_bp
+    from app.routes.avaliacoes import avaliacoes_bp
+    from app.routes.instrumentos import instrumentos_bp
+    from app.routes.relatorios import relatorios_bp
+    from app.routes.admin import admin_bp
+
+    app.register_blueprint(main_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(pacientes_bp, url_prefix='/pacientes')
+    app.register_blueprint(avaliacoes_bp, url_prefix='/avaliacoes')
+    app.register_blueprint(instrumentos_bp, url_prefix='/instrumentos')
+    app.register_blueprint(relatorios_bp, url_prefix='/relatorios')
+    app.register_blueprint(admin_bp, url_prefix='/admin')
+
+    # Contexto do template
+    @app.context_processor
+    def inject_globals():
+        """Injeta variáveis globais nos templates"""
+        return {
+            'app_name': 'SPM-TO',
+            'app_version': '1.0.0'
+        }
+
+    # Criar diretórios necessários
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+    return app
