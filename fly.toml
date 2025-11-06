@@ -10,6 +10,7 @@ primary_region = "gru"  # São Paulo, Brasil
 
 [env]
   FLASK_ENV = "production"
+  FLASK_APP = "run.py"
   PORT = "8080"
 
 [http_service]
@@ -35,3 +36,6 @@ primary_region = "gru"  # São Paulo, Brasil
 [[statics]]
   guest_path = "/app/static"
   url_prefix = "/static"
+
+[deploy]
+  release_command = "flask db upgrade"

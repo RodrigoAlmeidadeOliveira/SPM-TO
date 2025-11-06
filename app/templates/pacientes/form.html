@@ -1,89 +1,209 @@
 {% extends "base.html" %}
 
-{% block title %}{{ titulo }} - SPM-TO{% endblock %}
+{% block title %}{{ titulo }} - {{ super() }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2 mb-0">
+                    <i class="bi bi-person-fill me-2"></i>
+                    {{ titulo }}
+                </h1>
+                <a href="{{ url_for('pacientes.listar') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Voltar
+                </a>
+            </div>
+
             <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4><i class="fas fa-user-plus"></i> {{ titulo }}</h4>
-                </div>
                 <div class="card-body">
                     <form method="POST" novalidate>
                         {{ form.hidden_tag() }}
 
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                {{ form.nome.label(class="form-label") }}
+                        <!-- Dados Básicos -->
+                        <h5 class="border-bottom pb-2 mb-3">Dados Básicos</h5>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label for="nome" class="form-label">
+                                    {{ form.nome.label.text }} <span class="text-danger">*</span>
+                                </label>
                                 {{ form.nome(class="form-control" + (" is-invalid" if form.nome.errors else "")) }}
                                 {% if form.nome.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.nome.errors %}{{ error }}{% endfor %}
-                                    </div>
+                                <div class="invalid-feedback">
+                                    {% for error in form.nome.errors %}{{ error }}{% endfor %}
+                                </div>
                                 {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="identificacao" class="form-label">
+                                    {{ form.identificacao.label.text }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.identificacao(class="form-control" + (" is-invalid" if form.identificacao.errors else "")) }}
+                                {% if form.identificacao.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.identificacao.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Código único do paciente</small>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ form.identificacao.label(class="form-label") }}
-                                {{ form.identificacao(class="form-control") }}
-                                <small class="form-text text-muted">Opcional</small>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                {{ form.sexo.label(class="form-label") }}
-                                {{ form.sexo(class="form-select" + (" is-invalid" if form.sexo.errors else "")) }}
-                                {% if form.sexo.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.sexo.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ form.data_nascimento.label(class="form-label") }}
+                        <!-- Informações Demográficas -->
+                        <h5 class="border-bottom pb-2 mb-3">Informações Demográficas</h5>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label for="data_nascimento" class="form-label">
+                                    {{ form.data_nascimento.label.text }} <span class="text-danger">*</span>
+                                </label>
                                 {{ form.data_nascimento(class="form-control" + (" is-invalid" if form.data_nascimento.errors else "")) }}
                                 {% if form.data_nascimento.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.data_nascimento.errors %}{{ error }}{% endfor %}
-                                    </div>
+                                <div class="invalid-feedback">
+                                    {% for error in form.data_nascimento.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Idade calculada automaticamente</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="sexo" class="form-label">
+                                    {{ form.sexo.label.text }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.sexo(class="form-select" + (" is-invalid" if form.sexo.errors else "")) }}
+                                {% if form.sexo.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.sexo.errors %}{{ error }}{% endfor %}
+                                </div>
                                 {% endif %}
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                {{ form.raca_etnia.label(class="form-label") }}
-                                {{ form.raca_etnia(class="form-control") }}
-                                <small class="form-text text-muted">Opcional</small>
+                            <div class="col-md-4">
+                                <label for="raca_etnia" class="form-label">
+                                    {{ form.raca_etnia.label.text }}
+                                </label>
+                                {{ form.raca_etnia(class="form-select" + (" is-invalid" if form.raca_etnia.errors else "")) }}
+                                {% if form.raca_etnia.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.raca_etnia.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                {{ form.observacoes.label(class="form-label") }}
-                                {{ form.observacoes(class="form-control", rows=4) }}
-                                <small class="form-text text-muted">Observações gerais sobre o paciente</small>
+                        <!-- Observações -->
+                        <div class="mb-4">
+                            <label for="observacoes" class="form-label">
+                                {{ form.observacoes.label.text }}
+                            </label>
+                            {{ form.observacoes(class="form-control" + (" is-invalid" if form.observacoes.errors else "")) }}
+                            {% if form.observacoes.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.observacoes.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Informações adicionais relevantes</small>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.ativo(class="form-check-input") }}
+                                <label class="form-check-label" for="ativo">
+                                    {{ form.ativo.label.text }}
+                                </label>
+                                <small class="form-text text-muted d-block">
+                                    Pacientes inativos não aparecem nas buscas padrão.
+                                </small>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> {{ form.submit.label.text }}
-                                </button>
-                                <a href="{{ url_for('pacientes.listar') }}" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Cancelar
-                                </a>
-                            </div>
+                        <!-- Botões -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('pacientes.listar') }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>
+                                {% if paciente %}Atualizar{% else %}Cadastrar{% endif %} Paciente
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
+
+            <div class="alert alert-info mt-4">
+                <h6 class="alert-heading">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Informações sobre Instrumentos SPM
+                </h6>
+                <ul class="mb-0">
+                    <li><strong>SPM-P (3-5 anos):</strong> Crianças pré-escolares de 3 a 5 anos</li>
+                    <li><strong>SPM (5-12 anos):</strong> Crianças de 5 a 12 anos</li>
+                </ul>
+                <small class="text-muted">O sistema seleciona automaticamente o instrumento adequado com base na idade.</small>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const dataNascimentoInput = document.getElementById('data_nascimento');
+
+    if (!dataNascimentoInput) {
+        return;
+    }
+
+    const showAlert = (html, type) => {
+        let alertDiv = document.getElementById('idade-alert');
+        if (!alertDiv) {
+            alertDiv = document.createElement('div');
+            alertDiv.id = 'idade-alert';
+            dataNascimentoInput.parentElement.appendChild(alertDiv);
+        }
+        alertDiv.className = `alert alert-${type} mt-2`;
+        alertDiv.innerHTML = html;
+    };
+
+    const clearAlert = () => {
+        const alertDiv = document.getElementById('idade-alert');
+        if (alertDiv) {
+            alertDiv.remove();
+        }
+    };
+
+    const avaliarIdade = () => {
+        if (!dataNascimentoInput.value) {
+            clearAlert();
+            return;
+        }
+
+        const dataNascimento = new Date(dataNascimentoInput.value);
+        const hoje = new Date();
+        let idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        const mes = hoje.getMonth() - dataNascimento.getMonth();
+
+        if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+            idade--;
+        }
+
+        clearAlert();
+
+        if (idade < 3) {
+            showAlert('<i class="bi bi-exclamation-triangle me-2"></i>Atenção: os instrumentos SPM são para crianças a partir de 3 anos.', 'warning');
+        } else if (idade > 12) {
+            showAlert('<i class="bi bi-info-circle me-2"></i>Informação: os instrumentos SPM são projetados para crianças até 12 anos.', 'info');
+        } else if (idade <= 5) {
+            showAlert('<i class="bi bi-check-circle me-2"></i>Instrumento adequado sugerido: SPM-P (3-5 anos).', 'success');
+        } else {
+            showAlert('<i class="bi bi-check-circle me-2"></i>Instrumento adequado sugerido: SPM (5-12 anos).', 'success');
+        }
+    };
+
+    dataNascimentoInput.addEventListener('change', avaliarIdade);
+    if (dataNascimentoInput.value) {
+        avaliarIdade();
+    }
+});
+</script>
 {% endblock %}
