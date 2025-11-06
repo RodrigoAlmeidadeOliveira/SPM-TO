@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-list-check me-2"></i>
+                    {{ titulo }}
+                </h1>
+                <a href="{{ url_for('instrumentos.listar_questoes', id=instrumento.id) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Voltar
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-muted mb-2">
+                        Instrumento: <strong>{{ instrumento.nome }}</strong> (<code>{{ instrumento.codigo }}</code>)
+                    </p>
+                    <p class="text-muted">
+                        Domínio: <strong>{{ dominio.nome }}</strong> (<code>{{ dominio.codigo }}</code>)
+                    </p>
+
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.numero.id }}" class="form-label">
+                                    {{ form.numero.label.text }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.numero(class="form-control" + (" is-invalid" if form.numero.errors else "")) }}
+                                {% if form.numero.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.numero.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Sequência dentro do domínio.
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.numero_global.id }}" class="form-label">
+                                    {{ form.numero_global.label.text }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.numero_global(class="form-control" + (" is-invalid" if form.numero_global.errors else "")) }}
+                                {% if form.numero_global.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.numero_global.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Sequência global do instrumento.
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.texto.id }}" class="form-label">
+                                {{ form.texto.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.texto(class="form-control" + (" is-invalid" if form.texto.errors else "")) }}
+                            {% if form.texto.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.texto.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-check mb-4">
+                            {{ form.ativo(class="form-check-input") }}
+                            <label class="form-check-label" for="{{ form.ativo.id }}">
+                                {{ form.ativo.label.text }}
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('instrumentos.listar_questoes', id=instrumento.id) }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>
+                                {{ form.submit.label.text }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

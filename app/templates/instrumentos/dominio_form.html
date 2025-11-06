@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-diagram-3 me-2"></i>
+                    {{ titulo }}
+                </h1>
+                <a href="{{ url_for('instrumentos.visualizar', id=instrumento.id) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Voltar
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-muted">
+                        Instrumento: <strong>{{ instrumento.nome }}</strong> (<code>{{ instrumento.codigo }}</code>)
+                    </p>
+
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label for="{{ form.codigo.id }}" class="form-label">
+                                {{ form.codigo.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.codigo(class="form-control" + (" is-invalid" if form.codigo.errors else "")) }}
+                            {% if form.codigo.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.codigo.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.nome.id }}" class="form-label">
+                                {{ form.nome.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.nome(class="form-control" + (" is-invalid" if form.nome.errors else "")) }}
+                            {% if form.nome.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.nome.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.ordem.id }}" class="form-label">
+                                {{ form.ordem.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.ordem(class="form-control" + (" is-invalid" if form.ordem.errors else "")) }}
+                            {% if form.ordem.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.ordem.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Ordem de apresentação do domínio no instrumento.
+                            </small>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            {{ form.escala_invertida(class="form-check-input") }}
+                            <label class="form-check-label" for="{{ form.escala_invertida.id }}">
+                                {{ form.escala_invertida.label.text }}
+                            </label>
+                            <small class="form-text text-muted d-block">
+                                Para domínios em que as respostas com maiores frequências representam maior comprometimento.
+                            </small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('instrumentos.visualizar', id=instrumento.id) }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>
+                                {{ form.submit.label.text }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

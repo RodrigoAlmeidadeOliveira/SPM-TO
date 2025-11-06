@@ -51,17 +51,25 @@
                                     </span>
                                 </td>
                                 <td>{{ questao.texto }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('instrumentos.editar_questao', questao_id=questao.id) }}"
+                                           class="btn btn-outline-warning" title="Editar questão">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 {% else %}
-                <div class="p-3">
-                    <div class="alert alert-info mb-0">
-                        Nenhuma questão cadastrada para este domínio.
+                    <div class="p-3">
+                        <div class="alert alert-info mb-0">
+                            Nenhuma questão cadastrada para este domínio.
+                        </div>
                     </div>
-                </div>
                 {% endif %}
             </div>
         </div>
@@ -71,6 +79,6 @@
         <i class="bi bi-info-circle me-2"></i>
         Nenhum domínio ou questão encontrado para este instrumento.
     </div>
-    {% endif %}
+{% endif %}
 </div>
 {% endblock %}

@@ -6,11 +6,15 @@ from app.forms.paciente_form import PacienteForm
 from app.forms.avaliacao_form import AvaliacaoForm, RespostaForm
 from app.forms.user_forms import UserForm, UserCreateForm, UserEditForm
 from app.forms.instrumento_forms import InstrumentoForm
+from app.forms.dominio_forms import DominioForm
+from app.forms.questao_forms import QuestaoForm
 
 __all__ = [
     'LoginForm',
     'PacienteForm',
     'InstrumentoForm',
+    'DominioForm',
+    'QuestaoForm',
     'AvaliacaoForm',
     'RespostaForm',
     'UserForm',
