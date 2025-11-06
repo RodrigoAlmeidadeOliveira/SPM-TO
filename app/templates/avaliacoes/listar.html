@@ -1,107 +1,493 @@
 {% extends "base.html" %}
 
-{% block title %}Avaliações - SPM-TO{% endblock %}
+{% block title %}Consulta de Avaliações - SPM-TO{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        border-left: 4px solid;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .stats-card.total {
+        border-color: #0d6efd;
+    }
+    .stats-card.filtered {
+        border-color: #198754;
+    }
+    .stats-card.pending {
+        border-color: #ffc107;
+    }
+    .stats-card.completed {
+        border-color: #20c997;
+    }
+    .filter-panel {
+        background: #f8f9fa;
+        border-radius: 0.375rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .filter-section-title {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .badge-status {
+        font-size: 0.875rem;
+        padding: 0.35em 0.65em;
+    }
+    .action-buttons .btn {
+        margin-right: 0.25rem;
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,123,255,0.05);
+    }
+    .active-filter-tag {
+        display: inline-block;
+        background: #e7f3ff;
+        border: 1px solid #0d6efd;
+        color: #0d6efd;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+    .active-filter-tag .btn-close {
+        font-size: 0.65rem;
+        margin-left: 0.5rem;
+    }
+    .quick-filter-btn {
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container-fluid">
+    <!-- Header -->
     <div class="row mb-4">
         <div class="col-md-6">
-            <h1><i class="fas fa-clipboard-list"></i> Avaliações</h1>
+            <h1><i class="fas fa-clipboard-list"></i> Consulta de Avaliações</h1>
+            <p class="text-muted">Pesquise e filtre avaliações por paciente, avaliador e período</p>
         </div>
         <div class="col-md-6 text-end">
-            <a href="{{ url_for('avaliacoes.nova') }}" class="btn btn-success">
+            <a href="{{ url_for('avaliacoes.nova') }}" class="btn btn-success btn-lg">
                 <i class="fas fa-plus"></i> Nova Avaliação
             </a>
         </div>
     </div>
 
-    <!-- Filtros -->
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="card">
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card total h-100">
                 <div class="card-body">
-                    <form method="GET" class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-select">
-                                <option value="">Todos</option>
-                                <option value="em_andamento" {% if status == 'em_andamento' %}selected{% endif %}>
-                                    Em Andamento
-                                </option>
-                                <option value="concluida" {% if status == 'concluida' %}selected{% endif %}>
-                                    Concluída
-                                </option>
-                            </select>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total de Avaliações</h6>
+                            <h2 class="mb-0">{{ total_geral }}</h2>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">&nbsp;</label>
-                            <button type="submit" class="btn btn-primary d-block">
-                                <i class="fas fa-filter"></i> Filtrar
-                            </button>
+                        <div>
+                            <i class="fas fa-clipboard-list fa-2x text-primary opacity-50"></i>
                         </div>
-                        <div class="col-md-4 text-end">
-                            <label class="form-label">&nbsp;</label>
-                            <a href="{{ url_for('avaliacoes.listar') }}" class="btn btn-secondary d-block">
-                                <i class="fas fa-times"></i> Limpar Filtros
-                            </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card filtered h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Resultado da Busca</h6>
+                            <h2 class="mb-0">{{ total_filtrado }}</h2>
                         </div>
-                    </form>
+                        <div>
+                            <i class="fas fa-filter fa-2x text-success opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card pending h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Em Andamento</h6>
+                            <h2 class="mb-0">{{ avaliacoes.items | selectattr('status', 'equalto', 'em_andamento') | list | length }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-hourglass-half fa-2x text-warning opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card completed h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Concluídas</h6>
+                            <h2 class="mb-0">{{ avaliacoes.items | selectattr('status', 'equalto', 'concluida') | list | length }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-check-circle fa-2x text-info opacity-50"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Lista de Avaliações -->
-    <div class="card">
-        <div class="card-body">
+    <!-- Filtros Rápidos -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="d-flex align-items-center flex-wrap">
+                <span class="me-2 fw-bold">Filtros rápidos:</span>
+                <a href="{{ url_for('avaliacoes.listar', status='em_andamento') }}"
+                   class="btn btn-sm btn-outline-warning quick-filter-btn">
+                    <i class="fas fa-hourglass-half"></i> Em Andamento
+                </a>
+                <a href="{{ url_for('avaliacoes.listar', status='concluida') }}"
+                   class="btn btn-sm btn-outline-success quick-filter-btn">
+                    <i class="fas fa-check-circle"></i> Concluídas
+                </a>
+                <a href="{{ url_for('avaliacoes.listar', avaliador_id=current_user.id) }}"
+                   class="btn btn-sm btn-outline-primary quick-filter-btn">
+                    <i class="fas fa-user"></i> Minhas Avaliações
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-secondary quick-filter-btn"
+                        data-bs-toggle="collapse" data-bs-target="#filterPanel">
+                    <i class="fas fa-sliders-h"></i> Filtros Avançados
+                </button>
+                {% if paciente_id or avaliador_id or status or data_inicio or data_fim or busca %}
+                <a href="{{ url_for('avaliacoes.listar') }}"
+                   class="btn btn-sm btn-outline-danger quick-filter-btn">
+                    <i class="fas fa-times"></i> Limpar Filtros
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros Ativos -->
+    {% if paciente_id or avaliador_id or status or data_inicio or data_fim or busca %}
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                <strong><i class="fas fa-filter"></i> Filtros ativos:</strong>
+                <div class="mt-2">
+                    {% if busca %}
+                    <span class="active-filter-tag">
+                        Busca: "{{ busca }}"
+                        <a href="{{ url_for('avaliacoes.listar',
+                                   paciente_id=paciente_id,
+                                   avaliador_id=avaliador_id,
+                                   status=status,
+                                   data_inicio=data_inicio,
+                                   data_fim=data_fim) }}"
+                           class="btn-close"></a>
+                    </span>
+                    {% endif %}
+                    {% if paciente_id %}
+                    <span class="active-filter-tag">
+                        Paciente: {{ pacientes | selectattr('id', 'equalto', paciente_id) | map(attribute='nome') | first }}
+                        <a href="{{ url_for('avaliacoes.listar',
+                                   busca=busca,
+                                   avaliador_id=avaliador_id,
+                                   status=status,
+                                   data_inicio=data_inicio,
+                                   data_fim=data_fim) }}"
+                           class="btn-close"></a>
+                    </span>
+                    {% endif %}
+                    {% if avaliador_id %}
+                    <span class="active-filter-tag">
+                        Avaliador: {{ avaliadores | selectattr('id', 'equalto', avaliador_id) | map(attribute='nome_completo') | first }}
+                        <a href="{{ url_for('avaliacoes.listar',
+                                   busca=busca,
+                                   paciente_id=paciente_id,
+                                   status=status,
+                                   data_inicio=data_inicio,
+                                   data_fim=data_fim) }}"
+                           class="btn-close"></a>
+                    </span>
+                    {% endif %}
+                    {% if status %}
+                    <span class="active-filter-tag">
+                        Status: {{ 'Em Andamento' if status == 'em_andamento' else 'Concluída' }}
+                        <a href="{{ url_for('avaliacoes.listar',
+                                   busca=busca,
+                                   paciente_id=paciente_id,
+                                   avaliador_id=avaliador_id,
+                                   data_inicio=data_inicio,
+                                   data_fim=data_fim) }}"
+                           class="btn-close"></a>
+                    </span>
+                    {% endif %}
+                    {% if data_inicio %}
+                    <span class="active-filter-tag">
+                        De: {{ data_inicio }}
+                        <a href="{{ url_for('avaliacoes.listar',
+                                   busca=busca,
+                                   paciente_id=paciente_id,
+                                   avaliador_id=avaliador_id,
+                                   status=status,
+                                   data_fim=data_fim) }}"
+                           class="btn-close"></a>
+                    </span>
+                    {% endif %}
+                    {% if data_fim %}
+                    <span class="active-filter-tag">
+                        Até: {{ data_fim }}
+                        <a href="{{ url_for('avaliacoes.listar',
+                                   busca=busca,
+                                   paciente_id=paciente_id,
+                                   avaliador_id=avaliador_id,
+                                   status=status,
+                                   data_inicio=data_inicio) }}"
+                           class="btn-close"></a>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Painel de Filtros Avançados -->
+    <div class="collapse {% if paciente_id or avaliador_id or status or data_inicio or data_fim %}show{% endif %}" id="filterPanel">
+        <div class="filter-panel">
+            <form method="GET" id="filterForm">
+                <div class="filter-section-title">
+                    <i class="fas fa-search"></i> Filtros Avançados
+                </div>
+
+                <div class="row">
+                    <!-- Busca por Nome -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-search"></i> Busca Rápida
+                        </label>
+                        <input type="text" name="busca" class="form-control"
+                               placeholder="Digite o nome do paciente..."
+                               value="{{ busca or '' }}">
+                        <small class="form-text text-muted">Busca por nome do paciente</small>
+                    </div>
+
+                    <!-- Paciente -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-user"></i> Paciente
+                        </label>
+                        <select name="paciente_id" class="form-select">
+                            <option value="">Todos os pacientes</option>
+                            {% for paciente in pacientes %}
+                            <option value="{{ paciente.id }}" {% if paciente_id == paciente.id %}selected{% endif %}>
+                                {{ paciente.nome }} - {{ paciente.calcular_idade()[0] }} anos
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Avaliador -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-user-md"></i> Avaliador
+                        </label>
+                        <select name="avaliador_id" class="form-select">
+                            <option value="">Todos os avaliadores</option>
+                            {% for avaliador in avaliadores %}
+                            <option value="{{ avaliador.id }}" {% if avaliador_id == avaliador.id %}selected{% endif %}>
+                                {{ avaliador.nome_completo }} ({{ avaliador.tipo|capitalize }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-info-circle"></i> Status
+                        </label>
+                        <select name="status" class="form-select">
+                            <option value="">Todos os status</option>
+                            <option value="em_andamento" {% if status == 'em_andamento' %}selected{% endif %}>
+                                Em Andamento
+                            </option>
+                            <option value="concluida" {% if status == 'concluida' %}selected{% endif %}>
+                                Concluída
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Data Início -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-calendar"></i> Data Início
+                        </label>
+                        <input type="date" name="data_inicio" class="form-control"
+                               value="{{ data_inicio or '' }}">
+                        <small class="form-text text-muted">Avaliações a partir desta data</small>
+                    </div>
+
+                    <!-- Data Fim -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-calendar"></i> Data Fim
+                        </label>
+                        <input type="date" name="data_fim" class="form-control"
+                               value="{{ data_fim or '' }}">
+                        <small class="form-text text-muted">Avaliações até esta data</small>
+                    </div>
+                </div>
+
+                <!-- Botões -->
+                <div class="d-flex justify-content-between mt-3">
+                    <button type="reset" class="btn btn-outline-secondary" onclick="window.location.href='{{ url_for('avaliacoes.listar') }}'">
+                        <i class="fas fa-undo"></i> Limpar Filtros
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Avaliações -->
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Resultados
+                    <span class="badge bg-primary">{{ avaliacoes.total }}</span>
+                </h5>
+                <div>
+                    <!-- Preparado para futura exportação -->
+                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                        <i class="fas fa-file-excel"></i> Exportar Excel
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
             {% if avaliacoes.items %}
             <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <th>ID</th>
+                            <th style="width: 60px;">ID</th>
                             <th>Paciente</th>
                             <th>Instrumento</th>
-                            <th>Data</th>
+                            <th style="width: 120px;">Data</th>
                             <th>Respondente</th>
-                            <th>Status</th>
                             <th>Avaliador</th>
-                            <th>Ações</th>
+                            <th style="width: 130px;">Status</th>
+                            <th style="width: 200px;" class="text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for avaliacao in avaliacoes.items %}
                         <tr>
-                            <td>{{ avaliacao.id }}</td>
-                            <td>
-                                <a href="{{ url_for('pacientes.visualizar', id=avaliacao.paciente.id) }}">
-                                    {{ avaliacao.paciente.nome }}
-                                </a>
+                            <td class="align-middle">
+                                <strong>#{{ avaliacao.id }}</strong>
                             </td>
-                            <td>{{ avaliacao.instrumento.nome }}</td>
-                            <td>{{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}</td>
-                            <td>{{ avaliacao.relacionamento_respondente|capitalize }}</td>
-                            <td>
+                            <td class="align-middle">
+                                <a href="{{ url_for('pacientes.visualizar', id=avaliacao.paciente.id) }}"
+                                   class="text-decoration-none">
+                                    <strong>{{ avaliacao.paciente.nome }}</strong>
+                                </a>
+                                <br>
+                                <small class="text-muted">
+                                    {{ avaliacao.paciente.calcular_idade()[0] }} anos
+                                </small>
+                            </td>
+                            <td class="align-middle">
+                                <span class="badge bg-info">{{ avaliacao.instrumento.nome }}</span>
+                            </td>
+                            <td class="align-middle">
+                                {{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}
+                            </td>
+                            <td class="align-middle">
+                                {{ avaliacao.relacionamento_respondente|capitalize }}
+                            </td>
+                            <td class="align-middle">
+                                <small>{{ avaliacao.avaliador.nome_completo }}</small>
+                            </td>
+                            <td class="align-middle">
                                 {% if avaliacao.status == 'concluida' %}
-                                    <span class="badge bg-success">Concluída</span>
+                                    <span class="badge badge-status bg-success">
+                                        <i class="fas fa-check-circle"></i> Concluída
+                                    </span>
                                 {% elif avaliacao.status == 'em_andamento' %}
-                                    <span class="badge bg-warning">Em Andamento</span>
+                                    <span class="badge badge-status bg-warning text-dark">
+                                        <i class="fas fa-hourglass-half"></i> Em Andamento
+                                    </span>
                                 {% else %}
-                                    <span class="badge bg-secondary">{{ avaliacao.status }}</span>
+                                    <span class="badge badge-status bg-secondary">
+                                        {{ avaliacao.status }}
+                                    </span>
                                 {% endif %}
                             </td>
-                            <td>{{ avaliacao.avaliador.nome_completo }}</td>
-                            <td>
-                                <a href="{{ url_for('avaliacoes.visualizar', id=avaliacao.id) }}"
-                                   class="btn btn-sm btn-info" title="Visualizar">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                {% if avaliacao.status != 'concluida' %}
-                                <a href="{{ url_for('avaliacoes.responder', id=avaliacao.id) }}"
-                                   class="btn btn-sm btn-primary" title="Continuar">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                {% endif %}
+                            <td class="align-middle text-center">
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('avaliacoes.visualizar', id=avaliacao.id) }}"
+                                       class="btn btn-sm btn-info"
+                                       data-bs-toggle="tooltip"
+                                       title="Visualizar detalhes">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if avaliacao.status != 'concluida' %}
+                                    <a href="{{ url_for('avaliacoes.responder', id=avaliacao.id) }}"
+                                       class="btn btn-sm btn-primary"
+                                       data-bs-toggle="tooltip"
+                                       title="Continuar avaliação">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% else %}
+                                    <a href="{{ url_for('relatorios.avaliacao', id=avaliacao.id) }}"
+                                       class="btn btn-sm btn-success"
+                                       data-bs-toggle="tooltip"
+                                       title="Ver relatório">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if current_user.is_admin() or avaliacao.avaliador_id == current_user.id %}
+                                    <button type="button"
+                                            class="btn btn-sm btn-danger"
+                                            data-bs-toggle="tooltip"
+                                            title="Excluir avaliação"
+                                            onclick="confirmarExclusao({{ avaliacao.id }}, '{{ avaliacao.paciente.nome }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -110,34 +496,167 @@
             </div>
 
             <!-- Paginação -->
-            {% if avaliacoes.has_prev or avaliacoes.has_next %}
-            <nav aria-label="Paginação">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item {% if not avaliacoes.has_prev %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('avaliacoes.listar', page=avaliacoes.prev_num, status=status) }}">
-                            Anterior
-                        </a>
-                    </li>
-                    <li class="page-item active">
-                        <span class="page-link">{{ avaliacoes.page }} de {{ avaliacoes.pages }}</span>
-                    </li>
-                    <li class="page-item {% if not avaliacoes.has_next %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('avaliacoes.listar', page=avaliacoes.next_num, status=status) }}">
-                            Próxima
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+            {% if avaliacoes.pages > 1 %}
+            <div class="card-footer bg-white">
+                <nav aria-label="Paginação de avaliações">
+                    <ul class="pagination justify-content-center mb-0">
+                        <!-- Primeira página -->
+                        <li class="page-item {% if not avaliacoes.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('avaliacoes.listar', page=1,
+                                   busca=busca, paciente_id=paciente_id, avaliador_id=avaliador_id,
+                                   status=status, data_inicio=data_inicio, data_fim=data_fim) }}">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+
+                        <!-- Página anterior -->
+                        <li class="page-item {% if not avaliacoes.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('avaliacoes.listar', page=avaliacoes.prev_num,
+                                   busca=busca, paciente_id=paciente_id, avaliador_id=avaliador_id,
+                                   status=status, data_inicio=data_inicio, data_fim=data_fim) }}">
+                                <i class="fas fa-angle-left"></i> Anterior
+                            </a>
+                        </li>
+
+                        <!-- Páginas numeradas -->
+                        {% for page_num in avaliacoes.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                            {% if page_num %}
+                                <li class="page-item {% if page_num == avaliacoes.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('avaliacoes.listar', page=page_num,
+                                           busca=busca, paciente_id=paciente_id, avaliador_id=avaliador_id,
+                                           status=status, data_inicio=data_inicio, data_fim=data_fim) }}">
+                                        {{ page_num }}
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Próxima página -->
+                        <li class="page-item {% if not avaliacoes.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('avaliacoes.listar', page=avaliacoes.next_num,
+                                   busca=busca, paciente_id=paciente_id, avaliador_id=avaliador_id,
+                                   status=status, data_inicio=data_inicio, data_fim=data_fim) }}">
+                                Próxima <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+
+                        <!-- Última página -->
+                        <li class="page-item {% if not avaliacoes.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('avaliacoes.listar', page=avaliacoes.pages,
+                                   busca=busca, paciente_id=paciente_id, avaliador_id=avaliador_id,
+                                   status=status, data_inicio=data_inicio, data_fim=data_fim) }}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="text-center mt-2">
+                    <small class="text-muted">
+                        Mostrando {{ ((avaliacoes.page - 1) * 20) + 1 }}
+                        a {{ ((avaliacoes.page - 1) * 20) + avaliacoes.items|length }}
+                        de {{ avaliacoes.total }} registros
+                    </small>
+                </div>
+            </div>
             {% endif %}
 
             {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
-                Nenhuma avaliação encontrada.
-                <a href="{{ url_for('avaliacoes.nova') }}">Criar nova avaliação</a>.
+            <!-- Estado vazio -->
+            <div class="empty-state">
+                <i class="fas fa-clipboard-list"></i>
+                <h4>Nenhuma avaliação encontrada</h4>
+                <p class="text-muted">
+                    {% if paciente_id or avaliador_id or status or data_inicio or data_fim or busca %}
+                    Nenhuma avaliação corresponde aos filtros aplicados.
+                    <br>
+                    <a href="{{ url_for('avaliacoes.listar') }}" class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="fas fa-undo"></i> Limpar filtros
+                    </a>
+                    {% else %}
+                    Ainda não há avaliações cadastradas no sistema.
+                    <br>
+                    <a href="{{ url_for('avaliacoes.nova') }}" class="btn btn-primary mt-2">
+                        <i class="fas fa-plus"></i> Criar primeira avaliação
+                    </a>
+                    {% endif %}
+                </p>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
+
+<!-- Modal de confirmação de exclusão -->
+<form method="POST" id="formExcluir">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Inicializar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Confirmar exclusão
+    window.confirmarExclusao = function(id, nomePaciente) {
+        if (confirm('Tem certeza que deseja excluir a avaliação do paciente "' + nomePaciente + '"?\n\nEsta ação não pode ser desfeita.')) {
+            var form = document.getElementById('formExcluir');
+            form.action = '{{ url_for("avaliacoes.excluir", id=0) }}'.replace('/0/', '/' + id + '/');
+            form.submit();
+        }
+    };
+
+    // Atalhos de teclado
+    $(document).on('keydown', function(e) {
+        // Ctrl/Cmd + F = Focar no campo de busca
+        if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+            e.preventDefault();
+            $('input[name="busca"]').focus();
+        }
+
+        // Ctrl/Cmd + N = Nova avaliação
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            window.location.href = '{{ url_for("avaliacoes.nova") }}';
+        }
+    });
+
+    // Auto-submit ao selecionar filtros rápidos
+    $('select[name="paciente_id"], select[name="avaliador_id"], select[name="status"]').on('change', function() {
+        // Opcional: submit automático ao mudar
+        // $('#filterForm').submit();
+    });
+
+    // Validação de datas
+    $('input[name="data_fim"]').on('change', function() {
+        var dataInicio = $('input[name="data_inicio"]').val();
+        var dataFim = $(this).val();
+
+        if (dataInicio && dataFim && dataFim < dataInicio) {
+            alert('A data fim não pode ser anterior à data início');
+            $(this).val('');
+        }
+    });
+
+    // Highlight da linha ao passar mouse
+    $('tbody tr').hover(
+        function() {
+            $(this).find('.action-buttons').addClass('show');
+        },
+        function() {
+            $(this).find('.action-buttons').removeClass('show');
+        }
+    );
+});
+</script>
 {% endblock %}
