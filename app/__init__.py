@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf import CSRFProtect
+from flask_wtf.csrf import generate_csrf
 import os
 
 # Inicializar extensões
@@ -70,6 +71,13 @@ def create_app(config_name=None):
         return {
             'app_name': 'SPM-TO',
             'app_version': '1.0.0'
+        }
+
+    @app.context_processor
+    def inject_csrf_token():
+        """Disponibiliza função para geração de tokens CSRF em formulários manuais"""
+        return {
+            'csrf_token': generate_csrf
         }
 
     # Criar diretórios necessários

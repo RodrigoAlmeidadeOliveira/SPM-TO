@@ -67,6 +67,8 @@ class Avaliacao(db.Model):
     avaliador = db.relationship('User', back_populates='avaliacoes')
     respostas = db.relationship('Resposta', back_populates='avaliacao',
                                 lazy='dynamic', cascade='all, delete-orphan')
+    plano_itens = db.relationship('PlanoItem', back_populates='avaliacao',
+                                  lazy='dynamic', cascade='all, delete-orphan')
 
     def calcular_escores(self):
         """

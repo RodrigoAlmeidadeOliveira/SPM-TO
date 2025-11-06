@@ -5,6 +5,7 @@ from app.models.user import User
 from app.models.paciente import Paciente
 from app.models.instrumento import Instrumento, Dominio, Questao, TabelaReferencia
 from app.models.avaliacao import Avaliacao, Resposta
+from app.models.plano import PlanoTemplateItem, PlanoItem
 
 __all__ = [
     'User',
@@ -14,5 +15,7 @@ __all__ = [
     'Questao',
     'TabelaReferencia',
     'Avaliacao',
-    'Resposta'
+    'Resposta',
+    'PlanoTemplateItem',
+    'PlanoItem'
 ]

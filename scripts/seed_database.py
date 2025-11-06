@@ -4,7 +4,7 @@ Script para popular o banco de dados com instrumentos, questões e tabelas de re
 import openpyxl
 from pathlib import Path
 from app import db
-from app.models import Instrumento, Dominio, Questao, TabelaReferencia
+from app.models import Instrumento, Dominio, Questao, TabelaReferencia, PlanoTemplateItem
 
 
 def seed_database():
@@ -92,6 +92,7 @@ def seed_database():
         dominio_set = 'SPM_P_3_5' if 'SPM_P_3_5' in config['codigo'] else 'SPM_5_12'
 
         # Criar domínios
+        dominios_criados = []
         for dom_config in dominios_config[dominio_set]:
             dominio = Dominio(
                 instrumento_id=instrumento.id,
@@ -102,13 +103,15 @@ def seed_database():
             )
             db.session.add(dominio)
             db.session.flush()
+            dominios_criados.append(dominio)
 
             print(f"  - Domínio criado: {dom_config['nome']}")
 
         # Ler questões da planilha
         try:
             planilha_path = doctos_path / config['planilha']
-            extrair_questoes_planilha(planilha_path, instrumento)
+            extrair_questoes_planilha(planilha_path, instrumento, dominios_criados)
+            extrair_plano_planilha(planilha_path, instrumento, dominios_criados)
 
             # Extrair tabela de referência (se houver)
             extrair_tabela_referencia(planilha_path, instrumento)
@@ -119,7 +122,7 @@ def seed_database():
     print('\n✓ Banco de dados populado com sucesso!')
 
 
-def extrair_questoes_planilha(planilha_path, instrumento):
+def extrair_questoes_planilha(planilha_path, instrumento, dominios_criados):
     """
     Extrai questões da planilha Excel
 
@@ -131,7 +134,7 @@ def extrair_questoes_planilha(planilha_path, instrumento):
     ws = wb['Entrada de Dados']
 
     # Mapeamento de domínios
-    dominios = {d.codigo: d for d in instrumento.dominios}
+    dominios = {d.codigo: d for d in dominios_criados}
 
     # Variáveis de controle
     dominio_atual = None
@@ -182,6 +185,59 @@ def extrair_questoes_planilha(planilha_path, instrumento):
                     numero_questao_dominio += 1
 
     print(f"    Total de questões extraídas: {numero_questao - 1}")
+
+
+def extrair_plano_planilha(planilha_path, instrumento, dominios_criados):
+    """
+    Extrai itens de plano (PEI) da planilha Excel
+
+    Args:
+        planilha_path: Caminho para a planilha
+        instrumento: Instância de Instrumento
+        dominios_criados: Lista de domínios associados ao instrumento
+    """
+    wb = openpyxl.load_workbook(planilha_path)
+
+    if 'Plano' not in wb.sheetnames:
+        print("    AVISO: Planilha não possui aba 'Plano'")
+        return
+
+    ws = wb['Plano']
+
+    dominios_por_nome = {d.nome.lower(): d for d in dominios_criados}
+    dominio_atual = None
+    ordem = 1
+
+    for row in ws.iter_rows(min_row=3, values_only=True):
+        texto = row[2] if len(row) >= 3 else None
+        if not texto or not isinstance(texto, str):
+            continue
+
+        texto = texto.strip()
+        if not texto:
+            continue
+
+        partes = texto.split('.', 1)
+
+        if len(partes) == 2:
+            resto = partes[1].strip().lower()
+            if resto in dominios_por_nome:
+                dominio_atual = dominios_por_nome[resto]
+                continue
+
+        if dominio_atual is None:
+            continue
+
+        item = PlanoTemplateItem(
+            instrumento_id=instrumento.id,
+            dominio_id=dominio_atual.id,
+            ordem=ordem,
+            texto=texto
+        )
+        db.session.add(item)
+        ordem += 1
+
+    print(f"    Itens de plano extraídos: {ordem - 1}")
 
 
 def extrair_tabela_referencia(planilha_path, instrumento):

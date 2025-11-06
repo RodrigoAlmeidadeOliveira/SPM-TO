@@ -1,10 +1,13 @@
 """
 Blueprint de Relatórios
 """
-from flask import Blueprint, render_template, Response, make_response
+from collections import OrderedDict
+from flask import Blueprint, render_template, Response, make_response, request, redirect, url_for, flash
 from flask_login import login_required
+from app import db
 from app.models.avaliacao import Avaliacao
 from app.models.paciente import Paciente
+from app.models.plano import PlanoItem, PlanoTemplateItem
 from app.services.grafico_service import GraficoService
 from io import BytesIO
 
@@ -115,10 +118,24 @@ def pei(avaliacao_id):
                 'valor': resposta.valor
             })
 
+    plano_selecionado = (
+        avaliacao_obj.plano_itens.join(PlanoItem.template_item)
+        .order_by(PlanoTemplateItem.ordem)
+        .all()
+    )
+
+    plano_por_dominio = OrderedDict()
+    for item in plano_selecionado:
+        if not item.selecionado:
+            continue
+        nome = item.template_item.dominio_nome
+        plano_por_dominio.setdefault(nome, []).append(item.template_item.texto)
+
     return render_template('relatorios/pei.html',
                           avaliacao=avaliacao_obj,
                           dominios_respostas=dominios_respostas,
-                          itens_criticos=itens_criticos)
+                          itens_criticos=itens_criticos,
+                          plano_por_dominio=plano_por_dominio)
 
 
 @relatorios_bp.route('/comparativo/<int:paciente_id>')
@@ -163,3 +180,52 @@ def comparativo(paciente_id):
                           avaliacao_casa=avaliacao_casa,
                           avaliacao_escola=avaliacao_escola,
                           comparacao=comparacao)
+
+
+@relatorios_bp.route('/pei/<int:avaliacao_id>/plano', methods=['GET', 'POST'])
+@login_required
+def pei_plano(avaliacao_id):
+    """Formulário para seleção de itens de intervenção (PEI)"""
+    avaliacao = Avaliacao.query.get_or_404(avaliacao_id)
+
+    template_itens = (
+        PlanoTemplateItem.query
+        .filter_by(instrumento_id=avaliacao.instrumento_id, ativo=True)
+        .order_by(PlanoTemplateItem.ordem)
+        .all()
+    )
+
+    if not template_itens:
+        flash('Não há itens de plano cadastrados para este instrumento.', 'warning')
+        return redirect(url_for('relatorios.pei', avaliacao_id=avaliacao.id))
+
+    itens_existentes = {
+        item.template_item_id: item
+        for item in avaliacao.plano_itens.all()
+    }
+
+    if request.method == 'POST':
+        selecionados = {int(item_id) for item_id in request.form.getlist('itens')}
+
+        for template_item in template_itens:
+            plano_item = itens_existentes.get(template_item.id)
+            if plano_item is None:
+                plano_item = PlanoItem(
+                    avaliacao_id=avaliacao.id,
+                    template_item_id=template_item.id
+                )
+                avaliacao.plano_itens.append(plano_item)
+                itens_existentes[template_item.id] = plano_item
+
+            plano_item.selecionado = template_item.id in selecionados
+
+        db.session.commit()
+        flash('Plano de intervenção atualizado com sucesso!', 'success')
+        return redirect(url_for('relatorios.pei', avaliacao_id=avaliacao.id))
+
+    return render_template(
+        'relatorios/pei_plano.html',
+        avaliacao=avaliacao,
+        template_itens=template_itens,
+        itens_existentes=itens_existentes
+    )
