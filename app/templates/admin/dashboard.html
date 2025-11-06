@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Administrativo - SPM-TO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1><i class="fas fa-tachometer-alt"></i> Dashboard Administrativo</h1>
+            <p class="text-muted">Painel de administração do sistema SPM-TO</p>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Total de Usuários</h6>
+                            <h2 class="card-title mb-0">{{ total_usuarios }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-users fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-primary bg-opacity-75">
+                    <a href="{{ url_for('admin.listar_usuarios') }}" class="text-white text-decoration-none">
+                        Ver todos <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Administradores</h6>
+                            <h2 class="card-title mb-0">{{ total_admins }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-user-shield fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-danger bg-opacity-75">
+                    <a href="{{ url_for('admin.listar_usuarios', tipo='admin') }}" class="text-white text-decoration-none">
+                        Ver administradores <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Terapeutas</h6>
+                            <h2 class="card-title mb-0">{{ total_terapeutas }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-user-md fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-success bg-opacity-75">
+                    <a href="{{ url_for('admin.listar_usuarios', tipo='terapeuta') }}" class="text-white text-decoration-none">
+                        Ver terapeutas <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu de Ações -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cog"></i> Gerenciamento</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-users-cog fa-3x text-primary mb-3"></i>
+                                    <h5 class="card-title">Gerenciar Usuários</h5>
+                                    <p class="card-text">Cadastre, edite e gerencie usuários do sistema</p>
+                                    <a href="{{ url_for('admin.listar_usuarios') }}" class="btn btn-primary">
+                                        <i class="fas fa-arrow-right"></i> Acessar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-user-plus fa-3x text-success mb-3"></i>
+                                    <h5 class="card-title">Novo Usuário</h5>
+                                    <p class="card-text">Cadastre um novo usuário no sistema</p>
+                                    <a href="{{ url_for('admin.novo_usuario') }}" class="btn btn-success">
+                                        <i class="fas fa-plus"></i> Cadastrar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-cogs fa-3x text-secondary mb-3"></i>
+                                    <h5 class="card-title">Configurações</h5>
+                                    <p class="card-text">Configure parâmetros do sistema</p>
+                                    <a href="{{ url_for('admin.configuracoes') }}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-right"></i> Acessar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

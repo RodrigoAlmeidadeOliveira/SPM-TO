@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes do Usuário - SPM-TO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1><i class="fas fa-user"></i> Detalhes do Usuário</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('admin.editar_usuario', id=usuario.id) }}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+            <a href="{{ url_for('admin.listar_usuarios') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações Básicas -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informações Básicas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>ID:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ usuario.id }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Nome Completo:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ usuario.nome_completo }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Nome de Usuário:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <code>{{ usuario.username }}</code>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Email:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <a href="mailto:{{ usuario.email }}">{{ usuario.email }}</a>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Tipo:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {% if usuario.tipo == 'admin' %}
+                            <span class="badge bg-danger">Administrador</span>
+                            {% elif usuario.tipo == 'terapeuta' %}
+                            <span class="badge bg-primary">Terapeuta</span>
+                            {% elif usuario.tipo == 'professor' %}
+                            <span class="badge bg-info">Professor</span>
+                            {% elif usuario.tipo == 'familiar' %}
+                            <span class="badge bg-secondary">Familiar</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Status:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {% if usuario.ativo %}
+                            <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                            <span class="badge bg-warning">Inativo</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Data de Criação:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ usuario.data_criacao.strftime('%d/%m/%Y às %H:%M') }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Último Acesso:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {% if usuario.ultimo_acesso %}
+                            {{ usuario.ultimo_acesso.strftime('%d/%m/%Y às %H:%M') }}
+                            {% else %}
+                            <span class="text-muted">Nunca acessou</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avaliações Realizadas -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list"></i> Avaliações Realizadas</h5>
+                </div>
+                <div class="card-body">
+                    {% set total_avaliacoes = usuario.avaliacoes.count() %}
+                    <p class="mb-0">
+                        <strong>Total de avaliações:</strong>
+                        <span class="badge bg-info">{{ total_avaliacoes }}</span>
+                    </p>
+
+                    {% if total_avaliacoes > 0 %}
+                    <hr>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Paciente</th>
+                                    <th>Instrumento</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for avaliacao in usuario.avaliacoes.order_by(avaliacao.data_avaliacao.desc()).limit(10) %}
+                                <tr>
+                                    <td>{{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('pacientes.visualizar', id=avaliacao.paciente_id) }}">
+                                            {{ avaliacao.paciente.nome }}
+                                        </a>
+                                    </td>
+                                    <td>{{ avaliacao.instrumento.nome }}</td>
+                                    <td>
+                                        {% if avaliacao.esta_completa() %}
+                                        <span class="badge bg-success">Completa</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pendente</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% if total_avaliacoes > 10 %}
+                        <p class="text-muted text-center mb-0">
+                            <small>Mostrando as 10 mais recentes de {{ total_avaliacoes }} avaliações</small>
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações Rápidas -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cog"></i> Ações</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('admin.editar_usuario', id=usuario.id) }}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Editar Usuário
+                        </a>
+
+                        {% if usuario.ativo %}
+                        <button type="button" class="btn btn-danger"
+                                onclick="confirmarDesativar({{ usuario.id }}, '{{ usuario.username }}')">
+                            <i class="fas fa-user-slash"></i> Desativar Usuário
+                        </button>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('admin.ativar_usuario', id=usuario.id) }}">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-user-check"></i> Reativar Usuário
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        <hr>
+
+                        <a href="{{ url_for('admin.listar_usuarios') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Voltar para Lista
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Estatísticas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Avaliações Realizadas</small>
+                        <h4 class="mb-0">{{ total_avaliacoes }}</h4>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Avaliações Completas</small>
+                        <h4 class="mb-0">
+                            {% set completas = usuario.avaliacoes.filter_by().all() | selectattr('esta_completa') | list | length %}
+                            {{ completas }}
+                        </h4>
+                    </div>
+                    <div>
+                        <small class="text-muted">Conta Criada Há</small>
+                        <h4 class="mb-0">
+                            {% set dias = (now() - usuario.data_criacao).days %}
+                            {{ dias }} dias
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmação de desativação -->
+<form method="POST" id="formDesativar">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+
+<script>
+function confirmarDesativar(id, username) {
+    if (confirm('Tem certeza que deseja desativar o usuário "' + username + '"?\n\nEle não poderá mais fazer login no sistema.')) {
+        var form = document.getElementById('formDesativar');
+        form.action = '{{ url_for("admin.deletar_usuario", id=0) }}'.replace('/0/', '/' + id + '/');
+        form.submit();
+    }
+}
+</script>
+{% endblock %}
