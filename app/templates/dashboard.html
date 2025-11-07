@@ -380,19 +380,19 @@
                         {% for avaliacao in avaliacoes_pendentes %}
                         <div class="ranking-item" style="border-left-color: #ffc107;">
                             <div>
-                                <strong>{{ avaliacao.paciente.nome }}</strong>
+                                <strong>{{ avaliacao.paciente }}</strong>
                                 <span class="badge badge-pendente float-end">
-                                    {{ avaliacao.dias_pendente }} dias
+                                    {{ avaliacao.dias }} dias
                                 </span>
                             </div>
                             <small class="text-muted d-block mt-1">
                                 <i class="fas fa-calendar"></i>
-                                {{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}
-                                - {{ avaliacao.instrumento.nome }}
+                                {{ avaliacao.data.strftime('%d/%m/%Y') }}
+                                - {{ avaliacao.instrumento }}
                             </small>
                             <small class="text-muted d-block">
                                 <i class="fas fa-user"></i>
-                                {{ avaliacao.avaliador.nome_completo }}
+                                {{ avaliacao.avaliador }}
                             </small>
                         </div>
                         {% endfor %}
