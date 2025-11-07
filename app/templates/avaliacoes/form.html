@@ -254,6 +254,24 @@
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">
+                                        {{ form.contexto.label.text }}
+                                        <i class="fas fa-question-circle help-icon"
+                                           data-bs-toggle="tooltip"
+                                           title="Onde a avaliação será aplicada? Casa (pais) ou Escola (professores)"></i>
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.contexto(class="form-select" + (" is-invalid" if form.contexto.errors else "")) }}
+                                    {% if form.contexto.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.contexto.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold">
                                         {{ form.relacionamento_respondente.label.text }}
                                         <i class="fas fa-question-circle help-icon"
                                            data-bs-toggle="tooltip"
@@ -373,6 +391,7 @@ $(document).ready(function() {
         const paciente = $('#paciente_id').val();
         const instrumento = $('#instrumento_id').val();
         const data = $('[name="data_avaliacao"]').val();
+        const contexto = $('[name="contexto"]').val();
         const respondente = $('[name="relacionamento_respondente"]').val();
 
         if (paciente) {
@@ -387,7 +406,7 @@ $(document).ready(function() {
             $('#step3').addClass('active');
         }
 
-        if (data && respondente) {
+        if (data && contexto && respondente) {
             $('#step3').addClass('completed');
             $('#step4').addClass('active');
         }
@@ -447,7 +466,7 @@ $(document).ready(function() {
     }
 
     // Monitorar mudanças para atualizar wizard
-    $('#instrumento_id, [name="data_avaliacao"], [name="relacionamento_respondente"]').on('change', updateWizardSteps);
+    $('#instrumento_id, [name="data_avaliacao"], [name="contexto"], [name="relacionamento_respondente"]').on('change', updateWizardSteps);
 
     // Validação ao submeter
     $('#avaliacaoForm').on('submit', function(e) {
@@ -479,6 +498,14 @@ $(document).ready(function() {
         if (!dataAvaliacao) {
             console.log('Data inválida');
             $('[name="data_avaliacao"]').addClass('is-invalid');
+            valid = false;
+        }
+
+        const contexto = $('[name="contexto"]').val();
+        console.log('Contexto:', contexto);
+        if (!contexto || contexto === '') {
+            console.log('Contexto inválido');
+            $('[name="contexto"]').addClass('is-invalid');
             valid = false;
         }
 
