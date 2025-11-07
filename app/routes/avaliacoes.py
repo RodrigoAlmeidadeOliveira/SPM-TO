@@ -281,14 +281,18 @@ def responder(id):
     }
 
     # Obter índice da questão atual (ou primeira não respondida)
-    questao_idx = request.args.get('q', 0, type=int)
+    questao_idx = request.args.get('q', None, type=int)
 
-    # Se não especificado, buscar primeira questão não respondida
-    if questao_idx == 0:
-        for idx, questao in enumerate(questoes):
-            if questao.id not in respostas_existentes:
-                questao_idx = idx
-                break
+    # Encontrar primeira questão não respondida
+    primeira_nao_respondida = 0
+    for idx, questao in enumerate(questoes):
+        if questao.id not in respostas_existentes:
+            primeira_nao_respondida = idx
+            break
+
+    # Se não especificado, usar primeira questão não respondida
+    if questao_idx is None:
+        questao_idx = primeira_nao_respondida
 
     # Validar índice
     if questao_idx < 0 or questao_idx >= len(questoes):
@@ -357,7 +361,10 @@ def responder(id):
         form=form,
         pode_voltar=questao_idx > 0,
         pode_avancar=questao_idx < total_questoes - 1,
-        resposta_existente=resposta_existente
+        resposta_existente=resposta_existente,
+        todas_questoes=questoes,
+        primeira_nao_respondida=primeira_nao_respondida,
+        respostas_existentes=respostas_existentes
     )
 
 
@@ -383,10 +390,10 @@ def finalizar(id):
     if request.method == 'POST':
         try:
             # Calcular escores
-            CalculoService.atualizar_escores_avaliacao(id)
+            CalculoService.atualizar_escores_avaliacao(avaliacao)
 
             # Classificar resultados
-            ClassificacaoService.classificar_avaliacao(id)
+            ClassificacaoService.classificar_avaliacao(avaliacao)
 
             # Atualizar status e data de conclusão
             avaliacao.status = 'concluida'
@@ -400,6 +407,8 @@ def finalizar(id):
         except Exception as e:
             db.session.rollback()
             flash(f'Erro ao finalizar avaliação: {str(e)}', 'danger')
+            import traceback
+            traceback.print_exc()
 
     return render_template('avaliacoes/finalizar.html', avaliacao=avaliacao, total_questoes=total_questoes)
 
