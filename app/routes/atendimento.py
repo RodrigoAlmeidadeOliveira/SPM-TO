@@ -181,7 +181,7 @@ def editar(atendimento_id):
         abort(403)
 
     # Não permitir edição de atendimentos finalizados por outros usuários
-    if atendimento.status == 'finalizado' and atendimento.profissional_id != current_user.id and not current_user.eh_admin():
+    if atendimento.status == 'finalizado' and atendimento.profissional_id != current_user.id and not current_user.is_admin():
         flash('Você não pode editar atendimentos finalizados por outros profissionais!', 'danger')
         return redirect(url_for('atendimento.visualizar', atendimento_id=atendimento_id))
 
@@ -297,7 +297,7 @@ def excluir(atendimento_id):
         abort(403)
 
     # Apenas criador ou admin pode excluir
-    if atendimento.profissional_id != current_user.id and not current_user.eh_admin():
+    if atendimento.profissional_id != current_user.id and not current_user.is_admin():
         flash('Apenas o profissional que criou o atendimento ou administradores podem excluí-lo!', 'danger')
         return redirect(url_for('atendimento.visualizar', atendimento_id=atendimento_id))
 
