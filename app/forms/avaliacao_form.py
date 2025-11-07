@@ -5,9 +5,6 @@ from flask_wtf import FlaskForm
 from wtforms import SelectField, DateField, TextAreaField, HiddenField, RadioField, SubmitField
 from wtforms.validators import DataRequired, Optional, ValidationError
 from datetime import date
-from wtforms import SubmitField
-
-submit = SubmitField('Salvar Avaliação', render_kw={'class': 'btn btn-primary btn-lg'})
 
 class AvaliacaoForm(FlaskForm):
     """Formulário para criar uma nova avaliação"""
