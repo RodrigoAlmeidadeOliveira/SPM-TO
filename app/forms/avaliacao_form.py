@@ -24,13 +24,13 @@ class AvaliacaoForm(FlaskForm):
     )
 
     contexto = SelectField(
-        'Contexto da Avaliação',
+        'Contexto da Avaliação (opcional)',
         choices=[
-            ('', 'Selecione o contexto...'),
+            ('', 'Selecione o contexto (opcional)...'),
             ('casa', 'Casa - Avaliação pelos pais/responsáveis'),
             ('escola', 'Escola - Avaliação por professores/educadores')
         ],
-        validators=[DataRequired(message='Selecione o contexto da avaliação')],
+        validators=[Optional()],
         render_kw={'class': 'form-select'}
     )
 

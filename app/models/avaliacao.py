@@ -2,7 +2,9 @@
 Modelos de Avaliação e Resposta
 """
 from datetime import datetime
+from sqlalchemy.orm import validates
 from app import db
+from app.models.utils import coerce_date
 
 
 class Avaliacao(db.Model):
@@ -16,7 +18,7 @@ class Avaliacao(db.Model):
 
     # Informações da avaliação (espelhando o cabeçalho das planilhas)
     data_avaliacao = db.Column(db.Date, nullable=False, index=True)
-    relacionamento_respondente = db.Column(db.String(100), nullable=False)
+    relacionamento_respondente = db.Column(db.String(100), nullable=False, default='Responsavel')
     # Ex: 'pai', 'mãe', 'professor', 'terapeuta'
 
     # Comentários
@@ -108,6 +110,11 @@ class Avaliacao(db.Model):
 
     def __repr__(self):
         return f'<Avaliacao {self.id} - Paciente {self.paciente_id}>'
+
+    @validates('data_avaliacao')
+    def _validate_data_avaliacao(self, key, value):
+        """Permite atribuir a data da avaliação usando string ou datetime."""
+        return coerce_date(value, key)
 
 
 class Resposta(db.Model):

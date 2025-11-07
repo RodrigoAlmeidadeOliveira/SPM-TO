@@ -2,7 +2,9 @@
 Modelo de Paciente
 """
 from datetime import datetime
+from sqlalchemy.orm import validates
 from app import db
+from app.models.utils import coerce_date
 
 # Tabela de associação muitos-para-muitos entre User e Paciente
 paciente_responsavel = db.Table('paciente_responsavel',
@@ -90,3 +92,8 @@ class Paciente(db.Model):
 
     def __repr__(self):
         return f'<Paciente {self.nome}>'
+
+    @validates('data_nascimento')
+    def _validate_data_nascimento(self, key, value):
+        """Permite atribuir datas como string, datetime ou date."""
+        return coerce_date(value, key)

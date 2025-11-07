@@ -121,6 +121,10 @@ def nova():
     paciente_id = request.args.get('paciente_id', type=int)
     instrumento_id = request.args.get('instrumento_id', type=int)
 
+    if not paciente_id and request.method == 'GET':
+        flash('Selecione um paciente para iniciar a avaliação.', 'warning')
+        return redirect(url_for('pacientes.listar'))
+
     # Criar formulário
     form = AvaliacaoForm()
 
