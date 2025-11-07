@@ -328,8 +328,15 @@
 <script>
 $(document).ready(function() {
     console.log('JavaScript loaded!');
-    console.log('Form element:', $('#avaliacaoForm'));
-    console.log('Submit button:', $('#submitBtn'));
+
+    // Usar setTimeout para garantir que o DOM está completamente carregado
+    setTimeout(function() {
+        console.log('DOM check...');
+        console.log('Form element:', $('#avaliacaoForm'));
+        console.log('Submit button by ID:', $('#submitBtn'));
+        console.log('Submit button by type:', $('button[type="submit"]'));
+        console.log('All buttons:', $('button'));
+    }, 100);
 
     // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
@@ -337,9 +344,9 @@ $(document).ready(function() {
         return new bootstrap.Tooltip(tooltipTriggerEl)
     });
 
-    // Adicionar listener no botão diretamente também
-    $('#submitBtn').on('click', function(e) {
-        console.log('Submit button clicked!');
+    // Usar seletor alternativo e event delegation
+    $(document).on('click', 'button[type="submit"]', function(e) {
+        console.log('Submit button clicked via delegation!');
     });
 
     // Objeto com dados dos pacientes (será preenchido dinamicamente)
