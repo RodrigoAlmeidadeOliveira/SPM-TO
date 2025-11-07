@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}Visualizar Anexo - {{ super() }}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- PDF.js para visualização de PDFs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<style>
+    #pdf-canvas {
+        border: 1px solid #ddd;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        max-width: 100%;
+        height: auto;
+    }
+
+    #image-preview {
+        max-width: 100%;
+        height: auto;
+        cursor: zoom-in;
+        transition: transform 0.3s ease;
+    }
+
+    #image-preview.zoomed {
+        cursor: zoom-out;
+        transform: scale(1.5);
+    }
+
+    .pdf-controls {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .loading-spinner {
+        text-align: center;
+        padding: 40px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('avaliacoes.listar') }}">Avaliações</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('avaliacoes.visualizar', id=anexo.avaliacao_id) }}">Avaliação #{{ anexo.avaliacao_id }}</a></li>
+            <li class="breadcrumb-item active">Anexo</li>
+        </ol>
+    </nav>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas {{ anexo.get_icone() }} me-2"></i>
+                    {{ anexo.nome_original }}
+                </h5>
+                <div class="btn-group">
+                    <a href="{{ url_for('anexos.download', anexo_id=anexo.id) }}"
+                       class="btn btn-sm btn-primary">
+                        <i class="bi bi-download me-1"></i>
+                        Baixar
+                    </a>
+                    <a href="{{ url_for('avaliacoes.visualizar', id=anexo.avaliacao_id) }}"
+                       class="btn btn-sm btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <strong>Tipo:</strong> {{ anexo.get_categoria_label() }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Tamanho:</strong> {{ anexo.get_tamanho_formatado() }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Data Upload:</strong> {{ anexo.data_upload.strftime('%d/%m/%Y %H:%M') }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Enviado por:</strong> {{ anexo.usuario.nome_completo if anexo.usuario else 'Desconhecido' }}
+                </div>
+            </div>
+
+            {% if anexo.descricao %}
+            <div class="alert alert-info">
+                <strong>Descrição:</strong> {{ anexo.descricao }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Visualização de PDF -->
+    {% if anexo.is_pdf() %}
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">Visualização do PDF</h6>
+        </div>
+        <div class="card-body">
+            <div class="pdf-controls d-flex justify-content-between align-items-center">
+                <div>
+                    <button id="prev-page" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </button>
+                    <span class="mx-3">
+                        Página <span id="page-num"></span> de <span id="page-count"></span>
+                    </span>
+                    <button id="next-page" class="btn btn-sm btn-outline-primary">
+                        Próxima <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+                <div>
+                    <button id="zoom-out" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-zoom-out"></i>
+                    </button>
+                    <span class="mx-2" id="zoom-level">100%</span>
+                    <button id="zoom-in" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-zoom-in"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="loading-spinner" id="pdf-loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando PDF...</span>
+                </div>
+                <p class="mt-2">Carregando PDF...</p>
+            </div>
+
+            <div class="text-center mt-3" id="pdf-container" style="display: none;">
+                <canvas id="pdf-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configurar PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let pdfDoc = null;
+        let pageNum = 1;
+        let pageRendering = false;
+        let pageNumPending = null;
+        let scale = 1.5;
+        const canvas = document.getElementById('pdf-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Carregar PDF
+        const url = '{{ url_for("anexos.visualizar", anexo_id=anexo.id) }}';
+
+        pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+            pdfDoc = pdfDoc_;
+            document.getElementById('page-count').textContent = pdfDoc.numPages;
+            document.getElementById('pdf-loading').style.display = 'none';
+            document.getElementById('pdf-container').style.display = 'block';
+            renderPage(pageNum);
+        }).catch(function(error) {
+            document.getElementById('pdf-loading').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Erro ao carregar PDF: ${error.message}
+                </div>
+            `;
+        });
+
+        function renderPage(num) {
+            pageRendering = true;
+            pdfDoc.getPage(num).then(function(page) {
+                const viewport = page.getViewport({scale: scale});
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+
+                const renderTask = page.render(renderContext);
+                renderTask.promise.then(function() {
+                    pageRendering = false;
+                    if (pageNumPending !== null) {
+                        renderPage(pageNumPending);
+                        pageNumPending = null;
+                    }
+                });
+            });
+
+            document.getElementById('page-num').textContent = num;
+        }
+
+        function queueRenderPage(num) {
+            if (pageRendering) {
+                pageNumPending = num;
+            } else {
+                renderPage(num);
+            }
+        }
+
+        function onPrevPage() {
+            if (pageNum <= 1) return;
+            pageNum--;
+            queueRenderPage(pageNum);
+        }
+
+        function onNextPage() {
+            if (pageNum >= pdfDoc.numPages) return;
+            pageNum++;
+            queueRenderPage(pageNum);
+        }
+
+        function onZoomIn() {
+            scale += 0.25;
+            document.getElementById('zoom-level').textContent = Math.round(scale * 100) + '%';
+            queueRenderPage(pageNum);
+        }
+
+        function onZoomOut() {
+            if (scale <= 0.5) return;
+            scale -= 0.25;
+            document.getElementById('zoom-level').textContent = Math.round(scale * 100) + '%';
+            queueRenderPage(pageNum);
+        }
+
+        document.getElementById('prev-page').addEventListener('click', onPrevPage);
+        document.getElementById('next-page').addEventListener('click', onNextPage);
+        document.getElementById('zoom-in').addEventListener('click', onZoomIn);
+        document.getElementById('zoom-out').addEventListener('click', onZoomOut);
+    </script>
+    {% endif %}
+
+    <!-- Visualização de Imagem -->
+    {% if anexo.is_imagem() %}
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">Visualização da Imagem</h6>
+        </div>
+        <div class="card-body text-center">
+            <p class="text-muted"><small>Clique na imagem para dar zoom</small></p>
+            <img src="{{ url_for('anexos.visualizar', anexo_id=anexo.id) }}"
+                 alt="{{ anexo.nome_original }}"
+                 id="image-preview"
+                 class="img-fluid">
+        </div>
+    </div>
+
+    <script>
+        const img = document.getElementById('image-preview');
+        img.addEventListener('click', function() {
+            this.classList.toggle('zoomed');
+        });
+    </script>
+    {% endif %}
+
+    <!-- Outros tipos de arquivo -->
+    {% if not anexo.is_pdf() and not anexo.is_imagem() %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas {{ anexo.get_icone() }} fa-5x mb-3"></i>
+            <h4>{{ anexo.nome_original }}</h4>
+            <p class="text-muted">Este tipo de arquivo não pode ser visualizado no navegador.</p>
+            <a href="{{ url_for('anexos.download', anexo_id=anexo.id) }}" class="btn btn-primary btn-lg">
+                <i class="bi bi-download me-2"></i>
+                Baixar Arquivo
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

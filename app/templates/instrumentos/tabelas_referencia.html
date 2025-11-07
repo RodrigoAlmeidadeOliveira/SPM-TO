@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Tabelas de Referência - {{ instrumento.nome }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('instrumentos.listar') }}">Instrumentos</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('instrumentos.visualizar', id=instrumento.id) }}">{{ instrumento.nome }}</a></li>
+            <li class="breadcrumb-item active">Tabelas de Referência</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 mb-0">
+            <i class="bi bi-table me-2"></i>
+            Tabelas de Referência
+        </h1>
+        <a href="{{ url_for('instrumentos.nova_tabela', instrumento_id=instrumento.id) }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>
+            Nova Tabela
+        </a>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">{{ instrumento.nome }}</h5>
+            <p class="text-muted mb-0">
+                <small>
+                    <strong>Código:</strong> {{ instrumento.codigo }} |
+                    <strong>Faixa Etária:</strong> {{ instrumento.idade_minima }}-{{ instrumento.idade_maxima }} anos |
+                    <strong>Contexto:</strong> {{ instrumento.contexto|title }}
+                </small>
+            </p>
+        </div>
+    </div>
+
+    {% if tabelas_por_dominio %}
+        {% for dominio_codigo, tabelas in tabelas_por_dominio.items() %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-diagram-3 me-2"></i>
+                    Domínio: {{ dominio_codigo }}
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>T-Score</th>
+                                <th>Escore Bruto</th>
+                                <th>Percentil</th>
+                                <th>Classificação</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tabela in tabelas %}
+                            <tr>
+                                <td><strong>{{ tabela.t_score }}</strong></td>
+                                <td>{{ tabela.escore_min }} - {{ tabela.escore_max }}</td>
+                                <td>
+                                    {% if tabela.percentil_min and tabela.percentil_max %}
+                                        {{ tabela.percentil_min }}% - {{ tabela.percentil_max }}%
+                                    {% elif tabela.percentil_min %}
+                                        &ge; {{ tabela.percentil_min }}%
+                                    {% elif tabela.percentil_max %}
+                                        &le; {{ tabela.percentil_max }}%
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if tabela.classificacao == 'TIPICO' %}
+                                        <span class="badge bg-success">Típico</span>
+                                    {% elif tabela.classificacao == 'PROVAVEL_DISFUNCAO' %}
+                                        <span class="badge bg-warning text-dark">Provável Disfunção</span>
+                                    {% elif tabela.classificacao == 'DISFUNCAO_DEFINITIVA' %}
+                                        <span class="badge bg-danger">Disfunção Definitiva</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ tabela.classificacao }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('instrumentos.editar_tabela', tabela_id=tabela.id) }}"
+                                       class="btn btn-sm btn-outline-primary" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="{{ url_for('instrumentos.excluir_tabela', tabela_id=tabela.id) }}"
+                                          method="POST" class="d-inline"
+                                          onsubmit="return confirm('Tem certeza que deseja excluir esta tabela de referência?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            Nenhuma tabela de referência cadastrada para este instrumento.
+            <a href="{{ url_for('instrumentos.nova_tabela', instrumento_id=instrumento.id) }}">Clique aqui para adicionar.</a>
+        </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{{ url_for('instrumentos.visualizar', id=instrumento.id) }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Voltar
+        </a>
+    </div>
+</div>
+{% endblock %}
