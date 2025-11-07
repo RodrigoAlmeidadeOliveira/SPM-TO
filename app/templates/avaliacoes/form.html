@@ -328,11 +328,18 @@
 <script>
 $(document).ready(function() {
     console.log('JavaScript loaded!');
+    console.log('Form element:', $('#avaliacaoForm'));
+    console.log('Submit button:', $('#submitBtn'));
 
     // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Adicionar listener no botão diretamente também
+    $('#submitBtn').on('click', function(e) {
+        console.log('Submit button clicked!');
     });
 
     // Objeto com dados dos pacientes (será preenchido dinamicamente)
