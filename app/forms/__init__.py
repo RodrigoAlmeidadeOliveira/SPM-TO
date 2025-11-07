@@ -11,6 +11,10 @@ from app.forms.questao_forms import QuestaoForm
 from app.forms.pei_forms import PlanoTemplateItemForm, PlanoItemSelecaoForm
 from app.forms.prontuario_forms import ProntuarioForm, EncerrarProntuarioForm
 from app.forms.atendimento_forms import AtendimentoForm, FinalizarAtendimentoForm
+from app.forms.plano_terapeutico_forms import (
+    PlanoTerapeuticoForm, AlterarStatusPlanoForm,
+    ObjetivoTerapeuticoForm, AtualizarProgressoObjetivoForm
+)
 
 __all__ = [
     'LoginForm',
@@ -28,5 +32,9 @@ __all__ = [
     'ProntuarioForm',
     'EncerrarProntuarioForm',
     'AtendimentoForm',
-    'FinalizarAtendimentoForm'
+    'FinalizarAtendimentoForm',
+    'PlanoTerapeuticoForm',
+    'AlterarStatusPlanoForm',
+    'ObjetivoTerapeuticoForm',
+    'AtualizarProgressoObjetivoForm'
 ]

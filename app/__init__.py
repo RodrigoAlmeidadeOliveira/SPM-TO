@@ -59,6 +59,7 @@ def create_app(config_name=None):
     from app.routes.pei import pei_bp
     from app.routes.prontuario import prontuario_bp
     from app.routes.atendimento import atendimento_bp
+    from app.routes.plano_terapeutico import plano_terapeutico_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -71,6 +72,7 @@ def create_app(config_name=None):
     app.register_blueprint(pei_bp, url_prefix='/pei')
     app.register_blueprint(prontuario_bp, url_prefix='/prontuario')
     app.register_blueprint(atendimento_bp, url_prefix='/atendimento')
+    app.register_blueprint(plano_terapeutico_bp, url_prefix='/plano')
 
     # Contexto do template
     @app.context_processor
