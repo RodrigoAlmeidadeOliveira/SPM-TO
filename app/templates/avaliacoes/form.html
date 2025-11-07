@@ -327,6 +327,8 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
+    console.log('JavaScript loaded!');
+
     // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -435,6 +437,7 @@ $(document).ready(function() {
 
     // Validação ao submeter
     $('#avaliacaoForm').on('submit', function(e) {
+        console.log('Form submit event triggered!');
         let valid = true;
 
         // Remover validações anteriores
@@ -442,30 +445,42 @@ $(document).ready(function() {
 
         // Validar campos obrigatórios
         const pacienteId = $('#paciente_id').val();
-        if (!pacienteId || pacienteId === '0') {
+        console.log('Paciente ID:', pacienteId);
+        if (!pacienteId || pacienteId === '0' || pacienteId === 0) {
+            console.log('Paciente inválido');
             $('#paciente_id').addClass('is-invalid');
             valid = false;
         }
 
         const instrumentoId = $('#instrumento_id').val();
-        if (!instrumentoId || instrumentoId === '0') {
+        console.log('Instrumento ID:', instrumentoId);
+        if (!instrumentoId || instrumentoId === '0' || instrumentoId === 0) {
+            console.log('Instrumento inválido');
             $('#instrumento_id').addClass('is-invalid');
             valid = false;
         }
 
-        if (!$('[name="data_avaliacao"]').val()) {
+        const dataAvaliacao = $('[name="data_avaliacao"]').val();
+        console.log('Data:', dataAvaliacao);
+        if (!dataAvaliacao) {
+            console.log('Data inválida');
             $('[name="data_avaliacao"]').addClass('is-invalid');
             valid = false;
         }
 
         const respondente = $('[name="relacionamento_respondente"]').val();
+        console.log('Respondente:', respondente);
         if (!respondente || respondente === '') {
+            console.log('Respondente inválido');
             $('[name="relacionamento_respondente"]').addClass('is-invalid');
             valid = false;
         }
 
+        console.log('Validation result:', valid);
+
         if (!valid) {
             e.preventDefault();
+            console.log('Form submission prevented - validation failed');
             alert('Por favor, preencha todos os campos obrigatórios (*)');
 
             // Scroll para o primeiro campo inválido
@@ -477,6 +492,7 @@ $(document).ready(function() {
             return false;
         }
 
+        console.log('Form validation passed, submitting...');
         // Desabilitar botão e mostrar loading
         $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Criando avaliação...');
     });
