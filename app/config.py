@@ -47,8 +47,9 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     """Configuração de testes"""
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/spm_test'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'  # Use SQLite in-memory for tests
     WTF_CSRF_ENABLED = False
+    SESSION_COOKIE_SECURE = False
 
 
 config = {

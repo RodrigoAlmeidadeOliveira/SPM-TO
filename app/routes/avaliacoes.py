@@ -8,6 +8,8 @@ from app.models import Avaliacao, Paciente, Instrumento, Questao, Resposta, Domi
 from app.forms import AvaliacaoForm, RespostaForm
 from app.services.calculo_service import CalculoService
 from app.services.classificacao_service import ClassificacaoService
+from app.services.permission_service import PermissionService
+from app.utils.decorators import can_view_avaliacao, can_edit_avaliacao
 from sqlalchemy import func
 from datetime import datetime
 
@@ -17,39 +19,99 @@ avaliacoes_bp = Blueprint('avaliacoes', __name__)
 @avaliacoes_bp.route('/')
 @login_required
 def listar():
-    """Lista todas as avaliações com filtros"""
-    # Parâmetros de busca
-    status_filtro = request.args.get('status', '').strip()
-    paciente_id = request.args.get('paciente_id', type=int)
+    """Lista avaliações com filtros avançados"""
+    from app.models.user import User
+    from datetime import datetime as dt
+
     page = request.args.get('page', 1, type=int)
-    per_page = 15
+    per_page = 20
+
+    # Filtros
+    paciente_id = request.args.get('paciente_id', type=int)
+    avaliador_id = request.args.get('avaliador_id', type=int)
+    status = request.args.get('status', '')
+    data_inicio = request.args.get('data_inicio', '')
+    data_fim = request.args.get('data_fim', '')
+    busca = request.args.get('busca', '')
 
     # Query base
     query = Avaliacao.query.join(Paciente).join(Instrumento)
 
-    # Filtrar por paciente se especificado
+    # Filtrar avaliações baseado nos pacientes que o usuário tem acesso
+    if not current_user.is_admin():
+        # Obter IDs de pacientes que o usuário pode acessar
+        pacientes_query = Paciente.query
+        pacientes_query = PermissionService.filtrar_pacientes_por_permissao(pacientes_query, current_user)
+        pacientes_ids = [p.id for p in pacientes_query.all()]
+
+        # Filtrar avaliações apenas destes pacientes
+        if pacientes_ids:
+            query = query.filter(Avaliacao.paciente_id.in_(pacientes_ids))
+        else:
+            query = query.filter(False)  # Nenhum resultado
+
+    # Filtro por paciente específico
     if paciente_id:
+        # Verificar se o usuário tem permissão para este paciente
+        if not PermissionService.pode_acessar_paciente(current_user, paciente_id):
+            flash('Você não tem permissão para visualizar avaliações deste paciente', 'danger')
+            return redirect(url_for('avaliacoes.listar'))
         query = query.filter(Avaliacao.paciente_id == paciente_id)
 
-    # Filtrar por status
-    if status_filtro and status_filtro in ['em_andamento', 'concluida', 'revisao']:
-        query = query.filter(Avaliacao.status == status_filtro)
+    # Filtro por avaliador
+    if avaliador_id:
+        query = query.filter_by(avaliador_id=avaliador_id)
 
-    # Ordenar por data mais recente
-    query = query.order_by(Avaliacao.data_avaliacao.desc())
+    # Filtro por status
+    if status:
+        query = query.filter_by(status=status)
 
-    # Paginar
-    paginacao = query.paginate(page=page, per_page=per_page, error_out=False)
-    avaliacoes = paginacao.items
+    # Filtro por período
+    if data_inicio:
+        try:
+            data_inicio_dt = dt.strptime(data_inicio, '%Y-%m-%d').date()
+            query = query.filter(Avaliacao.data_avaliacao >= data_inicio_dt)
+        except ValueError:
+            flash('Data de início inválida', 'warning')
 
-    return render_template(
-        'avaliacoes/listar.html',
-        avaliacoes=avaliacoes,
-        paginacao=paginacao,
-        status_filtro=status_filtro,
-        paciente_id=paciente_id
+    if data_fim:
+        try:
+            data_fim_dt = dt.strptime(data_fim, '%Y-%m-%d').date()
+            query = query.filter(Avaliacao.data_avaliacao <= data_fim_dt)
+        except ValueError:
+            flash('Data de fim inválida', 'warning')
+
+    # Filtro por busca (nome do paciente)
+    if busca:
+        query = query.join(Paciente).filter(
+            Paciente.nome.ilike(f'%{busca}%')
+        )
+
+    # Ordenar e paginar
+    avaliacoes = query.order_by(db.desc(Avaliacao.data_avaliacao)).paginate(
+        page=page, per_page=per_page, error_out=False
     )
 
+    # Estatísticas dos filtros
+    total_filtrado = query.count()
+    total_geral = Avaliacao.query.count()
+
+    # Listas para os filtros
+    pacientes = Paciente.query.filter_by(ativo=True).order_by(Paciente.nome).all()
+    avaliadores = User.query.filter_by(ativo=True).order_by(User.nome_completo).all()
+
+    return render_template('avaliacoes/listar.html',
+                          avaliacoes=avaliacoes,
+                          pacientes=pacientes,
+                          avaliadores=avaliadores,
+                          paciente_id=paciente_id,
+                          avaliador_id=avaliador_id,
+                          status=status,
+                          data_inicio=data_inicio,
+                          data_fim=data_fim,
+                          busca=busca,
+                          total_filtrado=total_filtrado,
+                          total_geral=total_geral)
 
 @avaliacoes_bp.route('/nova', methods=['GET', 'POST'])
 @login_required
@@ -126,6 +188,7 @@ def nova():
 
 @avaliacoes_bp.route('/<int:id>')
 @login_required
+@can_view_avaliacao
 def visualizar(id):
     """Visualiza detalhes de uma avaliação"""
     avaliacao = Avaliacao.query.get_or_404(id)
@@ -167,6 +230,7 @@ def visualizar(id):
 
 @avaliacoes_bp.route('/<int:id>/responder', methods=['GET', 'POST'])
 @login_required
+@can_edit_avaliacao
 def responder(id):
     """Interface para responder questões da avaliação"""
     avaliacao = Avaliacao.query.get_or_404(id)
@@ -277,6 +341,7 @@ def responder(id):
 
 @avaliacoes_bp.route('/<int:id>/finalizar', methods=['GET', 'POST'])
 @login_required
+@can_edit_avaliacao
 def finalizar(id):
     """Finaliza uma avaliação e calcula os escores"""
     avaliacao = Avaliacao.query.get_or_404(id)
@@ -319,10 +384,16 @@ def finalizar(id):
 
 @avaliacoes_bp.route('/<int:id>/excluir', methods=['POST'])
 @login_required
+@can_edit_avaliacao
 def excluir(id):
     """Exclui uma avaliação"""
     avaliacao = Avaliacao.query.get_or_404(id)
     paciente_id = avaliacao.paciente_id
+
+    # Verificar se pode excluir (apenas se não estiver concluída ou se for admin/criador)
+    if avaliacao.status == 'concluida' and avaliacao.avaliador_id != current_user.id and not current_user.is_admin():
+        flash('Você não pode excluir avaliações concluídas de outros usuários', 'danger')
+        return redirect(url_for('avaliacoes.visualizar', id=id))
 
     try:
         # Excluir respostas associadas

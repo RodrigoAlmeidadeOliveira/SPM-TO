@@ -13,6 +13,9 @@ class Instrumento(db.Model):
     codigo = db.Column(db.String(50), unique=True, nullable=False, index=True)
     nome = db.Column(db.String(200), nullable=False)
 
+    # Vinculação com módulo (para arquitetura modular)
+    modulo_id = db.Column(db.Integer, db.ForeignKey('modulos.id'), nullable=True, index=True)
+
     # Faixa etária e contexto
     idade_minima = db.Column(db.Integer, nullable=False)  # em anos
     idade_maxima = db.Column(db.Integer, nullable=False)  # em anos
@@ -28,6 +31,7 @@ class Instrumento(db.Model):
                                   onupdate=datetime.utcnow, nullable=False)
 
     # Relacionamentos
+    modulo = db.relationship('Modulo', back_populates='instrumentos')
     dominios = db.relationship('Dominio', back_populates='instrumento',
                                lazy='dynamic', cascade='all, delete-orphan',
                                order_by='Dominio.ordem')

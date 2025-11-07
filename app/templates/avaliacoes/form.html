@@ -1,163 +1,484 @@
 {% extends "base.html" %}
 
-{% block title %}Nova Avaliação - {{ super() }}{% endblock %}
+{% block title %}{{ titulo }} - SPM-TO{% endblock %}
+
+{% block extra_css %}
+<style>
+    .wizard-steps {
+        counter-reset: step;
+        margin-bottom: 2rem;
+    }
+    .wizard-steps li {
+        counter-increment: step;
+        position: relative;
+        padding-left: 3rem;
+        margin-bottom: 1.5rem;
+    }
+    .wizard-steps li::before {
+        content: counter(step);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 2.5rem;
+        height: 2.5rem;
+        background: #6c757d;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    .wizard-steps li.active::before {
+        background: #198754;
+    }
+    .wizard-steps li.completed::before {
+        content: "✓";
+        background: #0d6efd;
+    }
+    .patient-info-card {
+        background: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: none;
+    }
+    .instrument-suggestion {
+        background: #d1ecf1;
+        border-left: 4px solid #0c5460;
+        padding: 1rem;
+        margin-top: 0.5rem;
+        display: none;
+    }
+    .form-section {
+        background: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .help-icon {
+        cursor: help;
+        margin-left: 0.25rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h2">
-                    <i class="bi bi-clipboard-plus me-2"></i>
-                    Nova Avaliação
-                </h1>
-                <a href="{{ url_for('pacientes.visualizar', id=paciente.id) }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i>
-                    Voltar
-                </a>
-            </div>
-
-            <!-- Informações do Paciente -->
-            <div class="card mb-4 bg-light">
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar com Instruções -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="card sticky-top" style="top: 1rem;">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Guia de Preenchimento</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Paciente</h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Nome:</strong> {{ paciente.nome }}</p>
-                            <p class="mb-0"><strong>Identificação:</strong> <code>{{ paciente.identificacao }}</code></p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Idade:</strong> {{ paciente.calcular_idade() }} anos</p>
-                            <p class="mb-0"><strong>Sexo:</strong>
-                                {% if paciente.sexo == 'M' %}Masculino
-                                {% elif paciente.sexo == 'F' %}Feminino
-                                {% else %}Outro{% endif %}
-                            </p>
-                        </div>
+                    <ol class="wizard-steps list-unstyled">
+                        <li id="step1" class="active">
+                            <strong>Selecione o Paciente</strong>
+                            <p class="text-muted small mb-0">Escolha a criança que será avaliada</p>
+                        </li>
+                        <li id="step2">
+                            <strong>Escolha o Instrumento</strong>
+                            <p class="text-muted small mb-0">Selecione SPM ou SPM-P conforme a idade</p>
+                        </li>
+                        <li id="step3">
+                            <strong>Dados da Avaliação</strong>
+                            <p class="text-muted small mb-0">Data e respondente</p>
+                        </li>
+                        <li id="step4">
+                            <strong>Observações</strong>
+                            <p class="text-muted small mb-0">Comentários adicionais</p>
+                        </li>
+                    </ol>
+
+                    <hr>
+
+                    <div class="alert alert-warning alert-sm">
+                        <i class="fas fa-lightbulb"></i> <strong>Dica:</strong>
+                        O sistema sugere automaticamente o instrumento adequado baseado na idade do paciente.
                     </div>
+
+                    <h6 class="mt-3"><i class="fas fa-book"></i> Instrumentos Disponíveis</h6>
+                    <ul class="small">
+                        <li><strong>SPM-P</strong> (3-5 anos): Crianças pré-escolares</li>
+                        <li><strong>SPM</strong> (5-12 anos): Crianças escolares</li>
+                    </ul>
+
+                    <h6 class="mt-3"><i class="fas fa-users"></i> Respondentes</h6>
+                    <p class="small text-muted">
+                        Pode responder: Pai, Mãe, Responsável Legal, Professor(a) ou Terapeuta
+                    </p>
                 </div>
             </div>
+        </div>
 
-            <!-- Formulário de Criação -->
-            <div class="card">
-                <div class="card-body">
-                    <form method="POST" novalidate>
+        <!-- Formulário Principal -->
+        <div class="col-lg-9">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-clipboard-check"></i> {{ titulo }}
+                        </h4>
+                        <span class="badge bg-light text-dark">
+                            <i class="fas fa-clock"></i> {{ "now"|date("%d/%m/%Y") }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" id="avaliacaoForm" novalidate>
                         {{ form.hidden_tag() }}
 
-                        <!-- Seleção de Instrumento -->
-                        <div class="mb-4">
-                            <h5 class="border-bottom pb-2 mb-3">Seleção do Instrumento</h5>
+                        <!-- Seção 1: Seleção de Paciente -->
+                        <div class="form-section" data-step="1">
+                            <div class="form-section-title">
+                                <i class="fas fa-user"></i> 1. Dados do Paciente
+                            </div>
 
                             <div class="mb-3">
-                                <label for="instrumento_id" class="form-label">
-                                    {{ form.instrumento_id.label.text }} <span class="text-danger">*</span>
+                                <label class="form-label fw-bold">
+                                    {{ form.paciente_id.label.text }}
+                                    <i class="fas fa-question-circle help-icon"
+                                       data-bs-toggle="tooltip"
+                                       title="Selecione o paciente que será avaliado. A idade será usada para sugerir o instrumento adequado."></i>
+                                    <span class="text-danger">*</span>
                                 </label>
-                                {{ form.instrumento_id(class="form-select" + (" is-invalid" if form.instrumento_id.errors else "")) }}
+                                {{ form.paciente_id(class="form-select form-select-lg" + (" is-invalid" if form.paciente_id.errors else ""), id="paciente_id") }}
+                                {% if form.paciente_id.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.paciente_id.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i> Não encontrou o paciente?
+                                    <a href="{{ url_for('pacientes.novo') }}" target="_blank">Cadastrar novo paciente</a>
+                                </small>
+                            </div>
+
+                            <!-- Card com informações do paciente selecionado -->
+                            <div id="patientInfo" class="patient-info-card">
+                                <h6 class="mb-2"><i class="fas fa-user-circle"></i> Informações do Paciente</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <strong>Idade:</strong> <span id="patientAge">-</span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Sexo:</strong> <span id="patientGender">-</span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Data Nasc.:</strong> <span id="patientBirth">-</span>
+                                    </div>
+                                </div>
+                                <div id="patientHistory" class="mt-2" style="display: none;">
+                                    <strong>Avaliações anteriores:</strong> <span id="patientEvaluations">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seção 2: Seleção de Instrumento -->
+                        <div class="form-section" data-step="2">
+                            <div class="form-section-title">
+                                <i class="fas fa-tasks"></i> 2. Instrumento de Avaliação
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    {{ form.instrumento_id.label.text }}
+                                    <i class="fas fa-question-circle help-icon"
+                                       data-bs-toggle="tooltip"
+                                       title="Escolha entre SPM (5-12 anos) ou SPM-P (3-5 anos). O sistema sugerirá o instrumento adequado baseado na idade."></i>
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.instrumento_id(class="form-select form-select-lg" + (" is-invalid" if form.instrumento_id.errors else ""), id="instrumento_id") }}
                                 {% if form.instrumento_id.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in form.instrumento_id.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                <!-- Sugestão automática de instrumento -->
+                                <div id="instrumentSuggestion" class="instrument-suggestion">
+                                    <i class="fas fa-magic"></i> <strong>Sugestão:</strong>
+                                    <span id="suggestionText"></span>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="alert alert-info mb-0">
+                                        <strong><i class="fas fa-info-circle"></i> Sobre os Instrumentos:</strong>
+                                        <ul class="mb-0 mt-2">
+                                            <li><strong>SPM-P (3-5 anos):</strong> Avalia 8 domínios incluindo Olfato/Paladar</li>
+                                            <li><strong>SPM (5-12 anos):</strong> Avalia 7 domínios do processamento sensorial</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seção 3: Dados da Avaliação -->
+                        <div class="form-section" data-step="3">
+                            <div class="form-section-title">
+                                <i class="fas fa-calendar-alt"></i> 3. Dados da Avaliação
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">
+                                        {{ form.data_avaliacao.label.text }}
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.data_avaliacao(class="form-control" + (" is-invalid" if form.data_avaliacao.errors else "")) }}
+                                    {% if form.data_avaliacao.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.data_avaliacao.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Data em que a avaliação está sendo realizada
+                                    </small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">
+                                        {{ form.relacionamento_respondente.label.text }}
+                                        <i class="fas fa-question-circle help-icon"
+                                           data-bs-toggle="tooltip"
+                                           title="Quem está respondendo esta avaliação? Ex: Mãe, Professor, Terapeuta"></i>
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.relacionamento_respondente(class="form-select" + (" is-invalid" if form.relacionamento_respondente.errors else "")) }}
+                                    {% if form.relacionamento_respondente.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.relacionamento_respondente.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seção 4: Comentários -->
+                        <div class="form-section" data-step="4">
+                            <div class="form-section-title">
+                                <i class="fas fa-comment-alt"></i> 4. Observações e Comentários
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    {{ form.comentarios.label.text }}
+                                    <span class="text-muted">(Opcional)</span>
+                                </label>
+                                {{ form.comentarios(class="form-control", rows=5, placeholder="Descreva comportamentos relevantes, contexto da avaliação, condições especiais, etc.") }}
                                 <small class="form-text text-muted">
-                                    Apenas instrumentos adequados para a idade do paciente são exibidos
+                                    <i class="fas fa-lightbulb"></i> Inclua informações sobre comportamento, funcionamento, contexto ou qualquer observação relevante
                                 </small>
                             </div>
-
-                            {% if instrumentos %}
-                            <div class="alert alert-info">
-                                <h6 class="alert-heading">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    Instrumentos Disponíveis
-                                </h6>
-                                <ul class="mb-0">
-                                    {% for inst in instrumentos %}
-                                    <li>
-                                        <strong>{{ inst.nome }}</strong> ({{ inst.contexto }})
-                                        - Faixa etária: {{ inst.idade_minima }} a {{ inst.idade_maxima }} anos
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            {% else %}
-                            <div class="alert alert-warning">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                Nenhum instrumento disponível para a idade do paciente ({{ paciente.calcular_idade() }} anos)
-                            </div>
-                            {% endif %}
                         </div>
 
-                        <!-- Dados da Avaliação -->
-                        <h5 class="border-bottom pb-2 mb-3">Dados da Avaliação</h5>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="data_avaliacao" class="form-label">
-                                    {{ form.data_avaliacao.label.text }} <span class="text-danger">*</span>
-                                </label>
-                                {{ form.data_avaliacao(class="form-control" + (" is-invalid" if form.data_avaliacao.errors else "")) }}
-                                {% if form.data_avaliacao.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.data_avaliacao.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="relacionamento_respondente" class="form-label">
-                                    {{ form.relacionamento_respondente.label.text }} <span class="text-danger">*</span>
-                                </label>
-                                {{ form.relacionamento_respondente(class="form-select" + (" is-invalid" if form.relacionamento_respondente.errors else "")) }}
-                                {% if form.relacionamento_respondente.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.relacionamento_respondente.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                <small class="form-text text-muted">
-                                    Quem está respondendo o questionário
-                                </small>
+                        <!-- Alerta de Próximos Passos -->
+                        <div class="alert alert-success border-success">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-arrow-right fa-2x"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="alert-heading"><strong>Próximos Passos</strong></h6>
+                                    <p class="mb-2">Após criar esta avaliação, você será direcionado para:</p>
+                                    <ol class="mb-0">
+                                        <li>Responder as questões do instrumento selecionado</li>
+                                        <li>O sistema calculará automaticamente os escores por domínio</li>
+                                        <li>Você poderá visualizar gráficos e relatórios completos</li>
+                                    </ol>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="comentarios" class="form-label">
-                                {{ form.comentarios.label.text }}
-                            </label>
-                            {{ form.comentarios(class="form-control") }}
-                            <small class="form-text text-muted">
-                                Observações sobre o contexto, comportamento recente, etc.
-                            </small>
-                        </div>
-
-                        <!-- Botões -->
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ url_for('pacientes.visualizar', id=paciente.id) }}" class="btn btn-secondary">
-                                <i class="bi bi-x-circle me-1"></i>
-                                Cancelar
+                        <!-- Botões de Ação -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+                            <a href="{{ url_for('avaliacoes.listar') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancelar
                             </a>
-                            <button type="submit" class="btn btn-primary" {% if not instrumentos %}disabled{% endif %}>
-                                <i class="bi bi-check-circle me-1"></i>
-                                Criar Avaliação e Começar
+                            <button type="submit" class="btn btn-success btn-lg px-5" id="submitBtn">
+                                <i class="fas fa-save"></i> {{ form.submit.label.text }}
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
-
-            <!-- Instruções -->
-            <div class="alert alert-success mt-4">
-                <h6 class="alert-heading">
-                    <i class="bi bi-lightbulb me-1"></i>
-                    Próximos Passos
-                </h6>
-                <ol class="mb-0">
-                    <li>Selecione o instrumento adequado e preencha os dados</li>
-                    <li>Após criar a avaliação, você será direcionado para responder as questões</li>
-                    <li>As questões são apresentadas uma por vez</li>
-                    <li>Você pode pausar e continuar depois</li>
-                    <li>Ao concluir todas as questões, os escores serão calculados automaticamente</li>
-                </ol>
-            </div>
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Inicializar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Objeto com dados dos pacientes (será preenchido dinamicamente)
+    const pacientesData = {};
+
+    // Extrair dados dos pacientes do select
+    $('#paciente_id option').each(function() {
+        if ($(this).val()) {
+            const text = $(this).text();
+            const match = text.match(/(.+?)\s*-\s*(\d+)\s*anos/);
+            if (match) {
+                pacientesData[$(this).val()] = {
+                    nome: match[1].trim(),
+                    idade: parseInt(match[2])
+                };
+            }
+        }
+    });
+
+    // Atualizar wizard steps
+    function updateWizardSteps() {
+        $('.wizard-steps li').removeClass('active completed');
+
+        const paciente = $('#paciente_id').val();
+        const instrumento = $('#instrumento_id').val();
+        const data = $('[name="data_avaliacao"]').val();
+        const respondente = $('[name="relacionamento_respondente"]').val();
+
+        if (paciente) {
+            $('#step1').addClass('completed');
+            $('#step2').addClass('active');
+        } else {
+            $('#step1').addClass('active');
+        }
+
+        if (instrumento) {
+            $('#step2').addClass('completed');
+            $('#step3').addClass('active');
+        }
+
+        if (data && respondente) {
+            $('#step3').addClass('completed');
+            $('#step4').addClass('active');
+        }
+    }
+
+    // Quando selecionar paciente
+    $('#paciente_id').on('change', function() {
+        const pacienteId = $(this).val();
+
+        if (pacienteId && pacientesData[pacienteId]) {
+            const paciente = pacientesData[pacienteId];
+
+            // Mostrar informações do paciente
+            $('#patientAge').text(paciente.idade + ' anos');
+            $('#patientInfo').slideDown();
+
+            // Sugerir instrumento baseado na idade
+            suggestInstrument(paciente.idade);
+        } else {
+            $('#patientInfo').slideUp();
+            $('#instrumentSuggestion').slideUp();
+        }
+
+        updateWizardSteps();
+    });
+
+    // Sugerir instrumento baseado na idade
+    function suggestInstrument(idade) {
+        let sugestao = '';
+        let instrumentoSugerido = '';
+
+        if (idade >= 3 && idade < 5) {
+            sugestao = 'Para crianças de 3-5 anos, recomendamos o <strong>SPM-P (Pré-escolar)</strong>';
+            instrumentoSugerido = 'SPM-P';
+        } else if (idade >= 5 && idade <= 12) {
+            sugestao = 'Para crianças de 5-12 anos, recomendamos o <strong>SPM (Escolar)</strong>';
+            instrumentoSugerido = 'SPM';
+        } else if (idade < 3) {
+            sugestao = '<span class="text-warning">Atenção: Criança com menos de 3 anos. Os instrumentos disponíveis são para 3-12 anos.</span>';
+        } else {
+            sugestao = '<span class="text-warning">Atenção: Criança com mais de 12 anos. Os instrumentos disponíveis são para 3-12 anos.</span>';
+        }
+
+        if (sugestao) {
+            $('#suggestionText').html(sugestao);
+            $('#instrumentSuggestion').slideDown();
+
+            // Auto-selecionar instrumento se houver match
+            if (instrumentoSugerido) {
+                $('#instrumento_id option').each(function() {
+                    if ($(this).text().includes(instrumentoSugerido)) {
+                        $('#instrumento_id').val($(this).val()).trigger('change');
+                    }
+                });
+            }
+        }
+    }
+
+    // Monitorar mudanças para atualizar wizard
+    $('#instrumento_id, [name="data_avaliacao"], [name="relacionamento_respondente"]').on('change', updateWizardSteps);
+
+    // Validação ao submeter
+    $('#avaliacaoForm').on('submit', function(e) {
+        let valid = true;
+
+        // Remover validações anteriores
+        $('.is-invalid').removeClass('is-invalid');
+
+        // Validar campos obrigatórios
+        if (!$('#paciente_id').val()) {
+            $('#paciente_id').addClass('is-invalid');
+            valid = false;
+        }
+
+        if (!$('#instrumento_id').val()) {
+            $('#instrumento_id').addClass('is-invalid');
+            valid = false;
+        }
+
+        if (!$('[name="data_avaliacao"]').val()) {
+            $('[name="data_avaliacao"]').addClass('is-invalid');
+            valid = false;
+        }
+
+        if (!$('[name="relacionamento_respondente"]').val()) {
+            $('[name="relacionamento_respondente"]').addClass('is-invalid');
+            valid = false;
+        }
+
+        if (!valid) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios (*)');
+            return false;
+        }
+
+        // Desabilitar botão e mostrar loading
+        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Criando avaliação...');
+    });
+
+    // Scroll suave para campos com erro
+    if ($('.is-invalid').length > 0) {
+        $('html, body').animate({
+            scrollTop: $('.is-invalid').first().offset().top - 100
+        }, 500);
+    }
+
+    // Inicializar wizard no carregamento
+    updateWizardSteps();
+});
+</script>
 {% endblock %}

@@ -4,6 +4,14 @@ Modelo de Paciente
 from datetime import datetime
 from app import db
 
+# Tabela de associação muitos-para-muitos entre User e Paciente
+paciente_responsavel = db.Table('paciente_responsavel',
+    db.Column('paciente_id', db.Integer, db.ForeignKey('pacientes.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('tipo_vinculo', db.String(20), nullable=False, default='terapeuta'),  # terapeuta, professor, familiar
+    db.Column('data_vinculo', db.DateTime, default=datetime.utcnow, nullable=False)
+)
+
 
 class Paciente(db.Model):
     """Modelo de Paciente (Criança)"""
@@ -20,6 +28,9 @@ class Paciente(db.Model):
     observacoes = db.Column(db.Text)
     ativo = db.Column(db.Boolean, default=True, nullable=False)
 
+    # Quem criou o paciente (proprietário principal)
+    criador_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
     # Auditoria
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow,
@@ -28,6 +39,13 @@ class Paciente(db.Model):
     # Relacionamentos
     avaliacoes = db.relationship('Avaliacao', back_populates='paciente',
                                  lazy='dynamic', cascade='all, delete-orphan')
+
+    criador = db.relationship('User', foreign_keys=[criador_id], backref='pacientes_criados')
+
+    # Relacionamento muitos-para-muitos com User (responsáveis/terapeutas)
+    responsaveis = db.relationship('User', secondary=paciente_responsavel,
+                                   backref=db.backref('pacientes_vinculados', lazy='dynamic'),
+                                   lazy='dynamic')
 
     def calcular_idade(self, data_referencia=None):
         """

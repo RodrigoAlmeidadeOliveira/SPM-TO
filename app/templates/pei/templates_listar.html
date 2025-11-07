@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Templates PEI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-file-earmark-text me-2"></i>Templates PEI</h2>
+    <a href="{{ url_for('pei.novo_template') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>
+        Novo Template
+    </a>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Buscar</label>
+                <input type="text" name="busca" class="form-control"
+                       value="{{ busca }}" placeholder="Texto do item...">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Instrumento</label>
+                <select name="instrumento_id" class="form-select">
+                    <option value="">Todos</option>
+                    {% for instr in instrumentos %}
+                    <option value="{{ instr.id }}" {% if instr.id == instrumento_id %}selected{% endif %}>
+                        {{ instr.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Domínio</label>
+                <select name="dominio_id" class="form-select">
+                    <option value="">Todos</option>
+                    {% for dom in dominios %}
+                    <option value="{{ dom.id }}" {% if dom.id == dominio_id %}selected{% endif %}>
+                        {{ dom.instrumento.nome }} - {{ dom.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i>Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resultados -->
+{% if templates %}
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 5%">Ordem</th>
+                        <th style="width: 15%">Instrumento</th>
+                        <th style="width: 15%">Domínio</th>
+                        <th style="width: 50%">Texto</th>
+                        <th style="width: 8%">Status</th>
+                        <th style="width: 7%" class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                    <tr>
+                        <td>{{ template.ordem }}</td>
+                        <td><small>{{ template.instrumento.nome }}</small></td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ template.dominio_nome }}
+                            </span>
+                        </td>
+                        <td>{{ template.texto[:100] }}{% if template.texto|length > 100 %}...{% endif %}</td>
+                        <td>
+                            {% if template.ativo %}
+                            <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('pei.editar_template', id=template.id) }}"
+                                   class="btn btn-outline-primary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger"
+                                        onclick="confirmarExclusao({{ template.id }})" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação -->
+        {% if paginacao.pages > 1 %}
+        <nav aria-label="Navegação de página">
+            <ul class="pagination justify-content-center mb-0">
+                {% if paginacao.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('pei.listar_templates', page=paginacao.prev_num, busca=busca, instrumento_id=instrumento_id, dominio_id=dominio_id) }}">
+                        Anterior
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in paginacao.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == paginacao.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('pei.listar_templates', page=page_num, busca=busca, instrumento_id=instrumento_id, dominio_id=dominio_id) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if paginacao.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('pei.listar_templates', page=paginacao.next_num, busca=busca, instrumento_id=instrumento_id, dominio_id=dominio_id) }}">
+                        Próxima
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-2"></i>
+    Nenhum template encontrado.
+    <a href="{{ url_for('pei.novo_template') }}">Cadastre o primeiro template</a>.
+</div>
+{% endif %}
+
+<!-- Modal de Confirmação de Exclusão -->
+<form id="formExcluir" method="POST" style="display: none;">
+</form>
+
+<script>
+function confirmarExclusao(id) {
+    if (confirm('Tem certeza que deseja excluir este template? Esta ação não pode ser desfeita.')) {
+        const form = document.getElementById('formExcluir');
+        form.action = `/pei/templates/${id}/excluir`;
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

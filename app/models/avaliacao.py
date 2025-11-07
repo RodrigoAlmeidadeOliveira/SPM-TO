@@ -55,6 +55,10 @@ class Avaliacao(db.Model):
     classificacao_pla = db.Column(db.String(50))
     classificacao_olf = db.Column(db.String(50))
 
+    # T-score e classificação total
+    t_score_tot = db.Column(db.Integer)
+    classificacao_tot = db.Column(db.String(50))
+
     # Auditoria
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow,

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Selecionar Itens do PEI{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <!-- Cabeçalho -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="bi bi-check2-square me-2"></i>Selecionar Itens do PEI</h2>
+                <p class="text-muted mb-0">
+                    Paciente: <strong>{{ avaliacao.paciente.nome }}</strong> |
+                    Avaliação: {{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}
+                </p>
+            </div>
+            <div>
+                <button type="button" class="btn btn-outline-primary" onclick="aplicarSugestoes()">
+                    <i class="bi bi-magic me-1"></i>
+                    Aplicar Sugestões Automáticas
+                </button>
+            </div>
+        </div>
+
+        <!-- Informações da Avaliação -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-info-circle me-2"></i>Resultados da Avaliação
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Instrumento:</strong> {{ avaliacao.instrumento.nome }}</p>
+                        <p><strong>Status:</strong>
+                            <span class="badge bg-success">{{ avaliacao.status }}</span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Escore Total:</strong> {{ avaliacao.escore_total }}</p>
+                        <p><strong>T-Score Total:</strong>
+                            {% if avaliacao.t_score_tot %}
+                                {{ avaliacao.t_score_tot }}
+                                <span class="badge {% if avaliacao.classificacao_tot == 'TIPICO' %}bg-success{% elif avaliacao.classificacao_tot == 'PROVAVEL_DISFUNCAO' %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {% if avaliacao.classificacao_tot == 'TIPICO' %}Típico
+                                    {% elif avaliacao.classificacao_tot == 'PROVAVEL_DISFUNCAO' %}Provável Disfunção
+                                    {% else %}Disfunção Definitiva{% endif %}
+                                </span>
+                            {% else %}
+                                Não calculado
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulário de Seleção -->
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            {% for dominio_nome, templates in templates_por_dominio.items() %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-folder me-2"></i>{{ dominio_nome }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for template in templates %}
+                    <div class="border rounded p-3 mb-3 item-pei" data-template-id="{{ template.id }}">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="itens_selecionados" value="{{ template.id }}"
+                                   id="item_{{ template.id }}"
+                                   {% if template.id in itens_existentes and itens_existentes[template.id].selecionado %}checked{% endif %}>
+                            <label class="form-check-label w-100" for="item_{{ template.id }}">
+                                <strong>{{ template.ordem }}.</strong> {{ template.texto }}
+                            </label>
+                        </div>
+
+                        <!-- Campo de observações (aparece ao marcar) -->
+                        <div class="mt-2 observacoes-container" style="display: {% if template.id in itens_existentes and itens_existentes[template.id].selecionado %}block{% else %}none{% endif %};">
+                            <label class="form-label small text-muted">Observações específicas (opcional):</label>
+                            <textarea name="observacoes_{{ template.id }}"
+                                      class="form-control form-control-sm"
+                                      rows="2"
+                                      placeholder="Adaptações, contexto específico, prioridade..."
+                            >{% if template.id in itens_existentes %}{{ itens_existentes[template.id].observacoes or '' }}{% endif %}</textarea>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Botões -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted">
+                                <span id="contador-selecionados">0</span> item(ns) selecionado(s)
+                            </span>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('avaliacoes.visualizar', id=avaliacao.id) }}"
+                               class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-1"></i>Gerar PEI
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Mostrar/ocultar campo de observações ao marcar checkbox
+document.querySelectorAll('.form-check-input[name="itens_selecionados"]').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const container = this.closest('.item-pei').querySelector('.observacoes-container');
+        container.style.display = this.checked ? 'block' : 'none';
+    });
+});
+
+// Atualizar contador de itens selecionados
+function atualizarContador() {
+    const selecionados = document.querySelectorAll('.form-check-input[name="itens_selecionados"]:checked').length;
+    document.getElementById('contador-selecionados').textContent = selecionados;
+}
+
+document.querySelectorAll('.form-check-input[name="itens_selecionados"]').forEach(checkbox => {
+    checkbox.addEventListener('change', atualizarContador);
+});
+
+// Executar no carregamento
+atualizarContador();
+
+// Aplicar sugestões automáticas
+async function aplicarSugestoes() {
+    try {
+        const response = await fetch('{{ url_for("pei.sugerir_itens", avaliacao_id=avaliacao.id) }}');
+        const data = await response.json();
+
+        if (data.success) {
+            // Desmarcar todos primeiro
+            document.querySelectorAll('.form-check-input[name="itens_selecionados"]').forEach(checkbox => {
+                checkbox.checked = false;
+                const container = checkbox.closest('.item-pei').querySelector('.observacoes-container');
+                container.style.display = 'none';
+            });
+
+            // Marcar os sugeridos
+            data.sugeridos.forEach(templateId => {
+                const checkbox = document.getElementById('item_' + templateId);
+                if (checkbox) {
+                    checkbox.checked = true;
+                    const container = checkbox.closest('.item-pei').querySelector('.observacoes-container');
+                    container.style.display = 'block';
+                }
+            });
+
+            atualizarContador();
+
+            alert(`${data.sugeridos.length} item(ns) sugerido(s) com base em ${data.dominios_afetados} domínio(s) com disfunção identificada.`);
+        }
+    } catch (error) {
+        console.error('Erro ao buscar sugestões:', error);
+        alert('Erro ao aplicar sugestões automáticas.');
+    }
+}
+</script>
+{% endblock %}

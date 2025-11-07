@@ -2,12 +2,14 @@
 Rotas para gerenciamento de pacientes
 """
 from flask import Blueprint, render_template, redirect, url_for, flash, request
-from flask_login import login_required
+from flask_login import login_required, current_user
 from sqlalchemy import or_
 
 from app import db
 from app.forms import PacienteForm
 from app.models import Paciente, Avaliacao
+from app.services.permission_service import PermissionService
+from app.utils.decorators import can_view_patient, can_edit_patient, can_delete_patient
 
 
 pacientes_bp = Blueprint('pacientes', __name__)
@@ -16,14 +18,16 @@ pacientes_bp = Blueprint('pacientes', __name__)
 @pacientes_bp.route('/')
 @login_required
 def listar():
-    """Lista todos os pacientes com busca e filtros"""
+    """Lista pacientes com base nas permissões do usuário"""
     busca = request.args.get('busca', '').strip()
     sexo_filtro = request.args.get('sexo', '').strip()
     ativo_filtro = request.args.get('ativo', '').strip()
     page = request.args.get('page', 1, type=int)
     per_page = 15
 
+    # Aplicar filtro de permissão - usuários só veem seus pacientes
     query = Paciente.query
+    query = PermissionService.filtrar_pacientes_por_permissao(query, current_user)
 
     if busca:
         query = query.filter(
@@ -85,11 +89,18 @@ def novo():
                 sexo=form.sexo.data,
                 raca_etnia=form.raca_etnia.data if form.raca_etnia.data else None,
                 observacoes=form.observacoes.data,
-                ativo=form.ativo.data
+                ativo=form.ativo.data,
+                criador_id=current_user.id  # Define o criador
             )
 
             db.session.add(paciente)
             db.session.commit()
+
+            # Vincular automaticamente como responsável
+            PermissionService.vincular_responsavel(paciente.id, current_user.id, current_user.tipo)
+
+            # Registrar na auditoria
+            PermissionService.registrar_acesso(current_user, 'paciente', paciente.id, 'criar')
 
             flash(f'Paciente {paciente.nome} cadastrado com sucesso!', 'success')
             return redirect(url_for('pacientes.visualizar', id=paciente.id))
@@ -103,6 +114,7 @@ def novo():
 
 @pacientes_bp.route('/<int:id>')
 @login_required
+@can_view_patient
 def visualizar(id):
     """Visualiza detalhes de um paciente"""
     paciente = Paciente.query.get_or_404(id)
@@ -133,6 +145,7 @@ def visualizar(id):
 
 @pacientes_bp.route('/<int:id>/editar', methods=['GET', 'POST'])
 @login_required
+@can_edit_patient
 def editar(id):
     """Edita um paciente existente"""
     paciente = Paciente.query.get_or_404(id)
@@ -181,6 +194,7 @@ def editar(id):
 
 @pacientes_bp.route('/<int:id>/excluir', methods=['POST'])
 @login_required
+@can_delete_patient
 def excluir(id):
     """Exclui (desativa) um paciente"""
     paciente = Paciente.query.get_or_404(id)
@@ -212,6 +226,7 @@ def excluir(id):
 
 @pacientes_bp.route('/<int:id>/reativar', methods=['POST'])
 @login_required
+@can_edit_patient
 def reativar(id):
     """Reativa um paciente desativado"""
     paciente = Paciente.query.get_or_404(id)
@@ -223,5 +238,101 @@ def reativar(id):
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao reativar paciente: {str(e)}', 'danger')
+
+    return redirect(url_for('pacientes.visualizar', id=id))
+
+
+@pacientes_bp.route('/<int:id>/vincular', methods=['POST'])
+@login_required
+@can_edit_patient
+def vincular_responsavel(id):
+    """Vincula um responsável ao paciente"""
+    paciente = Paciente.query.get_or_404(id)
+
+    user_id = request.form.get('user_id', type=int)
+    tipo_vinculo = request.form.get('tipo_vinculo', 'terapeuta')
+
+    if not user_id:
+        flash('Usuário não especificado', 'danger')
+        return redirect(url_for('pacientes.visualizar', id=id))
+
+    from app.models.user import User
+    usuario = User.query.get(user_id)
+
+    if not usuario:
+        flash('Usuário não encontrado', 'danger')
+        return redirect(url_for('pacientes.visualizar', id=id))
+
+    try:
+        if PermissionService.vincular_responsavel(id, user_id, tipo_vinculo):
+            flash(f'{usuario.nome_completo} vinculado como {tipo_vinculo} com sucesso!', 'success')
+            PermissionService.registrar_acesso(current_user, 'paciente', id, 'vincular_responsavel')
+        else:
+            flash('Erro ao vincular responsável', 'danger')
+    except Exception as e:
+        flash(f'Erro ao vincular responsável: {str(e)}', 'danger')
+
+    return redirect(url_for('pacientes.visualizar', id=id))
+
+
+@pacientes_bp.route('/<int:id>/desvincular', methods=['POST'])
+@login_required
+@can_edit_patient
+def desvincular_responsavel(id):
+    """Remove vínculo de um responsável"""
+    paciente = Paciente.query.get_or_404(id)
+
+    user_id = request.form.get('user_id', type=int)
+
+    if not user_id:
+        flash('Usuário não especificado', 'danger')
+        return redirect(url_for('pacientes.visualizar', id=id))
+
+    try:
+        if PermissionService.desvincular_responsavel(id, user_id):
+            flash('Responsável desvinculado com sucesso!', 'success')
+            PermissionService.registrar_acesso(current_user, 'paciente', id, 'desvincular_responsavel')
+        else:
+            flash('Erro ao desvincular responsável', 'danger')
+    except Exception as e:
+        flash(f'Erro ao desvincular responsável: {str(e)}', 'danger')
+
+    return redirect(url_for('pacientes.visualizar', id=id))
+
+
+@pacientes_bp.route('/<int:id>/compartilhar', methods=['POST'])
+@login_required
+@can_edit_patient
+def compartilhar(id):
+    """Compartilha paciente com outro usuário"""
+    paciente = Paciente.query.get_or_404(id)
+
+    user_id = request.form.get('user_id', type=int)
+    tipo_acesso = request.form.get('tipo_acesso', 'leitura')
+    motivo = request.form.get('motivo', '')
+
+    if not user_id:
+        flash('Usuário não especificado', 'danger')
+        return redirect(url_for('pacientes.visualizar', id=id))
+
+    from app.models.user import User
+    usuario = User.query.get(user_id)
+
+    if not usuario:
+        flash('Usuário não encontrado', 'danger')
+        return redirect(url_for('pacientes.visualizar', id=id))
+
+    try:
+        compartilhamento = PermissionService.compartilhar_paciente(
+            id, current_user.id, user_id, tipo_acesso, motivo
+        )
+
+        if compartilhamento:
+            flash(f'Paciente compartilhado com {usuario.nome_completo} com sucesso!', 'success')
+            PermissionService.registrar_acesso(current_user, 'paciente', id, 'compartilhar')
+        else:
+            flash('Erro ao compartilhar paciente', 'danger')
+    except Exception as e:
+        flash(f'Erro ao compartilhar paciente: {str(e)}', 'danger')
 
     return redirect(url_for('pacientes.visualizar', id=id))
