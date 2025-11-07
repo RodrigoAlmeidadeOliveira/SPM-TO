@@ -68,7 +68,7 @@ def visualizar(atendimento_id):
     atendimento = Atendimento.query.get_or_404(atendimento_id)
 
     # Verificar permissão
-    if not PermissionService.pode_visualizar_paciente(atendimento.paciente_id, current_user):
+    if not PermissionService.pode_visualizar_paciente(current_user, atendimento.paciente_id):
         abort(403)
 
     # Registrar auditoria

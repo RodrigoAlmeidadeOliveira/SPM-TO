@@ -51,7 +51,7 @@ def visualizar(plano_id):
     plano = PlanoTerapeutico.query.get_or_404(plano_id)
 
     # Verificar permissão
-    if not PermissionService.pode_visualizar_paciente(plano.paciente_id, current_user):
+    if not PermissionService.pode_visualizar_paciente(current_user, plano.paciente_id):
         abort(403)
 
     # Buscar objetivos agrupados por prioridade
