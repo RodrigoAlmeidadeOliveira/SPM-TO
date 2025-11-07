@@ -441,12 +441,14 @@ $(document).ready(function() {
         $('.is-invalid').removeClass('is-invalid');
 
         // Validar campos obrigatórios
-        if (!$('#paciente_id').val()) {
+        const pacienteId = $('#paciente_id').val();
+        if (!pacienteId || pacienteId === '0') {
             $('#paciente_id').addClass('is-invalid');
             valid = false;
         }
 
-        if (!$('#instrumento_id').val()) {
+        const instrumentoId = $('#instrumento_id').val();
+        if (!instrumentoId || instrumentoId === '0') {
             $('#instrumento_id').addClass('is-invalid');
             valid = false;
         }
@@ -456,7 +458,8 @@ $(document).ready(function() {
             valid = false;
         }
 
-        if (!$('[name="relacionamento_respondente"]').val()) {
+        const respondente = $('[name="relacionamento_respondente"]').val();
+        if (!respondente || respondente === '') {
             $('[name="relacionamento_respondente"]').addClass('is-invalid');
             valid = false;
         }
@@ -464,6 +467,13 @@ $(document).ready(function() {
         if (!valid) {
             e.preventDefault();
             alert('Por favor, preencha todos os campos obrigatórios (*)');
+
+            // Scroll para o primeiro campo inválido
+            if ($('.is-invalid').length > 0) {
+                $('html, body').animate({
+                    scrollTop: $('.is-invalid').first().offset().top - 100
+                }, 500);
+            }
             return false;
         }
 
