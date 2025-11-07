@@ -133,7 +133,8 @@
                             <i class="fas fa-clipboard-check"></i> {{ titulo }}
                         </h4>
                         <span class="badge bg-light text-dark">
-                            <i class="fas fa-clock"></i> {{ "now"|date("%d/%m/%Y") }}
+                            <i class="fas fa-clock"></i>
+                            <script>document.write(new Date().toLocaleDateString('pt-BR'));</script>
                         </span>
                     </div>
                 </div>
