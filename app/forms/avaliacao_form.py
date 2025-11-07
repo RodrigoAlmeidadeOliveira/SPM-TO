@@ -9,7 +9,12 @@ from datetime import date
 class AvaliacaoForm(FlaskForm):
     """Formulário para criar uma nova avaliação"""
 
-    paciente_id = HiddenField('Paciente ID', validators=[DataRequired()])
+    paciente_id = SelectField(
+        'Paciente',
+        coerce=int,
+        validators=[DataRequired(message='Selecione um paciente')],
+        render_kw={'class': 'form-select'}
+    )
 
     instrumento_id = SelectField(
         'Instrumento de Avaliação',
@@ -88,3 +93,5 @@ class RespostaForm(FlaskForm):
         validators=[DataRequired(message='Selecione uma resposta')],
         render_kw={'class': 'form-check-input'}
     )
+
+    submit = SubmitField('Salvar Resposta')

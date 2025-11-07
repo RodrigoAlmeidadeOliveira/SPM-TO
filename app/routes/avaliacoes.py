@@ -121,26 +121,20 @@ def nova():
     paciente_id = request.args.get('paciente_id', type=int)
     instrumento_id = request.args.get('instrumento_id', type=int)
 
-    if not paciente_id:
-        flash('Paciente não especificado!', 'danger')
-        return redirect(url_for('pacientes.listar'))
-
-    paciente = Paciente.query.get_or_404(paciente_id)
-
-    # Calcular idade para filtrar instrumentos
-    idade_anos, idade_meses = paciente.calcular_idade()
-
     form = AvaliacaoForm()
-    form.paciente_id.data = paciente_id
 
-    # Buscar instrumentos adequados para a idade
-    instrumentos = Instrumento.query.filter(
-        Instrumento.ativo.is_(True),
-        Instrumento.idade_minima <= idade_anos,
-        Instrumento.idade_maxima >= idade_anos
-    ).all()
+    # Buscar pacientes ativos
+    pacientes = Paciente.query.filter_by(ativo=True).order_by(Paciente.nome).all()
+    form.paciente_id.choices = [(0, 'Selecione o paciente...')] + [
+        (p.id, f"{p.nome} - {p.calcular_idade()[0]} anos") for p in pacientes
+    ]
 
-    # Popular choices do select de instrumentos
+    # Se paciente foi pré-selecionado na URL
+    if paciente_id and request.method == 'GET':
+        form.paciente_id.data = paciente_id
+
+    # Buscar instrumentos disponíveis
+    instrumentos = Instrumento.query.filter_by(ativo=True).order_by(Instrumento.nome).all()
     form.instrumento_id.choices = [(0, 'Selecione o instrumento...')] + [
         (i.id, f"{i.nome} ({i.contexto})") for i in instrumentos
     ]
@@ -149,22 +143,43 @@ def nova():
     if instrumento_id and request.method == 'GET':
         form.instrumento_id.data = instrumento_id
 
+    # Se formulário já foi submetido, filtrar instrumentos por idade
+    if form.paciente_id.data and form.paciente_id.data != 0:
+        paciente = Paciente.query.get(form.paciente_id.data)
+        if paciente:
+            idade_anos, idade_meses = paciente.calcular_idade()
+            # Buscar instrumentos adequados para a idade
+            instrumentos = Instrumento.query.filter(
+                Instrumento.ativo.is_(True),
+                Instrumento.idade_minima <= idade_anos,
+                Instrumento.idade_maxima >= idade_anos
+            ).all()
+            form.instrumento_id.choices = [(0, 'Selecione o instrumento...')] + [
+                (i.id, f"{i.nome} ({i.contexto})") for i in instrumentos
+            ]
+
     if form.validate_on_submit():
         try:
+            paciente = Paciente.query.get(form.paciente_id.data)
             instrumento = Instrumento.query.get(form.instrumento_id.data)
+
+            if not paciente:
+                flash('Paciente inválido!', 'danger')
+                return render_template('avaliacoes/form.html', form=form, titulo='Nova Avaliação')
 
             if not instrumento:
                 flash('Instrumento inválido!', 'danger')
-                return render_template('avaliacoes/form.html', form=form, paciente=paciente)
+                return render_template('avaliacoes/form.html', form=form, titulo='Nova Avaliação')
 
             # Verificar se instrumento é adequado para a idade
+            idade_anos, idade_meses = paciente.calcular_idade()
             if idade_anos < instrumento.idade_minima or idade_anos > instrumento.idade_maxima:
                 flash(f'Este instrumento não é adequado para a idade do paciente ({idade_anos} anos)!', 'danger')
-                return render_template('avaliacoes/form.html', form=form, paciente=paciente)
+                return render_template('avaliacoes/form.html', form=form, titulo='Nova Avaliação')
 
             # Criar nova avaliação
             avaliacao = Avaliacao(
-                paciente_id=paciente_id,
+                paciente_id=paciente.id,
                 instrumento_id=instrumento.id,
                 avaliador_id=current_user.id,
                 data_avaliacao=form.data_avaliacao.data,
@@ -183,7 +198,7 @@ def nova():
             db.session.rollback()
             flash(f'Erro ao criar avaliação: {str(e)}', 'danger')
 
-    return render_template('avaliacoes/form.html', form=form, paciente=paciente, instrumentos=instrumentos)
+    return render_template('avaliacoes/form.html', form=form, titulo='Nova Avaliação')
 
 
 @avaliacoes_bp.route('/<int:id>')
