@@ -168,7 +168,7 @@ def editar(plano_id):
     plano = PlanoTerapeutico.query.get_or_404(plano_id)
 
     # Verificar permissão
-    if not PermissionService.pode_editar_paciente(plano.paciente_id, current_user):
+    if not PermissionService.pode_editar_paciente(current_user, plano.paciente_id):
         abort(403)
 
     form = PlanoTerapeuticoForm(obj=plano)
@@ -239,7 +239,7 @@ def alterar_status(plano_id):
     plano = PlanoTerapeutico.query.get_or_404(plano_id)
 
     # Verificar permissão
-    if not PermissionService.pode_editar_paciente(plano.paciente_id, current_user):
+    if not PermissionService.pode_editar_paciente(current_user, plano.paciente_id):
         abort(403)
 
     form = AlterarStatusPlanoForm()
@@ -288,7 +288,7 @@ def novo_objetivo(plano_id):
     plano = PlanoTerapeutico.query.get_or_404(plano_id)
 
     # Verificar permissão
-    if not PermissionService.pode_editar_paciente(plano.paciente_id, current_user):
+    if not PermissionService.pode_editar_paciente(current_user, plano.paciente_id):
         abort(403)
 
     form = ObjetivoTerapeuticoForm()
@@ -350,7 +350,7 @@ def editar_objetivo(objetivo_id):
     plano = objetivo.plano
 
     # Verificar permissão
-    if not PermissionService.pode_editar_paciente(plano.paciente_id, current_user):
+    if not PermissionService.pode_editar_paciente(current_user, plano.paciente_id):
         abort(403)
 
     form = ObjetivoTerapeuticoForm(obj=objetivo)
@@ -405,7 +405,7 @@ def atualizar_progresso(objetivo_id):
     plano = objetivo.plano
 
     # Verificar permissão
-    if not PermissionService.pode_editar_paciente(plano.paciente_id, current_user):
+    if not PermissionService.pode_editar_paciente(current_user, plano.paciente_id):
         abort(403)
 
     form = AtualizarProgressoObjetivoForm()
@@ -459,7 +459,7 @@ def excluir_objetivo(objetivo_id):
     plano = objetivo.plano
 
     # Verificar permissão
-    if not PermissionService.pode_editar_paciente(plano.paciente_id, current_user):
+    if not PermissionService.pode_editar_paciente(current_user, plano.paciente_id):
         abort(403)
 
     try:

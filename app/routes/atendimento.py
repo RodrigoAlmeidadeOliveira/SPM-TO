@@ -177,7 +177,7 @@ def editar(atendimento_id):
     atendimento = Atendimento.query.get_or_404(atendimento_id)
 
     # Verificar permissão
-    if not PermissionService.pode_editar_paciente(atendimento.paciente_id, current_user):
+    if not PermissionService.pode_editar_paciente(current_user, atendimento.paciente_id):
         abort(403)
 
     # Não permitir edição de atendimentos finalizados por outros usuários
@@ -254,7 +254,7 @@ def finalizar(atendimento_id):
     atendimento = Atendimento.query.get_or_404(atendimento_id)
 
     # Verificar permissão
-    if not PermissionService.pode_editar_paciente(atendimento.paciente_id, current_user):
+    if not PermissionService.pode_editar_paciente(current_user, atendimento.paciente_id):
         abort(403)
 
     if atendimento.status == 'finalizado':
@@ -293,7 +293,7 @@ def excluir(atendimento_id):
     atendimento = Atendimento.query.get_or_404(atendimento_id)
 
     # Verificar permissão
-    if not PermissionService.pode_editar_paciente(atendimento.paciente_id, current_user):
+    if not PermissionService.pode_editar_paciente(current_user, atendimento.paciente_id):
         abort(403)
 
     # Apenas criador ou admin pode excluir
