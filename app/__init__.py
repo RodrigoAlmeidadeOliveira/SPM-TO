@@ -56,6 +56,7 @@ def create_app(config_name=None):
     from app.routes.relatorios import relatorios_bp
     from app.routes.admin import admin_bp
     from app.routes.anexos import anexos_bp
+    from app.routes.pei import pei_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -65,6 +66,7 @@ def create_app(config_name=None):
     app.register_blueprint(relatorios_bp, url_prefix='/relatorios')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(anexos_bp, url_prefix='/anexos')
+    app.register_blueprint(pei_bp, url_prefix='/pei')
 
     # Contexto do template
     @app.context_processor

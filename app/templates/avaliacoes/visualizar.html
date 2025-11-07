@@ -273,6 +273,33 @@
                 </div>
             </div>
             {% endif %}
+
+            <!-- PEI (Plano Educacional Individualizado) -->
+            {% if avaliacao.status == 'concluida' %}
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-earmark-check me-2"></i>
+                        PEI
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Plano Educacional Individualizado baseado nesta avaliação.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('pei.visualizar_pei', avaliacao_id=avaliacao.id) }}"
+                           class="btn btn-outline-info">
+                            <i class="bi bi-eye me-1"></i>
+                            Visualizar PEI
+                        </a>
+                        <a href="{{ url_for('pei.selecionar_itens', avaliacao_id=avaliacao.id) }}"
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-pencil me-1"></i>
+                            Selecionar Itens
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             {% else %}
             <div class="card">
                 <div class="card-body text-center text-muted">
