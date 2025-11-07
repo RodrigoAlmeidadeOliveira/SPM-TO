@@ -287,6 +287,82 @@
                 </div>
             </div>
             {% endif %}
+
+            <!-- Seção de Anexos -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-paperclip me-2"></i>
+                        Anexos
+                        <span class="badge bg-secondary ms-2" id="contadorAnexos">0</span>
+                    </h5>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalUpload">
+                        <i class="bi bi-upload me-1"></i>
+                        Adicionar Anexo
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="listaAnexos">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                            <p class="mt-3">Nenhum anexo ainda. Clique em "Adicionar Anexo" para enviar arquivos.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Upload -->
+<div class="modal fade" id="modalUpload" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-upload me-2"></i>
+                    Enviar Anexo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formUpload" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="arquivo" class="form-label">Arquivo *</label>
+                        <input type="file" class="form-control" id="arquivo" name="arquivo" required>
+                        <small class="form-text text-muted">
+                            Formatos aceitos: PDF, DOC, DOCX, JPG, PNG, GIF, XLS, XLSX, ZIP (máx. 10MB)
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tipo_anexo" class="form-label">Tipo de Anexo</label>
+                        <select class="form-select" id="tipo_anexo" name="tipo_anexo">
+                            <option value="documento">Documento</option>
+                            <option value="laudo">Laudo</option>
+                            <option value="foto">Foto</option>
+                            <option value="relatorio">Relatório</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição (opcional)</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="3"></textarea>
+                    </div>
+                    <div id="uploadProgress" class="d-none">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                        </div>
+                        <p class="text-center mt-2 mb-0">Enviando arquivo...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnEnviar">
+                        <i class="bi bi-upload me-1"></i>
+                        Enviar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -318,4 +394,184 @@
         </div>
     </div>
 </div>
+
+<script>
+// Gerenciamento de anexos
+const avaliacaoId = {{ avaliacao.id }};
+const csrfToken = '{{ csrf_token() }}';
+
+// Carregar anexos ao abrir a página
+document.addEventListener('DOMContentLoaded', function() {
+    carregarAnexos();
+});
+
+// Carregar lista de anexos
+function carregarAnexos() {
+    fetch(`/anexos/listar/${avaliacaoId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderizarAnexos(data.anexos);
+            }
+        })
+        .catch(error => console.error('Erro ao carregar anexos:', error));
+}
+
+// Renderizar lista de anexos
+function renderizarAnexos(anexos) {
+    const container = document.getElementById('listaAnexos');
+    const contador = document.getElementById('contadorAnexos');
+
+    contador.textContent = anexos.length;
+
+    if (anexos.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                <p class="mt-3">Nenhum anexo ainda. Clique em "Adicionar Anexo" para enviar arquivos.</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="list-group">';
+
+    anexos.forEach(anexo => {
+        html += `
+            <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">
+                            <i class="bi ${anexo.icone} me-2"></i>
+                            ${anexo.nome}
+                            <span class="badge bg-secondary ms-2">${anexo.tamanho}</span>
+                        </h6>
+                        <p class="mb-1 text-muted small">
+                            <i class="bi bi-person me-1"></i>${anexo.usuario}
+                            <i class="bi bi-calendar ms-2 me-1"></i>${anexo.data}
+                        </p>
+                        ${anexo.descricao ? `<p class="mb-0 small">${anexo.descricao}</p>` : ''}
+                    </div>
+                    <div class="btn-group" role="group">
+                        ${anexo.is_pdf || anexo.is_imagem ? `
+                            <a href="/anexos/visualizar/${anexo.id}"
+                               class="btn btn-sm btn-outline-info"
+                               target="_blank"
+                               title="Visualizar">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        ` : ''}
+                        <a href="/anexos/download/${anexo.id}"
+                           class="btn btn-sm btn-outline-primary"
+                           title="Baixar">
+                            <i class="bi bi-download"></i>
+                        </a>
+                        ${anexo.pode_excluir ? `
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    onclick="confirmarExclusao(${anexo.id}, '${anexo.nome}')"
+                                    title="Excluir">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Upload de anexo
+document.getElementById('formUpload').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const btnEnviar = document.getElementById('btnEnviar');
+    const progress = document.getElementById('uploadProgress');
+
+    // Mostrar progresso
+    btnEnviar.disabled = true;
+    progress.classList.remove('d-none');
+
+    fetch(`/anexos/upload/${avaliacaoId}?ajax=1`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalUpload'));
+            modal.hide();
+
+            // Limpar form
+            document.getElementById('formUpload').reset();
+
+            // Recarregar lista
+            carregarAnexos();
+
+            // Mostrar mensagem de sucesso
+            mostrarAlerta('Arquivo enviado com sucesso!', 'success');
+        } else {
+            mostrarAlerta(data.error || 'Erro ao enviar arquivo', 'danger');
+        }
+    })
+    .catch(error => {
+        mostrarAlerta('Erro ao enviar arquivo: ' + error, 'danger');
+    })
+    .finally(() => {
+        btnEnviar.disabled = false;
+        progress.classList.add('d-none');
+    });
+});
+
+// Confirmar exclusão de anexo
+function confirmarExclusao(anexoId, nomeArquivo) {
+    if (confirm(`Tem certeza que deseja excluir o anexo "${nomeArquivo}"?`)) {
+        excluirAnexo(anexoId);
+    }
+}
+
+// Excluir anexo
+function excluirAnexo(anexoId) {
+    fetch(`/anexos/excluir/${anexoId}?ajax=1`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            carregarAnexos();
+            mostrarAlerta('Anexo excluído com sucesso', 'success');
+        } else {
+            mostrarAlerta(data.error || 'Erro ao excluir anexo', 'danger');
+        }
+    })
+    .catch(error => {
+        mostrarAlerta('Erro ao excluir anexo: ' + error, 'danger');
+    });
+}
+
+// Mostrar alerta
+function mostrarAlerta(mensagem, tipo) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${tipo} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${mensagem}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => alertDiv.remove(), 5000);
+}
+</script>
 {% endblock %}

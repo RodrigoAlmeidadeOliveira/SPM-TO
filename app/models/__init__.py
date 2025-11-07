@@ -7,6 +7,7 @@ from app.models.instrumento import Instrumento, Dominio, Questao, TabelaReferenc
 from app.models.avaliacao import Avaliacao, Resposta
 from app.models.plano import PlanoTemplateItem, PlanoItem
 from app.models.auditoria import AuditoriaAcesso, CompartilhamentoPaciente
+from app.models.anexo import AnexoAvaliacao
 
 __all__ = [
     'User',
@@ -21,5 +22,6 @@ __all__ = [
     'PlanoTemplateItem',
     'PlanoItem',
     'AuditoriaAcesso',
-    'CompartilhamentoPaciente'
+    'CompartilhamentoPaciente',
+    'AnexoAvaliacao'
 ]

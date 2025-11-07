@@ -9,6 +9,7 @@ from app.services.grafico_service import GraficoService
 from app.services.pdf_service import PDFService
 from app.services.dashboard_service import DashboardService
 from app.services.permission_service import PermissionService
+from app.services.upload_service import UploadService
 
 __all__ = [
     'CalculoService',
@@ -16,5 +17,6 @@ __all__ = [
     'GraficoService',
     'PDFService',
     'DashboardService',
-    'PermissionService'
+    'PermissionService',
+    'UploadService'
 ]
