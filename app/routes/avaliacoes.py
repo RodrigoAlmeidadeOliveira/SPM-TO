@@ -189,13 +189,19 @@ def nova():
             )
 
             db.session.add(avaliacao)
+            db.session.flush()  # Garantir que o ID seja gerado
+            avaliacao_id = avaliacao.id
             db.session.commit()
 
+            print(f"DEBUG: Avaliação criada com ID: {avaliacao_id}")
             flash(f'Avaliação criada com sucesso! Agora você pode responder às questões.', 'success')
-            return redirect(url_for('avaliacoes.responder', id=avaliacao.id))
+            return redirect(url_for('avaliacoes.responder', id=avaliacao_id))
 
         except Exception as e:
             db.session.rollback()
+            print(f"DEBUG: Erro ao criar avaliação: {str(e)}")
+            import traceback
+            traceback.print_exc()
             flash(f'Erro ao criar avaliação: {str(e)}', 'danger')
 
     return render_template('avaliacoes/form.html', form=form, titulo='Nova Avaliação')
