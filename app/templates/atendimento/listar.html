@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Atendimentos - {{ paciente.nome }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">{{ paciente.nome }}</a></li>
+                    <li class="breadcrumb-item active">Atendimentos</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-calendar-check"></i> Atendimentos - {{ paciente.nome }}</h2>
+                <a href="{{ url_for('atendimento.novo', paciente_id=paciente.id) }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Novo Atendimento
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Tipo</label>
+                    <select name="tipo" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="sessao" {% if tipo_filtro == 'sessao' %}selected{% endif %}>Sessão</option>
+                        <option value="avaliacao" {% if tipo_filtro == 'avaliacao' %}selected{% endif %}>Avaliação</option>
+                        <option value="reavaliacao" {% if tipo_filtro == 'reavaliacao' %}selected{% endif %}>Reavaliação</option>
+                        <option value="orientacao" {% if tipo_filtro == 'orientacao' %}selected{% endif %}>Orientação</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="rascunho" {% if status_filtro == 'rascunho' %}selected{% endif %}>Rascunho</option>
+                        <option value="finalizado" {% if status_filtro == 'finalizado' %}selected{% endif %}>Finalizado</option>
+                        <option value="revisado" {% if status_filtro == 'revisado' %}selected{% endif %}>Revisado</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                    <a href="{{ url_for('atendimento.listar', paciente_id=paciente.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Atendimentos -->
+    {% if atendimentos %}
+    <div class="row">
+        {% for atendimento in atendimentos %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-calendar"></i> {{ atendimento.data_hora.strftime('%d/%m/%Y %H:%M') }}</span>
+                    <span class="badge {{ atendimento.get_status_badge_class() }}">{{ atendimento.status }}</span>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ atendimento.get_tipo_display() }}</h6>
+                    {% if atendimento.modalidade %}
+                    <p class="card-text"><small><i class="fas fa-map-marker-alt"></i> {{ atendimento.get_modalidade_display() }}</small></p>
+                    {% endif %}
+                    <p class="card-text"><small><i class="fas fa-user-md"></i> {{ atendimento.profissional.nome_completo }}</small></p>
+                    {% if atendimento.duracao_minutos %}
+                    <p class="card-text"><small><i class="fas fa-clock"></i> {{ atendimento.duracao_minutos }} min</small></p>
+                    {% endif %}
+                    {% if not atendimento.compareceu %}
+                    <p class="text-danger"><i class="fas fa-exclamation-circle"></i> Não compareceu</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('atendimento.visualizar', atendimento_id=atendimento.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-eye"></i> Ver Detalhes
+                    </a>
+                    {% if atendimento.status != 'finalizado' or current_user.eh_admin() %}
+                    <a href="{{ url_for('atendimento.editar', atendimento_id=atendimento.id) }}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginação -->
+    {% if paginacao.pages > 1 %}
+    <nav aria-label="Navegação de atendimentos">
+        <ul class="pagination justify-content-center">
+            {% if paginacao.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('atendimento.listar', paciente_id=paciente.id, page=paginacao.prev_num, tipo=tipo_filtro, status=status_filtro) }}">Anterior</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in paginacao.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == paginacao.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('atendimento.listar', paciente_id=paciente.id, page=page_num, tipo=tipo_filtro, status=status_filtro) }}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if paginacao.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('atendimento.listar', paciente_id=paciente.id, page=paginacao.next_num, tipo=tipo_filtro, status=status_filtro) }}">Próximo</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Nenhum atendimento encontrado para este paciente.
+        <a href="{{ url_for('atendimento.novo', paciente_id=paciente.id) }}" class="alert-link">Criar o primeiro atendimento</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

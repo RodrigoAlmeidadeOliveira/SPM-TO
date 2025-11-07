@@ -9,6 +9,8 @@ from app.forms.instrumento_forms import InstrumentoForm
 from app.forms.dominio_forms import DominioForm
 from app.forms.questao_forms import QuestaoForm
 from app.forms.pei_forms import PlanoTemplateItemForm, PlanoItemSelecaoForm
+from app.forms.prontuario_forms import ProntuarioForm, EncerrarProntuarioForm
+from app.forms.atendimento_forms import AtendimentoForm, FinalizarAtendimentoForm
 
 __all__ = [
     'LoginForm',
@@ -22,5 +24,9 @@ __all__ = [
     'UserCreateForm',
     'UserEditForm',
     'PlanoTemplateItemForm',
-    'PlanoItemSelecaoForm'
+    'PlanoItemSelecaoForm',
+    'ProntuarioForm',
+    'EncerrarProntuarioForm',
+    'AtendimentoForm',
+    'FinalizarAtendimentoForm'
 ]

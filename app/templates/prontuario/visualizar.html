@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Prontuário - {{ paciente.nome }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">{{ paciente.nome }}</a></li>
+                    <li class="breadcrumb-item active">Prontuário</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-file-medical"></i> Prontuário Eletrônico</h2>
+                <div>
+                    <a href="{{ url_for('prontuario.editar', paciente_id=paciente.id) }}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    {% if prontuario.status == 'ativo' %}
+                    <a href="{{ url_for('prontuario.encerrar', paciente_id=paciente.id) }}" class="btn btn-danger">
+                        <i class="fas fa-times-circle"></i> Encerrar
+                    </a>
+                    {% else %}
+                    <form action="{{ url_for('prontuario.reativar', paciente_id=paciente.id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Deseja reativar este prontuário?')">
+                            <i class="fas fa-check-circle"></i> Reativar
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações do Paciente -->
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-user"></i> Dados do Paciente</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Nome:</strong> {{ paciente.nome }}</p>
+                    <p><strong>Identificação:</strong> {{ paciente.identificacao }}</p>
+                    <p><strong>Data de Nascimento:</strong> {{ paciente.data_nascimento.strftime('%d/%m/%Y') }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Status do Prontuário:</strong>
+                        <span class="badge {{ prontuario.get_status_badge_class() }}">
+                            {{ prontuario.get_status_display() }}
+                        </span>
+                    </p>
+                    <p><strong>Abertura:</strong> {{ prontuario.data_abertura.strftime('%d/%m/%Y') }} por {{ prontuario.profissional_abertura.nome_completo }}</p>
+                    <p><strong>Total de Atendimentos:</strong> {{ total_atendimentos }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs para organizar informações -->
+    <ul class="nav nav-tabs" id="prontuarioTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="anamnese-tab" data-bs-toggle="tab" data-bs-target="#anamnese" type="button">
+                <i class="fas fa-stethoscope"></i> Anamnese
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="desenvolvimento-tab" data-bs-toggle="tab" data-bs-target="#desenvolvimento" type="button">
+                <i class="fas fa-child"></i> Desenvolvimento
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="contexto-tab" data-bs-toggle="tab" data-bs-target="#contexto" type="button">
+                <i class="fas fa-home"></i> Contexto
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="atendimentos-tab" data-bs-toggle="tab" data-bs-target="#atendimentos" type="button">
+                <i class="fas fa-calendar-check"></i> Atendimentos
+            </button>
+        </li>
+        {% if plano_ativo %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="plano-tab" data-bs-toggle="tab" data-bs-target="#plano" type="button">
+                <i class="fas fa-tasks"></i> Plano Ativo
+            </button>
+        </li>
+        {% endif %}
+    </ul>
+
+    <div class="tab-content border border-top-0 p-3" id="prontuarioTabsContent">
+        <!-- Tab Anamnese -->
+        <div class="tab-pane fade show active" id="anamnese">
+            {% if prontuario.queixa_principal %}
+            <h5>Queixa Principal</h5>
+            <p class="text-muted">{{ prontuario.queixa_principal }}</p>
+            {% endif %}
+
+            {% if prontuario.historia_doenca_atual %}
+            <h5>História da Doença Atual</h5>
+            <p class="text-muted">{{ prontuario.historia_doenca_atual }}</p>
+            {% endif %}
+
+            {% if prontuario.diagnosticos %}
+            <h5>Diagnósticos</h5>
+            <ul>
+            {% for diagnostico in prontuario.get_diagnosticos_list() %}
+                <li>{{ diagnostico }}</li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if prontuario.medicamentos_uso %}
+            <h5>Medicamentos em Uso</h5>
+            <ul>
+            {% for medicamento in prontuario.get_medicamentos_list() %}
+                <li>{{ medicamento }}</li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if prontuario.alergias %}
+            <h5>Alergias</h5>
+            <ul>
+            {% for alergia in prontuario.get_alergias_list() %}
+                <li>{{ alergia }}</li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if prontuario.historia_familiar %}
+            <h5>História Familiar</h5>
+            <p class="text-muted">{{ prontuario.historia_familiar }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Tab Desenvolvimento -->
+        <div class="tab-pane fade" id="desenvolvimento">
+            {% if prontuario.gestacao %}
+            <h5>Gestação</h5>
+            <p class="text-muted">{{ prontuario.gestacao }}</p>
+            {% endif %}
+
+            {% if prontuario.parto %}
+            <h5>Parto</h5>
+            <p class="text-muted">{{ prontuario.parto }}</p>
+            {% endif %}
+
+            {% if prontuario.desenvolvimento_motor %}
+            <h5>Desenvolvimento Motor</h5>
+            <p class="text-muted">{{ prontuario.desenvolvimento_motor }}</p>
+            {% endif %}
+
+            {% if prontuario.desenvolvimento_linguagem %}
+            <h5>Desenvolvimento de Linguagem</h5>
+            <p class="text-muted">{{ prontuario.desenvolvimento_linguagem }}</p>
+            {% endif %}
+
+            {% if prontuario.desenvolvimento_social %}
+            <h5>Desenvolvimento Social</h5>
+            <p class="text-muted">{{ prontuario.desenvolvimento_social }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Tab Contexto -->
+        <div class="tab-pane fade" id="contexto">
+            {% if prontuario.escola %}
+            <p><strong>Escola:</strong> {{ prontuario.escola }}</p>
+            {% endif %}
+            {% if prontuario.serie_ano %}
+            <p><strong>Série/Ano:</strong> {{ prontuario.serie_ano }}</p>
+            {% endif %}
+            <p><strong>AEE:</strong> {{ 'Sim' if prontuario.possui_aee else 'Não' }}</p>
+            <p><strong>Cuidador:</strong> {{ 'Sim' if prontuario.possui_cuidador else 'Não' }}</p>
+
+            {% if prontuario.composicao_familiar %}
+            <h5>Composição Familiar</h5>
+            <p class="text-muted">{{ prontuario.composicao_familiar }}</p>
+            {% endif %}
+
+            {% if prontuario.objetivos_gerais %}
+            <h5>Objetivos Gerais do Tratamento</h5>
+            <p class="text-muted">{{ prontuario.objetivos_gerais }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Tab Atendimentos -->
+        <div class="tab-pane fade" id="atendimentos">
+            <div class="mb-3">
+                <a href="{{ url_for('atendimento.novo', paciente_id=paciente.id) }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Novo Atendimento
+                </a>
+                <a href="{{ url_for('atendimento.listar', paciente_id=paciente.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-list"></i> Ver Todos
+                </a>
+            </div>
+
+            {% if atendimentos_recentes %}
+            <h5>Atendimentos Recentes</h5>
+            <div class="list-group">
+            {% for atendimento in atendimentos_recentes %}
+                <a href="{{ url_for('atendimento.visualizar', atendimento_id=atendimento.id) }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ atendimento.get_tipo_display() }}</h6>
+                        <small>{{ atendimento.data_hora.strftime('%d/%m/%Y %H:%M') }}</small>
+                    </div>
+                    <p class="mb-1"><small>Profissional: {{ atendimento.profissional.nome_completo }}</small></p>
+                    <span class="badge {{ atendimento.get_status_badge_class() }}">{{ atendimento.status }}</span>
+                </a>
+            {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">Nenhum atendimento registrado ainda.</p>
+            {% endif %}
+        </div>
+
+        <!-- Tab Plano Terapêutico -->
+        {% if plano_ativo %}
+        <div class="tab-pane fade" id="plano">
+            <h5>{{ plano_ativo.titulo }}</h5>
+            <p><strong>Período:</strong> {{ plano_ativo.data_inicio.strftime('%d/%m/%Y') }}
+            {% if plano_ativo.data_fim %} - {{ plano_ativo.data_fim.strftime('%d/%m/%Y') }}{% endif %}</p>
+            <p><strong>Progresso:</strong> {{ plano_ativo.get_progresso_percentual() }}%</p>
+
+            {% if plano_ativo.descricao %}
+            <p class="text-muted">{{ plano_ativo.descricao }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

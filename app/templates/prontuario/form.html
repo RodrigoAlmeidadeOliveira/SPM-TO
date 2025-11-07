@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - {{ paciente.nome }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">{{ paciente.nome }}</a></li>
+                    <li class="breadcrumb-item active">{{ titulo }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-file-medical"></i> {{ titulo }}</h4>
+                    <small>Paciente: {{ paciente.nome }}</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Accordion para organizar o formulário -->
+                        <div class="accordion" id="prontuarioAccordion">
+                            <!-- Seção 1: Anamnese -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#anamnese">
+                                        <i class="fas fa-stethoscope me-2"></i> Anamnese
+                                    </button>
+                                </h2>
+                                <div id="anamnese" class="accordion-collapse collapse show" data-bs-parent="#prontuarioAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            {{ form.queixa_principal.label(class="form-label") }}
+                                            {{ form.queixa_principal(class="form-control") }}
+                                            {% if form.queixa_principal.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.queixa_principal.errors[0] }}</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.historia_doenca_atual.label(class="form-label") }}
+                                            {{ form.historia_doenca_atual(class="form-control") }}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.historia_previa.label(class="form-label") }}
+                                            {{ form.historia_previa(class="form-control") }}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.historia_familiar.label(class="form-label") }}
+                                            {{ form.historia_familiar(class="form-control") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seção 2: Desenvolvimento -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#desenvolvimento">
+                                        <i class="fas fa-child me-2"></i> Desenvolvimento
+                                    </button>
+                                </h2>
+                                <div id="desenvolvimento" class="accordion-collapse collapse" data-bs-parent="#prontuarioAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            {{ form.gestacao.label(class="form-label") }}
+                                            {{ form.gestacao(class="form-control") }}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.parto.label(class="form-label") }}
+                                            {{ form.parto(class="form-control") }}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.desenvolvimento_motor.label(class="form-label") }}
+                                            {{ form.desenvolvimento_motor(class="form-control") }}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.desenvolvimento_linguagem.label(class="form-label") }}
+                                            {{ form.desenvolvimento_linguagem(class="form-control") }}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.desenvolvimento_social.label(class="form-label") }}
+                                            {{ form.desenvolvimento_social(class="form-control") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seção 3: Histórico Médico -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#medico">
+                                        <i class="fas fa-notes-medical me-2"></i> Histórico Médico
+                                    </button>
+                                </h2>
+                                <div id="medico" class="accordion-collapse collapse" data-bs-parent="#prontuarioAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            {{ form.diagnosticos.label(class="form-label") }}
+                                            {{ form.diagnosticos(class="form-control") }}
+                                            <small class="form-text text-muted">Um diagnóstico por linha</small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.medicamentos_uso.label(class="form-label") }}
+                                            {{ form.medicamentos_uso(class="form-control") }}
+                                            <small class="form-text text-muted">Um medicamento por linha</small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.alergias.label(class="form-label") }}
+                                            {{ form.alergias(class="form-control") }}
+                                            <small class="form-text text-muted">Uma alergia por linha</small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.cirurgias_previas.label(class="form-label") }}
+                                            {{ form.cirurgias_previas(class="form-control") }}
+                                            <small class="form-text text-muted">Uma cirurgia por linha</small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.internacoes_previas.label(class="form-label") }}
+                                            {{ form.internacoes_previas(class="form-control") }}
+                                            <small class="form-text text-muted">Uma internação por linha</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seção 4: Contexto Social e Educacional -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#contexto">
+                                        <i class="fas fa-home me-2"></i> Contexto Social e Educacional
+                                    </button>
+                                </h2>
+                                <div id="contexto" class="accordion-collapse collapse" data-bs-parent="#prontuarioAccordion">
+                                    <div class="accordion-body">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                {{ form.escola.label(class="form-label") }}
+                                                {{ form.escola(class="form-control") }}
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                {{ form.serie_ano.label(class="form-label") }}
+                                                {{ form.serie_ano(class="form-control") }}
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    {{ form.possui_aee(class="form-check-input") }}
+                                                    {{ form.possui_aee.label(class="form-check-label") }}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    {{ form.possui_cuidador(class="form-check-input") }}
+                                                    {{ form.possui_cuidador.label(class="form-check-label") }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.composicao_familiar.label(class="form-label") }}
+                                            {{ form.composicao_familiar(class="form-control") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seção 5: Objetivos e Observações -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#objetivos">
+                                        <i class="fas fa-bullseye me-2"></i> Objetivos e Observações
+                                    </button>
+                                </h2>
+                                <div id="objetivos" class="accordion-collapse collapse" data-bs-parent="#prontuarioAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            {{ form.objetivos_gerais.label(class="form-label") }}
+                                            {{ form.objetivos_gerais(class="form-control") }}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.observacoes.label(class="form-label") }}
+                                            {{ form.observacoes(class="form-control") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salvar Prontuário
+                            </button>
+                            <a href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
