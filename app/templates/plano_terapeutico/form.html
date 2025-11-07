@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - {{ paciente.nome }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">{{ paciente.nome }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('plano_terapeutico.listar', paciente_id=paciente.id) }}">Planos</a></li>
+                    <li class="breadcrumb-item active">{{ titulo }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-tasks"></i> {{ titulo }}</h4>
+                    <small>Paciente: {{ paciente.nome }}</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Accordion para organizar o formulário -->
+                        <div class="accordion" id="planoAccordion">
+                            <!-- Seção 1: Informações Básicas -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#info">
+                                        <i class="fas fa-info-circle me-2"></i> Informações Básicas
+                                    </button>
+                                </h2>
+                                <div id="info" class="accordion-collapse collapse show" data-bs-parent="#planoAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            {{ form.titulo.label(class="form-label") }}
+                                            {{ form.titulo(class="form-control") }}
+                                            {% if form.titulo.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.titulo.errors[0] }}</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.descricao.label(class="form-label") }}
+                                            {{ form.descricao(class="form-control") }}
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                {{ form.data_inicio.label(class="form-label") }}
+                                                {{ form.data_inicio(class="form-control") }}
+                                                {% if form.data_inicio.errors %}
+                                                    <div class="invalid-feedback d-block">{{ form.data_inicio.errors[0] }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                {{ form.data_fim.label(class="form-label") }}
+                                                {{ form.data_fim(class="form-control") }}
+                                                {% if form.data_fim.errors %}
+                                                    <div class="invalid-feedback d-block">{{ form.data_fim.errors[0] }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-4 mb-3">
+                                                {{ form.duracao_prevista_meses.label(class="form-label") }}
+                                                {{ form.duracao_prevista_meses(class="form-control") }}
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                {{ form.frequencia_semanal.label(class="form-label") }}
+                                                {{ form.frequencia_semanal(class="form-control") }}
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                {{ form.duracao_sessao_minutos.label(class="form-label") }}
+                                                {{ form.duracao_sessao_minutos(class="form-control") }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seção 2: Áreas de Foco e Estratégias -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#estrategias">
+                                        <i class="fas fa-bullseye me-2"></i> Áreas de Foco e Estratégias
+                                    </button>
+                                </h2>
+                                <div id="estrategias" class="accordion-collapse collapse" data-bs-parent="#planoAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            {{ form.areas_foco.label(class="form-label") }}
+                                            {{ form.areas_foco(class="form-control") }}
+                                            <small class="form-text text-muted">Uma área por linha</small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.estrategias_gerais.label(class="form-label") }}
+                                            {{ form.estrategias_gerais(class="form-control") }}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.recursos_necessarios.label(class="form-label") }}
+                                            {{ form.recursos_necessarios(class="form-control") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seção 3: Orientações -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orientacoes">
+                                        <i class="fas fa-lightbulb me-2"></i> Orientações
+                                    </button>
+                                </h2>
+                                <div id="orientacoes" class="accordion-collapse collapse" data-bs-parent="#planoAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            {{ form.orientacoes_familia.label(class="form-label") }}
+                                            {{ form.orientacoes_familia(class="form-control") }}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.orientacoes_escola.label(class="form-label") }}
+                                            {{ form.orientacoes_escola(class="form-control") }}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.orientacoes_equipe.label(class="form-label") }}
+                                            {{ form.orientacoes_equipe(class="form-control") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seção 4: Critérios de Alta e Observações -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#outros">
+                                        <i class="fas fa-flag-checkered me-2"></i> Critérios de Alta e Observações
+                                    </button>
+                                </h2>
+                                <div id="outros" class="accordion-collapse collapse" data-bs-parent="#planoAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            {{ form.criterios_alta.label(class="form-label") }}
+                                            {{ form.criterios_alta(class="form-control") }}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ form.observacoes.label(class="form-label") }}
+                                            {{ form.observacoes(class="form-control") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salvar Plano Terapêutico
+                            </button>
+                            <a href="{{ url_for('plano_terapeutico.listar', paciente_id=paciente.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

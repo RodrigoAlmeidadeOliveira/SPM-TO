@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - {{ paciente.nome }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">{{ paciente.nome }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('atendimento.listar', paciente_id=paciente.id) }}">Atendimentos</a></li>
+                    <li class="breadcrumb-item active">{{ titulo }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-calendar-check"></i> {{ titulo }}</h4>
+                    <small>Paciente: {{ paciente.nome }}</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Informações Básicas -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informações Básicas</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.data_hora.label(class="form-label") }}
+                                        {{ form.data_hora(class="form-control") }}
+                                        {% if form.data_hora.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.data_hora.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.duracao_minutos.label(class="form-label") }}
+                                        {{ form.duracao_minutos(class="form-control") }}
+                                        {% if form.duracao_minutos.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.duracao_minutos.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        {{ form.tipo.label(class="form-label") }}
+                                        {{ form.tipo(class="form-select") }}
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        {{ form.modalidade.label(class="form-label") }}
+                                        {{ form.modalidade(class="form-select") }}
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        {{ form.local.label(class="form-label") }}
+                                        {{ form.local(class="form-control") }}
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <div class="form-check">
+                                            {{ form.compareceu(class="form-check-input") }}
+                                            {{ form.compareceu.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12 mb-3" id="motivo-falta-group" style="display:none;">
+                                        {{ form.motivo_falta.label(class="form-label text-danger") }}
+                                        {{ form.motivo_falta(class="form-control") }}
+                                        {% if form.motivo_falta.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.motivo_falta.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SOAP Notes -->
+                        <div id="soap-section">
+                            <h5 class="mb-3"><i class="fas fa-notes-medical"></i> Notas SOAP</h5>
+
+                            <div class="card mb-3 border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">S - Subjetivo</h6>
+                                    <small>Relatos do paciente/responsável</small>
+                                </div>
+                                <div class="card-body">
+                                    {{ form.subjetivo(class="form-control") }}
+                                </div>
+                            </div>
+
+                            <div class="card mb-3 border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">O - Objetivo</h6>
+                                    <small>Observações do profissional</small>
+                                </div>
+                                <div class="card-body">
+                                    {{ form.objetivo(class="form-control") }}
+                                </div>
+                            </div>
+
+                            <div class="card mb-3 border-warning">
+                                <div class="card-header bg-warning">
+                                    <h6 class="mb-0">A - Avaliação/Análise</h6>
+                                    <small>Análise clínica</small>
+                                </div>
+                                <div class="card-body">
+                                    {{ form.avaliacao(class="form-control") }}
+                                </div>
+                            </div>
+
+                            <div class="card mb-3 border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">P - Plano</h6>
+                                    <small>Plano de ação e próximos passos</small>
+                                </div>
+                                <div class="card-body">
+                                    {{ form.plano(class="form-control") }}
+                                </div>
+                            </div>
+
+                            <!-- Intervenções e Recursos -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-tools"></i> Intervenções e Recursos</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        {{ form.intervencoes.label(class="form-label") }}
+                                        {{ form.intervencoes(class="form-control") }}
+                                        <small class="form-text text-muted">Uma intervenção por linha</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        {{ form.recursos_utilizados.label(class="form-label") }}
+                                        {{ form.recursos_utilizados(class="form-control") }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Orientações -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-lightbulb"></i> Orientações</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        {{ form.orientacoes_familia.label(class="form-label") }}
+                                        {{ form.orientacoes_familia(class="form-control") }}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        {{ form.orientacoes_escola.label(class="form-label") }}
+                                        {{ form.orientacoes_escola(class="form-control") }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Observações -->
+                            <div class="mb-3">
+                                {{ form.observacoes.label(class="form-label") }}
+                                {{ form.observacoes(class="form-control") }}
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salvar Atendimento
+                            </button>
+                            <a href="{{ url_for('atendimento.listar', paciente_id=paciente.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Mostrar/ocultar motivo da falta baseado no checkbox de comparecimento
+const compareceuCheckbox = document.getElementById('compareceu');
+const motivoFaltaGroup = document.getElementById('motivo-falta-group');
+const soapSection = document.getElementById('soap-section');
+
+function toggleFalta() {
+    if (!compareceuCheckbox.checked) {
+        motivoFaltaGroup.style.display = 'block';
+        soapSection.style.display = 'none';
+    } else {
+        motivoFaltaGroup.style.display = 'none';
+        soapSection.style.display = 'block';
+    }
+}
+
+// Executar na carga da página e no change
+if (compareceuCheckbox) {
+    compareceuCheckbox.addEventListener('change', toggleFalta);
+    toggleFalta();
+}
+</script>
+{% endblock %}

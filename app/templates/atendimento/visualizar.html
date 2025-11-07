@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Atendimento - {{ paciente.nome }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">{{ paciente.nome }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('atendimento.listar', paciente_id=paciente.id) }}">Atendimentos</a></li>
+                    <li class="breadcrumb-item active">Atendimento #{{ atendimento.id }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-calendar-check"></i> {{ atendimento.get_tipo_display() }}</h2>
+                <div>
+                    {% if atendimento.status != 'finalizado' or current_user.eh_admin() %}
+                    <a href="{{ url_for('atendimento.editar', atendimento_id=atendimento.id) }}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    {% endif %}
+                    {% if atendimento.status == 'rascunho' %}
+                    <form action="{{ url_for('atendimento.finalizar', atendimento_id=atendimento.id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Confirma finalização do atendimento?')">
+                            <i class="fas fa-check"></i> Finalizar
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% if atendimento.status != 'finalizado' and (atendimento.profissional_id == current_user.id or current_user.eh_admin()) %}
+                    <form action="{{ url_for('atendimento.excluir', atendimento_id=atendimento.id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir este atendimento?')">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações do Atendimento -->
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informações do Atendimento</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Data/Hora:</strong> {{ atendimento.data_hora.strftime('%d/%m/%Y %H:%M') }}</p>
+                    <p><strong>Paciente:</strong> {{ paciente.nome }}</p>
+                    <p><strong>Profissional:</strong> {{ atendimento.profissional.nome_completo }}</p>
+                    {% if atendimento.duracao_minutos %}
+                    <p><strong>Duração:</strong> {{ atendimento.duracao_minutos }} minutos</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Status:</strong> <span class="badge {{ atendimento.get_status_badge_class() }}">{{ atendimento.status }}</span></p>
+                    <p><strong>Tipo:</strong> {{ atendimento.get_tipo_display() }}</p>
+                    {% if atendimento.modalidade %}
+                    <p><strong>Modalidade:</strong> {{ atendimento.get_modalidade_display() }}</p>
+                    {% endif %}
+                    {% if atendimento.local %}
+                    <p><strong>Local:</strong> {{ atendimento.local }}</p>
+                    {% endif %}
+                    <p><strong>Compareceu:</strong> {% if atendimento.compareceu %}<span class="text-success">Sim</span>{% else %}<span class="text-danger">Não</span>{% endif %}</p>
+                </div>
+            </div>
+            {% if not atendimento.compareceu and atendimento.motivo_falta %}
+            <div class="alert alert-warning mt-2">
+                <strong>Motivo da Falta:</strong> {{ atendimento.motivo_falta }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SOAP Notes -->
+    {% if atendimento.compareceu %}
+    <div class="row">
+        <!-- S - Subjetivo -->
+        {% if atendimento.subjetivo %}
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-comment"></i> S - Subjetivo</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">{{ atendimento.subjetivo|replace('\n', '<br>')|safe }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- O - Objetivo -->
+        {% if atendimento.objetivo %}
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-eye"></i> O - Objetivo</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">{{ atendimento.objetivo|replace('\n', '<br>')|safe }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- A - Avaliação -->
+        {% if atendimento.avaliacao %}
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> A - Avaliação/Análise</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">{{ atendimento.avaliacao|replace('\n', '<br>')|safe }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- P - Plano -->
+        {% if atendimento.plano %}
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-tasks"></i> P - Plano</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">{{ atendimento.plano|replace('\n', '<br>')|safe }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Intervenções e Recursos -->
+    {% if atendimento.intervencoes or atendimento.recursos_utilizados %}
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-tools"></i> Intervenções e Recursos</h5>
+        </div>
+        <div class="card-body">
+            {% if atendimento.intervencoes %}
+            <h6>Intervenções Realizadas</h6>
+            <ul>
+            {% for intervencao in atendimento.get_intervencoes_list() %}
+                <li>{{ intervencao }}</li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if atendimento.recursos_utilizados %}
+            <h6>Recursos Utilizados</h6>
+            <p class="text-muted">{{ atendimento.recursos_utilizados }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Orientações -->
+    {% if atendimento.orientacoes_familia or atendimento.orientacoes_escola %}
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Orientações</h5>
+        </div>
+        <div class="card-body">
+            {% if atendimento.orientacoes_familia %}
+            <h6>Orientações à Família</h6>
+            <p class="text-muted">{{ atendimento.orientacoes_familia|replace('\n', '<br>')|safe }}</p>
+            {% endif %}
+
+            {% if atendimento.orientacoes_escola %}
+            <h6>Orientações à Escola</h6>
+            <p class="text-muted">{{ atendimento.orientacoes_escola|replace('\n', '<br>')|safe }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Observações -->
+    {% if atendimento.observacoes %}
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-sticky-note"></i> Observações</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">{{ atendimento.observacoes|replace('\n', '<br>')|safe }}</p>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

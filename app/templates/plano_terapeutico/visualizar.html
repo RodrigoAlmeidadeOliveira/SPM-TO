@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}{{ plano.titulo }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">{{ paciente.nome }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('plano_terapeutico.listar', paciente_id=paciente.id) }}">Planos</a></li>
+                    <li class="breadcrumb-item active">{{ plano.titulo }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-tasks"></i> {{ plano.titulo }}</h2>
+                <div>
+                    {% if plano.status == 'ativo' %}
+                    <a href="{{ url_for('plano_terapeutico.novo_objetivo', plano_id=plano.id) }}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Novo Objetivo
+                    </a>
+                    <a href="{{ url_for('plano_terapeutico.editar', plano_id=plano.id) }}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Editar Plano
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('plano_terapeutico.alterar_status', plano_id=plano.id) }}" class="btn btn-info">
+                        <i class="fas fa-exchange-alt"></i> Alterar Status
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações do Plano -->
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informações do Plano</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Paciente:</strong> {{ paciente.nome }}</p>
+                    <p><strong>Status:</strong> <span class="badge {{ plano.get_status_badge_class() }}">{{ plano.get_status_display() }}</span></p>
+                    <p><strong>Período:</strong> {{ plano.data_inicio.strftime('%d/%m/%Y') }}
+                    {% if plano.data_fim %} até {{ plano.data_fim.strftime('%d/%m/%Y') }}{% endif %}</p>
+                    {% if plano.duracao_prevista_meses %}
+                    <p><strong>Duração Prevista:</strong> {{ plano.duracao_prevista_meses }} meses</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Profissional:</strong> {{ plano.profissional.nome_completo }}</p>
+                    {% if plano.frequencia_semanal %}
+                    <p><strong>Frequência:</strong> {{ plano.frequencia_semanal }}x por semana</p>
+                    {% endif %}
+                    {% if plano.duracao_sessao_minutos %}
+                    <p><strong>Duração da Sessão:</strong> {{ plano.duracao_sessao_minutos }} minutos</p>
+                    {% endif %}
+                    <p><strong>Progresso Geral:</strong></p>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar {% if plano.get_progresso_percentual() == 100 %}bg-success{% endif %}"
+                             role="progressbar"
+                             style="width: {{ plano.get_progresso_percentual() }}%">
+                            {{ plano.get_progresso_percentual() }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if plano.descricao %}
+            <hr>
+            <p class="mb-0"><strong>Descrição:</strong><br>{{ plano.descricao }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Áreas de Foco e Estratégias -->
+    <div class="row mb-3">
+        {% if plano.areas_foco %}
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bullseye"></i> Áreas de Foco</h5>
+                </div>
+                <div class="card-body">
+                    {% for area in plano.get_areas_foco_list() %}
+                    <span class="badge bg-info me-1 mb-1">{{ area }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if plano.estrategias_gerais %}
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Estratégias Gerais</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ plano.estrategias_gerais|replace('\n', '<br>')|safe }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Objetivos Terapêuticos -->
+    <div class="card mb-3">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-list-check"></i> Objetivos Terapêuticos ({{ plano.count_objetivos() }})</h5>
+            {% if plano.status == 'ativo' %}
+            <a href="{{ url_for('plano_terapeutico.novo_objetivo', plano_id=plano.id) }}" class="btn btn-light btn-sm">
+                <i class="fas fa-plus"></i> Adicionar Objetivo
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if plano.count_objetivos() > 0 %}
+            <!-- Objetivos de Alta Prioridade -->
+            {% if objetivos_por_prioridade[1] %}
+            <h5 class="text-danger"><i class="fas fa-exclamation-circle"></i> Alta Prioridade</h5>
+            <div class="row mb-3">
+                {% for objetivo in objetivos_por_prioridade[1] %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-danger">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="badge bg-danger">{{ objetivo.get_prioridade_display() }}</span>
+                            <span class="badge {{ objetivo.get_status_badge_class() }}">{{ objetivo.get_status_display() }}</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ objetivo.descricao }}</p>
+                            {% if objetivo.area %}
+                            <p class="mb-1"><small><strong>Área:</strong> {{ objetivo.area }}</small></p>
+                            {% endif %}
+                            <p class="mb-2"><small><strong>Tipo:</strong> {{ objetivo.get_tipo_display() }}</small></p>
+
+                            <div class="progress mb-2" style="height: 20px;">
+                                <div class="progress-bar {% if objetivo.percentual_progresso == 100 %}bg-success{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ objetivo.percentual_progresso }}%">
+                                    {{ objetivo.percentual_progresso }}%
+                                </div>
+                            </div>
+
+                            {% if objetivo.prazo_estimado %}
+                            <p class="mb-2"><small><i class="fas fa-calendar"></i> Prazo: {{ objetivo.prazo_estimado.strftime('%d/%m/%Y') }}</small></p>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ url_for('plano_terapeutico.atualizar_progresso', objetivo_id=objetivo.id) }}" class="btn btn-sm btn-success">
+                                <i class="fas fa-chart-line"></i> Atualizar Progresso
+                            </a>
+                            {% if plano.status == 'ativo' %}
+                            <a href="{{ url_for('plano_terapeutico.editar_objetivo', objetivo_id=objetivo.id) }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <form action="{{ url_for('plano_terapeutico.excluir_objetivo', objetivo_id=objetivo.id) }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Excluir este objetivo?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Objetivos de Média Prioridade -->
+            {% if objetivos_por_prioridade[2] %}
+            <h5 class="text-warning"><i class="fas fa-circle"></i> Média Prioridade</h5>
+            <div class="row mb-3">
+                {% for objetivo in objetivos_por_prioridade[2] %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="badge bg-warning text-dark">{{ objetivo.get_prioridade_display() }}</span>
+                            <span class="badge {{ objetivo.get_status_badge_class() }}">{{ objetivo.get_status_display() }}</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ objetivo.descricao }}</p>
+                            {% if objetivo.area %}
+                            <p class="mb-1"><small><strong>Área:</strong> {{ objetivo.area }}</small></p>
+                            {% endif %}
+                            <p class="mb-2"><small><strong>Tipo:</strong> {{ objetivo.get_tipo_display() }}</small></p>
+
+                            <div class="progress mb-2" style="height: 20px;">
+                                <div class="progress-bar {% if objetivo.percentual_progresso == 100 %}bg-success{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ objetivo.percentual_progresso }}%">
+                                    {{ objetivo.percentual_progresso }}%
+                                </div>
+                            </div>
+
+                            {% if objetivo.prazo_estimado %}
+                            <p class="mb-2"><small><i class="fas fa-calendar"></i> Prazo: {{ objetivo.prazo_estimado.strftime('%d/%m/%Y') }}</small></p>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ url_for('plano_terapeutico.atualizar_progresso', objetivo_id=objetivo.id) }}" class="btn btn-sm btn-success">
+                                <i class="fas fa-chart-line"></i> Atualizar
+                            </a>
+                            {% if plano.status == 'ativo' %}
+                            <a href="{{ url_for('plano_terapeutico.editar_objetivo', objetivo_id=objetivo.id) }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ url_for('plano_terapeutico.excluir_objetivo', objetivo_id=objetivo.id) }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Excluir este objetivo?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Objetivos de Baixa Prioridade -->
+            {% if objetivos_por_prioridade[3] %}
+            <h5 class="text-info"><i class="fas fa-circle"></i> Baixa Prioridade</h5>
+            <div class="row mb-3">
+                {% for objetivo in objetivos_por_prioridade[3] %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-info">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="badge bg-info">{{ objetivo.get_prioridade_display() }}</span>
+                            <span class="badge {{ objetivo.get_status_badge_class() }}">{{ objetivo.get_status_display() }}</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ objetivo.descricao }}</p>
+                            {% if objetivo.area %}
+                            <p class="mb-1"><small><strong>Área:</strong> {{ objetivo.area }}</small></p>
+                            {% endif %}
+                            <p class="mb-2"><small><strong>Tipo:</strong> {{ objetivo.get_tipo_display() }}</small></p>
+
+                            <div class="progress mb-2" style="height: 20px;">
+                                <div class="progress-bar {% if objetivo.percentual_progresso == 100 %}bg-success{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ objetivo.percentual_progresso }}%">
+                                    {{ objetivo.percentual_progresso }}%
+                                </div>
+                            </div>
+
+                            {% if objetivo.prazo_estimado %}
+                            <p class="mb-2"><small><i class="fas fa-calendar"></i> Prazo: {{ objetivo.prazo_estimado.strftime('%d/%m/%Y') }}</small></p>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ url_for('plano_terapeutico.atualizar_progresso', objetivo_id=objetivo.id) }}" class="btn btn-sm btn-success">
+                                <i class="fas fa-chart-line"></i> Atualizar
+                            </a>
+                            {% if plano.status == 'ativo' %}
+                            <a href="{{ url_for('plano_terapeutico.editar_objetivo', objetivo_id=objetivo.id) }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ url_for('plano_terapeutico.excluir_objetivo', objetivo_id=objetivo.id) }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Excluir este objetivo?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% else %}
+            <p class="text-muted">Nenhum objetivo cadastrado ainda. <a href="{{ url_for('plano_terapeutico.novo_objetivo', plano_id=plano.id) }}">Adicione o primeiro objetivo</a>.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Orientações e Recursos -->
+    {% if plano.orientacoes_familia or plano.orientacoes_escola or plano.orientacoes_equipe or plano.recursos_necessarios %}
+    <div class="row mb-3">
+        {% if plano.recursos_necessarios %}
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-toolbox"></i> Recursos Necessários</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ plano.recursos_necessarios|replace('\n', '<br>')|safe }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if plano.orientacoes_familia %}
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-home"></i> Orientações para a Família</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ plano.orientacoes_familia|replace('\n', '<br>')|safe }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if plano.orientacoes_escola %}
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-school"></i> Orientações para a Escola</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ plano.orientacoes_escola|replace('\n', '<br>')|safe }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if plano.orientacoes_equipe %}
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-friends"></i> Orientações para a Equipe</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ plano.orientacoes_equipe|replace('\n', '<br>')|safe }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if plano.criterios_alta %}
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-flag-checkered"></i> Critérios de Alta</h5>
+        </div>
+        <div class="card-body">
+            <p class="mb-0">{{ plano.criterios_alta|replace('\n', '<br>')|safe }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if plano.observacoes %}
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-sticky-note"></i> Observações</h5>
+        </div>
+        <div class="card-body">
+            <p class="mb-0">{{ plano.observacoes|replace('\n', '<br>')|safe }}</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

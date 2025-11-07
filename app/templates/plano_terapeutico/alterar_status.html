@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Alterar Status - {{ plano.titulo }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-exchange-alt"></i> Alterar Status do Plano</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-tasks"></i> Plano: {{ plano.titulo }}</h5>
+                        <p class="mb-1"><strong>Paciente:</strong> {{ plano.paciente.nome }}</p>
+                        <p class="mb-0"><strong>Status Atual:</strong> <span class="badge {{ plano.get_status_badge_class() }}">{{ plano.get_status_display() }}</span></p>
+                    </div>
+
+                    <!-- Informações sobre o status -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6><i class="fas fa-info-circle"></i> Significado dos Status:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Ativo:</strong> Plano em execução</li>
+                                <li><strong>Concluído:</strong> Objetivos alcançados, plano finalizado</li>
+                                <li><strong>Cancelado:</strong> Plano cancelado antes da conclusão</li>
+                                <li><strong>Suspenso:</strong> Plano temporariamente interrompido</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                            {% if form.status.errors %}
+                                <div class="invalid-feedback d-block">{{ form.status.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.motivo_status.label(class="form-label") }}
+                            {{ form.motivo_status(class="form-control") }}
+                            <small class="form-text text-muted">Descreva o motivo da alteração de status</small>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-info">
+                                <i class="fas fa-save"></i> Confirmar Alteração
+                            </button>
+                            <a href="{{ url_for('plano_terapeutico.visualizar', plano_id=plano.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

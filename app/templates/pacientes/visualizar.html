@@ -233,6 +233,36 @@
                 </div>
             </div>
 
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-medical me-2"></i>
+                        Prontuário Eletrônico
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text mb-3">
+                        <small class="text-muted">
+                            Gerencie o prontuário, atendimentos e planos terapêuticos do paciente.
+                        </small>
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('prontuario.visualizar', paciente_id=paciente.id) }}" class="btn btn-success">
+                            <i class="fas fa-folder-open me-1"></i>
+                            Prontuário
+                        </a>
+                        <a href="{{ url_for('atendimento.listar', paciente_id=paciente.id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-calendar-check me-1"></i>
+                            Atendimentos
+                        </a>
+                        <a href="{{ url_for('atendimento.novo', paciente_id=paciente.id) }}" class="btn btn-outline-info">
+                            <i class="fas fa-plus me-1"></i>
+                            Novo Atendimento
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">
