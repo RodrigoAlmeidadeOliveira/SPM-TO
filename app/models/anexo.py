@@ -23,9 +23,28 @@ class AnexoAvaliacao(db.Model):
     tipo_mime = db.Column(db.String(100), nullable=False)
     tamanho_bytes = db.Column(db.Integer, nullable=False)
 
-    # Tipo de anexo
+    # Tipo de anexo (categoria)
     tipo_anexo = db.Column(db.String(50), nullable=False, default='documento')
-    # 'laudo', 'foto', 'documento', 'relatorio', 'outro'
+    # 'laudo', 'foto', 'documento', 'relatorio', 'video', 'audio', 'outro'
+
+    # Constantes para tipos de anexo
+    TIPO_LAUDO = 'laudo'
+    TIPO_FOTO = 'foto'
+    TIPO_DOCUMENTO = 'documento'
+    TIPO_RELATORIO = 'relatorio'
+    TIPO_VIDEO = 'video'
+    TIPO_AUDIO = 'audio'
+    TIPO_OUTRO = 'outro'
+
+    TIPOS_ANEXO = [
+        (TIPO_LAUDO, 'Laudo Médico'),
+        (TIPO_FOTO, 'Foto/Imagem'),
+        (TIPO_DOCUMENTO, 'Documento'),
+        (TIPO_RELATORIO, 'Relatório'),
+        (TIPO_VIDEO, 'Vídeo'),
+        (TIPO_AUDIO, 'Áudio'),
+        (TIPO_OUTRO, 'Outro')
+    ]
 
     # Descrição opcional
     descricao = db.Column(db.Text)
@@ -53,6 +72,23 @@ class AnexoAvaliacao(db.Model):
     def is_pdf(self):
         """Verifica se é PDF"""
         return self.get_extensao() == 'pdf'
+
+    def is_video(self):
+        """Verifica se é vídeo"""
+        extensoes_video = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm']
+        return self.get_extensao() in extensoes_video
+
+    def is_audio(self):
+        """Verifica se é áudio"""
+        extensoes_audio = ['mp3', 'wav', 'ogg', 'm4a', 'flac']
+        return self.get_extensao() in extensoes_audio
+
+    def get_categoria_label(self):
+        """Retorna o label da categoria"""
+        for codigo, label in self.TIPOS_ANEXO:
+            if codigo == self.tipo_anexo:
+                return label
+        return 'Não categorizado'
 
     def get_tamanho_formatado(self):
         """Retorna tamanho formatado (KB, MB)"""

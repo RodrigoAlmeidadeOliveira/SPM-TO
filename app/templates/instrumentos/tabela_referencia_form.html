@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('instrumentos.listar') }}">Instrumentos</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('instrumentos.visualizar', id=instrumento.id) }}">{{ instrumento.nome }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('instrumentos.listar_tabelas', id=instrumento.id) }}">Tabelas</a></li>
+            <li class="breadcrumb-item active">{{ titulo }}</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-table me-2"></i>
+                {{ titulo }}
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info mb-4">
+                <strong><i class="bi bi-info-circle me-2"></i>Instrumento:</strong> {{ instrumento.nome }} ({{ instrumento.codigo }})
+            </div>
+
+            <form method="POST" novalidate>
+                {{ form.hidden_tag() }}
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.dominio_codigo.label(class="form-label") }}
+                        {{ form.dominio_codigo(class="form-control" + (" is-invalid" if form.dominio_codigo.errors else "")) }}
+                        {% if form.dominio_codigo.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.dominio_codigo.errors[0] }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Ex: SOC, VIS, HEA, TOU, BOD, BAL, PLA, OLF</small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        {{ form.t_score.label(class="form-label") }}
+                        {{ form.t_score(class="form-control" + (" is-invalid" if form.t_score.errors else "")) }}
+                        {% if form.t_score.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.t_score.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.escore_min.label(class="form-label") }}
+                        {{ form.escore_min(class="form-control" + (" is-invalid" if form.escore_min.errors else "")) }}
+                        {% if form.escore_min.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.escore_min.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        {{ form.escore_max.label(class="form-label") }}
+                        {{ form.escore_max(class="form-control" + (" is-invalid" if form.escore_max.errors else "")) }}
+                        {% if form.escore_max.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.escore_max.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.percentil_min.label(class="form-label") }}
+                        {{ form.percentil_min(class="form-control" + (" is-invalid" if form.percentil_min.errors else "")) }}
+                        {% if form.percentil_min.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.percentil_min.errors[0] }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Deixe em branco se não houver</small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        {{ form.percentil_max.label(class="form-label") }}
+                        {{ form.percentil_max(class="form-control" + (" is-invalid" if form.percentil_max.errors else "")) }}
+                        {% if form.percentil_max.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.percentil_max.errors[0] }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Deixe em branco se não houver</small>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    {{ form.classificacao.label(class="form-label") }}
+                    {{ form.classificacao(class="form-select" + (" is-invalid" if form.classificacao.errors else "")) }}
+                    {% if form.classificacao.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.classificacao.errors[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2">
+                    {{ form.submit(class="btn btn-primary") }}
+                    <a href="{{ url_for('instrumentos.listar_tabelas', id=instrumento.id) }}" class="btn btn-secondary">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

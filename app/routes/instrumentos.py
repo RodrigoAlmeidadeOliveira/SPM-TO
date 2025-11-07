@@ -6,8 +6,8 @@ from flask_login import login_required
 from sqlalchemy import or_, func
 
 from app import db
-from app.forms import InstrumentoForm, DominioForm, QuestaoForm
-from app.models import Instrumento, Dominio, Questao
+from app.forms import InstrumentoForm, DominioForm, QuestaoForm, TabelaReferenciaForm
+from app.models import Instrumento, Dominio, Questao, TabelaReferencia
 
 instrumentos_bp = Blueprint('instrumentos', __name__)
 
@@ -341,3 +341,105 @@ def listar_questoes(id):
         instrumento=instrumento,
         dominios=dominios_detalhes
     )
+
+@instrumentos_bp.route('/<int:id>/tabelas-referencia')
+@login_required
+def listar_tabelas(id):
+    """Lista tabelas de referência de um instrumento"""
+    instrumento = Instrumento.query.get_or_404(id)
+    tabelas = TabelaReferencia.query.filter_by(instrumento_id=id).order_by(
+        TabelaReferencia.dominio_codigo.asc(),
+        TabelaReferencia.t_score.asc()
+    ).all()
+    
+    # Agrupar por domínio
+    tabelas_por_dominio = {}
+    for tabela in tabelas:
+        if tabela.dominio_codigo not in tabelas_por_dominio:
+            tabelas_por_dominio[tabela.dominio_codigo] = []
+        tabelas_por_dominio[tabela.dominio_codigo].append(tabela)
+    
+    return render_template(
+        'instrumentos/tabelas_referencia.html',
+        instrumento=instrumento,
+        tabelas_por_dominio=tabelas_por_dominio
+    )
+
+
+@instrumentos_bp.route('/<int:instrumento_id>/tabelas-referencia/nova', methods=['GET', 'POST'])
+@login_required
+def nova_tabela(instrumento_id):
+    """Cadastro de nova tabela de referência"""
+    instrumento = Instrumento.query.get_or_404(instrumento_id)
+    form = TabelaReferenciaForm()
+    
+    if form.validate_on_submit():
+        tabela = TabelaReferencia(
+            instrumento_id=instrumento.id,
+            dominio_codigo=form.dominio_codigo.data.strip().upper(),
+            escore_min=form.escore_min.data,
+            escore_max=form.escore_max.data,
+            t_score=form.t_score.data,
+            percentil_min=form.percentil_min.data,
+            percentil_max=form.percentil_max.data,
+            classificacao=form.classificacao.data
+        )
+        db.session.add(tabela)
+        db.session.commit()
+        
+        flash('Tabela de referência cadastrada com sucesso!', 'success')
+        return redirect(url_for('instrumentos.listar_tabelas', id=instrumento.id))
+    
+    return render_template(
+        'instrumentos/tabela_referencia_form.html',
+        form=form,
+        instrumento=instrumento,
+        titulo='Nova Tabela de Referência'
+    )
+
+
+@instrumentos_bp.route('/tabelas-referencia/<int:tabela_id>/editar', methods=['GET', 'POST'])
+@login_required
+def editar_tabela(tabela_id):
+    """Edição de tabela de referência existente"""
+    tabela = TabelaReferencia.query.get_or_404(tabela_id)
+    instrumento = tabela.instrumento
+    form = TabelaReferenciaForm(obj=tabela)
+    
+    if form.validate_on_submit():
+        tabela.dominio_codigo = form.dominio_codigo.data.strip().upper()
+        tabela.escore_min = form.escore_min.data
+        tabela.escore_max = form.escore_max.data
+        tabela.t_score = form.t_score.data
+        tabela.percentil_min = form.percentil_min.data
+        tabela.percentil_max = form.percentil_max.data
+        tabela.classificacao = form.classificacao.data
+        
+        db.session.commit()
+        flash('Tabela de referência atualizada com sucesso!', 'success')
+        return redirect(url_for('instrumentos.listar_tabelas', id=instrumento.id))
+    
+    else:
+        if request.method == 'GET':
+            form.dominio_codigo.data = tabela.dominio_codigo
+    
+    return render_template(
+        'instrumentos/tabela_referencia_form.html',
+        form=form,
+        instrumento=instrumento,
+        titulo=f'Editar Tabela: {tabela.dominio_codigo} T={tabela.t_score}'
+    )
+
+
+@instrumentos_bp.route('/tabelas-referencia/<int:tabela_id>/excluir', methods=['POST'])
+@login_required
+def excluir_tabela(tabela_id):
+    """Exclusão de tabela de referência"""
+    tabela = TabelaReferencia.query.get_or_404(tabela_id)
+    instrumento_id = tabela.instrumento_id
+    
+    db.session.delete(tabela)
+    db.session.commit()
+    
+    flash('Tabela de referência excluída com sucesso!', 'success')
+    return redirect(url_for('instrumentos.listar_tabelas', id=instrumento_id))
