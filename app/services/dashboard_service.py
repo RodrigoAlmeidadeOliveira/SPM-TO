@@ -78,10 +78,22 @@ class DashboardService:
         """
         data_inicio = datetime.now() - timedelta(days=meses*30)
 
-        query = db.session.query(
-            func.date_trunc('month', Avaliacao.data_avaliacao).label('mes'),
-            func.count(Avaliacao.id).label('total')
-        ).filter(Avaliacao.data_avaliacao >= data_inicio)
+        # Detectar tipo de banco de dados
+        from flask import current_app
+        is_sqlite = 'sqlite' in current_app.config.get('SQLALCHEMY_DATABASE_URI', '').lower()
+
+        if is_sqlite:
+            # SQLite usa strftime
+            query = db.session.query(
+                func.strftime('%Y-%m', Avaliacao.data_avaliacao).label('mes'),
+                func.count(Avaliacao.id).label('total')
+            ).filter(Avaliacao.data_avaliacao >= data_inicio)
+        else:
+            # PostgreSQL usa date_trunc
+            query = db.session.query(
+                func.date_trunc('month', Avaliacao.data_avaliacao).label('mes'),
+                func.count(Avaliacao.id).label('total')
+            ).filter(Avaliacao.data_avaliacao >= data_inicio)
 
         if avaliador_id:
             query = query.filter_by(avaliador_id=avaliador_id)
@@ -91,13 +103,19 @@ class DashboardService:
         if not resultados:
             return None
 
-        meses = [r.mes.strftime('%b/%Y') for r in resultados]
+        if is_sqlite:
+            # Para SQLite, mes é string no formato YYYY-MM
+            meses_list = [datetime.strptime(r.mes, '%Y-%m').strftime('%b/%Y') for r in resultados]
+        else:
+            # Para PostgreSQL, mes é datetime
+            meses_list = [r.mes.strftime('%b/%Y') for r in resultados]
+
         valores = [r.total for r in resultados]
 
         fig = go.Figure()
 
         fig.add_trace(go.Scatter(
-            x=meses,
+            x=meses_list,
             y=valores,
             mode='lines+markers',
             name='Avaliações',
