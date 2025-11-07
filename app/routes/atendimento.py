@@ -74,6 +74,8 @@ def visualizar(atendimento_id):
     # Registrar auditoria
     auditoria = AuditoriaAcesso(
         user_id=current_user.id,
+        recurso_tipo='atendimento',
+        recurso_id=atendimento.id,
         paciente_id=atendimento.paciente_id,
         acao='visualizar_atendimento',
         detalhes=f'Visualizou atendimento #{atendimento.id} do paciente {atendimento.paciente.nome}'
@@ -137,10 +139,13 @@ def novo(paciente_id):
             )
 
             db.session.add(atendimento)
+            db.session.flush()
 
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='atendimento',
+                recurso_id=atendimento.id,
                 paciente_id=paciente_id,
                 acao='criar_atendimento',
                 detalhes=f'Criou atendimento para paciente {paciente.nome}'
@@ -215,6 +220,8 @@ def editar(atendimento_id):
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='atendimento',
+                recurso_id=atendimento.id,
                 paciente_id=atendimento.paciente_id,
                 acao='editar_atendimento',
                 detalhes=f'Editou atendimento #{atendimento_id} do paciente {atendimento.paciente.nome}'
@@ -260,6 +267,8 @@ def finalizar(atendimento_id):
         # Registrar auditoria
         auditoria = AuditoriaAcesso(
             user_id=current_user.id,
+            recurso_tipo='atendimento',
+            recurso_id=atendimento.id,
             paciente_id=atendimento.paciente_id,
             acao='finalizar_atendimento',
             detalhes=f'Finalizou atendimento #{atendimento_id} do paciente {atendimento.paciente.nome}'
@@ -304,6 +313,8 @@ def excluir(atendimento_id):
         # Registrar auditoria
         auditoria = AuditoriaAcesso(
             user_id=current_user.id,
+            recurso_tipo='atendimento',
+            recurso_id=atendimento.id,
             paciente_id=paciente_id,
             acao='excluir_atendimento',
             detalhes=f'Excluiu atendimento #{atendimento_id} do paciente {paciente_nome}'

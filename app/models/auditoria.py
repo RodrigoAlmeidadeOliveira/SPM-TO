@@ -14,12 +14,14 @@ class AuditoriaAcesso(db.Model):
     # Quem acessou
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
 
-    # O que foi acessado
+    # Contexto do acesso
     recurso_tipo = db.Column(db.String(50), nullable=False)  # 'paciente', 'avaliacao', 'relatorio'
     recurso_id = db.Column(db.Integer, nullable=False)
+    paciente_id = db.Column(db.Integer, db.ForeignKey('pacientes.id', ondelete='SET NULL'), nullable=True)
 
     # Ação realizada
     acao = db.Column(db.String(50), nullable=False)  # 'visualizar', 'editar', 'excluir', 'criar', 'exportar'
+    detalhes = db.Column(db.Text)
 
     # Detalhes do acesso
     ip_address = db.Column(db.String(45))  # Suporta IPv6
@@ -30,6 +32,7 @@ class AuditoriaAcesso(db.Model):
 
     # Relacionamentos
     user = db.relationship('User', backref='acessos_auditados')
+    paciente = db.relationship('Paciente', backref='auditorias_acesso')
 
     def __repr__(self):
         return f'<AuditoriaAcesso {self.user_id} - {self.recurso_tipo}:{self.recurso_id} - {self.acao}>'

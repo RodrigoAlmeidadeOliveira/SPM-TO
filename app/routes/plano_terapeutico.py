@@ -65,6 +65,8 @@ def visualizar(plano_id):
     # Registrar auditoria
     auditoria = AuditoriaAcesso(
         user_id=current_user.id,
+        recurso_tipo='plano_terapeutico',
+        recurso_id=plano.id,
         paciente_id=plano.paciente_id,
         acao='visualizar_plano_terapeutico',
         detalhes=f'Visualizou plano terapêutico #{plano.id} do paciente {plano.paciente.nome}'
@@ -128,10 +130,13 @@ def novo(paciente_id):
             )
 
             db.session.add(plano)
+            db.session.flush()  # garante ID antes do registro de auditoria
 
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='plano_terapeutico',
+                recurso_id=plano.id,
                 paciente_id=paciente_id,
                 acao='criar_plano_terapeutico',
                 detalhes=f'Criou plano terapêutico "{form.titulo.data}" para paciente {paciente.nome}'
@@ -200,6 +205,8 @@ def editar(plano_id):
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='plano_terapeutico',
+                recurso_id=plano.id,
                 paciente_id=plano.paciente_id,
                 acao='editar_plano_terapeutico',
                 detalhes=f'Editou plano terapêutico #{plano.id} do paciente {plano.paciente.nome}'
@@ -248,6 +255,8 @@ def alterar_status(plano_id):
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='plano_terapeutico',
+                recurso_id=plano.id,
                 paciente_id=plano.paciente_id,
                 acao='alterar_status_plano',
                 detalhes=f'Alterou status do plano #{plano.id} para {form.status.data}'
@@ -303,10 +312,13 @@ def novo_objetivo(plano_id):
             )
 
             db.session.add(objetivo)
+            db.session.flush()
 
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='objetivo_terapeutico',
+                recurso_id=objetivo.id,
                 paciente_id=plano.paciente_id,
                 acao='criar_objetivo',
                 detalhes=f'Criou objetivo no plano #{plano.id}'
@@ -359,6 +371,8 @@ def editar_objetivo(objetivo_id):
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='objetivo_terapeutico',
+                recurso_id=objetivo.id,
                 paciente_id=plano.paciente_id,
                 acao='editar_objetivo',
                 detalhes=f'Editou objetivo #{objetivo_id} do plano #{plano.id}'
@@ -412,6 +426,8 @@ def atualizar_progresso(objetivo_id):
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='objetivo_terapeutico',
+                recurso_id=objetivo.id,
                 paciente_id=plano.paciente_id,
                 acao='atualizar_progresso_objetivo',
                 detalhes=f'Atualizou progresso do objetivo #{objetivo_id} para {form.percentual_progresso.data}%'
@@ -452,6 +468,8 @@ def excluir_objetivo(objetivo_id):
         # Registrar auditoria
         auditoria = AuditoriaAcesso(
             user_id=current_user.id,
+            recurso_tipo='objetivo_terapeutico',
+            recurso_id=objetivo.id,
             paciente_id=plano.paciente_id,
             acao='excluir_objetivo',
             detalhes=f'Excluiu objetivo #{objetivo_id} do plano #{plano.id}'
