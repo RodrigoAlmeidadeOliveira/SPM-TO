@@ -17,39 +17,82 @@ avaliacoes_bp = Blueprint('avaliacoes', __name__)
 @avaliacoes_bp.route('/')
 @login_required
 def listar():
-    """Lista todas as avaliações com filtros"""
-    # Parâmetros de busca
-    status_filtro = request.args.get('status', '').strip()
-    paciente_id = request.args.get('paciente_id', type=int)
+    """Lista avaliações com filtros avançados"""
+    from app.models.user import User
+    from datetime import datetime as dt
+
     page = request.args.get('page', 1, type=int)
-    per_page = 15
+    per_page = 20
+
+    # Filtros
+    paciente_id = request.args.get('paciente_id', type=int)
+    avaliador_id = request.args.get('avaliador_id', type=int)
+    status = request.args.get('status', '')
+    data_inicio = request.args.get('data_inicio', '')
+    data_fim = request.args.get('data_fim', '')
+    busca = request.args.get('busca', '')
 
     # Query base
     query = Avaliacao.query.join(Paciente).join(Instrumento)
 
-    # Filtrar por paciente se especificado
+    # Filtro por paciente
     if paciente_id:
         query = query.filter(Avaliacao.paciente_id == paciente_id)
 
-    # Filtrar por status
-    if status_filtro and status_filtro in ['em_andamento', 'concluida', 'revisao']:
-        query = query.filter(Avaliacao.status == status_filtro)
+    # Filtro por avaliador
+    if avaliador_id:
+        query = query.filter_by(avaliador_id=avaliador_id)
 
-    # Ordenar por data mais recente
-    query = query.order_by(Avaliacao.data_avaliacao.desc())
+    # Filtro por status
+    if status:
+        query = query.filter_by(status=status)
 
-    # Paginar
-    paginacao = query.paginate(page=page, per_page=per_page, error_out=False)
-    avaliacoes = paginacao.items
+    # Filtro por período
+    if data_inicio:
+        try:
+            data_inicio_dt = dt.strptime(data_inicio, '%Y-%m-%d').date()
+            query = query.filter(Avaliacao.data_avaliacao >= data_inicio_dt)
+        except ValueError:
+            flash('Data de início inválida', 'warning')
 
-    return render_template(
-        'avaliacoes/listar.html',
-        avaliacoes=avaliacoes,
-        paginacao=paginacao,
-        status_filtro=status_filtro,
-        paciente_id=paciente_id
+    if data_fim:
+        try:
+            data_fim_dt = dt.strptime(data_fim, '%Y-%m-%d').date()
+            query = query.filter(Avaliacao.data_avaliacao <= data_fim_dt)
+        except ValueError:
+            flash('Data de fim inválida', 'warning')
+
+    # Filtro por busca (nome do paciente)
+    if busca:
+        query = query.join(Paciente).filter(
+            Paciente.nome.ilike(f'%{busca}%')
+        )
+
+    # Ordenar e paginar
+    avaliacoes = query.order_by(db.desc(Avaliacao.data_avaliacao)).paginate(
+        page=page, per_page=per_page, error_out=False
     )
 
+    # Estatísticas dos filtros
+    total_filtrado = query.count()
+    total_geral = Avaliacao.query.count()
+
+    # Listas para os filtros
+    pacientes = Paciente.query.filter_by(ativo=True).order_by(Paciente.nome).all()
+    avaliadores = User.query.filter_by(ativo=True).order_by(User.nome_completo).all()
+
+    return render_template('avaliacoes/listar.html',
+                          avaliacoes=avaliacoes,
+                          pacientes=pacientes,
+                          avaliadores=avaliadores,
+                          paciente_id=paciente_id,
+                          avaliador_id=avaliador_id,
+                          status=status,
+                          data_inicio=data_inicio,
+                          data_fim=data_fim,
+                          busca=busca,
+                          total_filtrado=total_filtrado,
+                          total_geral=total_geral)
 
 @avaliacoes_bp.route('/nova', methods=['GET', 'POST'])
 @login_required

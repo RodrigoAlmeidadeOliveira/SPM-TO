@@ -1,94 +1,444 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - SPM-TO{% endblock %}
+{% block title %}Dashboard Analítico - SPM-TO{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kpi-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+        border-radius: 12px;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .kpi-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 10px 0;
+    }
+
+    .kpi-label {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.8;
+    }
+
+    .kpi-icon {
+        font-size: 3rem;
+        opacity: 0.3;
+    }
+
+    .chart-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 25px;
+    }
+
+    .chart-card .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #e9ecef;
+        font-weight: 600;
+        padding: 15px 20px;
+    }
+
+    .filter-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    .ranking-item {
+        padding: 12px;
+        border-left: 4px solid #0d6efd;
+        background-color: #f8f9fa;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+    }
+
+    .ranking-item:hover {
+        background-color: #e9ecef;
+    }
+
+    .ranking-position {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+        background-color: #0d6efd;
+        color: white;
+        border-radius: 50%;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    .badge-pendente {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .badge-concluida {
+        background-color: #198754;
+    }
+
+    .badge-em-andamento {
+        background-color: #0dcaf0;
+        color: #000;
+    }
+
+    .evolucao-destaque {
+        padding: 15px;
+        border: 2px solid #198754;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        background-color: #f0f9f4;
+    }
+
+    .evolucao-melhoria {
+        font-size: 1.5rem;
+        color: #198754;
+        font-weight: bold;
+    }
+
+    .tips-section {
+        background-color: #e7f3ff;
+        border-left: 4px solid #0d6efd;
+        padding: 15px;
+        border-radius: 4px;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="mb-4">
-        <i class="fas fa-home"></i> Dashboard
-    </h1>
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-2">
+                <i class="fas fa-chart-line"></i> Dashboard Analítico
+            </h1>
+            <p class="text-muted">Visão geral e métricas do sistema SPM-TO</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('avaliacoes.nova') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus-circle"></i> Nova Avaliação
+            </a>
+        </div>
+    </div>
 
+    <!-- Filtros -->
+    <div class="filter-section">
+        <form method="get" action="{{ url_for('main.dashboard') }}" id="filterForm">
+            <div class="row align-items-end">
+                <div class="col-md-3">
+                    <label for="periodo" class="form-label">
+                        <i class="fas fa-calendar-alt"></i> Período
+                    </label>
+                    <select name="periodo" id="periodo" class="form-select" onchange="this.form.submit()">
+                        <option value="7" {% if periodo == '7' %}selected{% endif %}>Últimos 7 dias</option>
+                        <option value="30" {% if periodo == '30' %}selected{% endif %}>Últimos 30 dias</option>
+                        <option value="90" {% if periodo == '90' %}selected{% endif %}>Últimos 90 dias</option>
+                        <option value="180" {% if periodo == '180' %}selected{% endif %}>Últimos 6 meses</option>
+                        <option value="365" {% if periodo == '365' %}selected{% endif %}>Último ano</option>
+                        <option value="tudo" {% if periodo == 'tudo' %}selected{% endif %}>Tudo</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="avaliador_id" class="form-label">
+                        <i class="fas fa-user"></i> Filtrar por Avaliador
+                    </label>
+                    <select name="avaliador_id" id="avaliador_id" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos os avaliadores</option>
+                        {% for avaliador in avaliadores %}
+                        <option value="{{ avaliador.id }}" {% if avaliador_id == avaliador.id %}selected{% endif %}>
+                            {{ avaliador.nome_completo }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    {% if avaliador_id or periodo != '30' %}
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-redo"></i> Limpar Filtros
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-3 text-end">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        Dados atualizados em tempo real
+                    </small>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- KPIs Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card kpi-card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-label">Total de Avaliações</div>
+                            <div class="kpi-value">{{ kpis.total_avaliacoes }}</div>
+                            <small>
+                                <i class="fas fa-check-circle"></i>
+                                {{ kpis.concluidas }} concluídas
+                            </small>
+                        </div>
+                        <div class="kpi-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card kpi-card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-label">Pacientes Únicos</div>
+                            <div class="kpi-value">{{ kpis.pacientes_unicos }}</div>
+                            <small>
+                                <i class="fas fa-users"></i>
+                                Com avaliações no período
+                            </small>
+                        </div>
+                        <div class="kpi-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card kpi-card bg-warning text-dark h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-label">Em Andamento</div>
+                            <div class="kpi-value">{{ kpis.em_andamento }}</div>
+                            <small>
+                                <i class="fas fa-clock"></i>
+                                Aguardando conclusão
+                            </small>
+                        </div>
+                        <div class="kpi-icon">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card kpi-card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-label">Tempo Médio</div>
+                            <div class="kpi-value">{{ "%.1f"|format(kpis.tempo_medio_dias) }}</div>
+                            <small>
+                                <i class="fas fa-calendar"></i>
+                                Dias para conclusão
+                            </small>
+                        </div>
+                        <div class="kpi-icon">
+                            <i class="fas fa-stopwatch"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Taxa de Conclusão -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Taxa de Conclusão</h6>
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar bg-success" role="progressbar"
+                             style="width: {{ kpis.taxa_conclusao }}%;"
+                             aria-valuenow="{{ kpis.taxa_conclusao }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                            <strong>{{ "%.1f"|format(kpis.taxa_conclusao) }}%</strong>
+                        </div>
+                    </div>
+                    <small class="text-muted mt-1">
+                        {{ kpis.concluidas }} de {{ kpis.total_avaliacoes }} avaliações concluídas
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos - Linha 1 -->
     <div class="row">
-        <!-- Card: Total de Pacientes -->
-        <div class="col-md-3 mb-4">
-            <div class="card bg-primary text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title text-uppercase mb-0">Pacientes</h6>
-                            <h2 class="mt-2 mb-0">0</h2>
-                        </div>
-                        <div>
-                            <i class="fas fa-users fa-3x opacity-50"></i>
-                        </div>
-                    </div>
+        <div class="col-lg-8 mb-4">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line"></i> Tendência de Avaliações por Mês
                 </div>
-                <div class="card-footer">
-                    <a href="{{ url_for('pacientes.listar') }}" class="text-white text-decoration-none">
-                        Ver todos <i class="fas fa-arrow-right"></i>
-                    </a>
+                <div class="card-body">
+                    {{ grafico_avaliacoes_mes | safe }}
                 </div>
             </div>
         </div>
 
-        <!-- Card: Total de Avaliações -->
-        <div class="col-md-3 mb-4">
-            <div class="card bg-success text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title text-uppercase mb-0">Avaliações</h6>
-                            <h2 class="mt-2 mb-0">0</h2>
-                        </div>
-                        <div>
-                            <i class="fas fa-clipboard-list fa-3x opacity-50"></i>
-                        </div>
-                    </div>
+        <div class="col-lg-4 mb-4">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie"></i> Distribuição por Classificação
                 </div>
-                <div class="card-footer">
-                    <a href="{{ url_for('avaliacoes.listar') }}" class="text-white text-decoration-none">
-                        Ver todas <i class="fas fa-arrow-right"></i>
-                    </a>
+                <div class="card-body">
+                    {{ grafico_classificacao | safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos - Linha 2 -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar"></i> Domínios Mais Afetados
+                </div>
+                <div class="card-body">
+                    {{ grafico_dominios | safe }}
                 </div>
             </div>
         </div>
 
-        <!-- Card: Avaliações Pendentes -->
-        <div class="col-md-3 mb-4">
-            <div class="card bg-warning text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title text-uppercase mb-0">Pendentes</h6>
-                            <h2 class="mt-2 mb-0">0</h2>
-                        </div>
-                        <div>
-                            <i class="fas fa-clock fa-3x opacity-50"></i>
-                        </div>
-                    </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <i class="fas fa-th"></i> Heatmap de Classificações por Domínio
                 </div>
-                <div class="card-footer">
-                    <span class="text-white">Avaliações em andamento</span>
+                <div class="card-body">
+                    {{ grafico_heatmap | safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rankings e Listas - Linha 3 -->
+    <div class="row">
+        <!-- Ranking de Terapeutas -->
+        <div class="col-lg-4 mb-4">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <i class="fas fa-trophy"></i> Top Avaliadores
+                </div>
+                <div class="card-body">
+                    {% if ranking_terapeutas %}
+                        {% for item in ranking_terapeutas %}
+                        <div class="ranking-item">
+                            <span class="ranking-position">{{ loop.index }}</span>
+                            <strong>{{ item.nome }}</strong>
+                            <span class="float-end badge bg-primary">
+                                {{ item.total }} avaliações
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                            <p>Nenhum dado disponível no período</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Card: Relatórios Gerados -->
-        <div class="col-md-3 mb-4">
-            <div class="card bg-info text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title text-uppercase mb-0">Relatórios</h6>
-                            <h2 class="mt-2 mb-0">0</h2>
-                        </div>
-                        <div>
-                            <i class="fas fa-file-pdf fa-3x opacity-50"></i>
-                        </div>
-                    </div>
+        <!-- Avaliações Pendentes -->
+        <div class="col-lg-4 mb-4">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <i class="fas fa-exclamation-triangle"></i> Avaliações Pendentes Mais Antigas
                 </div>
-                <div class="card-footer">
-                    <span class="text-white">Este mês</span>
+                <div class="card-body">
+                    {% if avaliacoes_pendentes %}
+                        {% for avaliacao in avaliacoes_pendentes %}
+                        <div class="ranking-item" style="border-left-color: #ffc107;">
+                            <div>
+                                <strong>{{ avaliacao.paciente.nome }}</strong>
+                                <span class="badge badge-pendente float-end">
+                                    {{ avaliacao.dias_pendente }} dias
+                                </span>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                <i class="fas fa-calendar"></i>
+                                {{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}
+                                - {{ avaliacao.instrumento.nome }}
+                            </small>
+                            <small class="text-muted d-block">
+                                <i class="fas fa-user"></i>
+                                {{ avaliacao.avaliador.nome_completo }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                            <p>Nenhuma avaliação pendente!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Evolução de Pacientes Destaque -->
+        <div class="col-lg-4 mb-4">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <i class="fas fa-star"></i> Melhores Evoluções
+                </div>
+                <div class="card-body">
+                    {% if evolucao_destaque %}
+                        {% for item in evolucao_destaque %}
+                        <div class="evolucao-destaque">
+                            <div>
+                                <strong>{{ item.paciente }}</strong>
+                                <span class="evolucao-melhoria float-end">
+                                    <i class="fas fa-arrow-up"></i> {{ item.melhoria }}
+                                </span>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="fas fa-chart-line"></i>
+                                T-Score: {{ item.tscore_inicial }} → {{ item.tscore_final }}
+                            </small>
+                            <small class="text-muted d-block">
+                                <i class="fas fa-calendar"></i>
+                                {{ item.periodo }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                            <p>Sem dados de evolução ainda</p>
+                            <small>Necessário pelo menos 2 avaliações por paciente</small>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -96,33 +446,84 @@
 
     <!-- Ações Rápidas -->
     <div class="row mt-4">
-        <div class="col-md-12">
-            <h3>Ações Rápidas</h3>
+        <div class="col-md-12 mb-3">
+            <h4><i class="fas fa-bolt"></i> Ações Rápidas</h4>
         </div>
         <div class="col-md-3">
-            <a href="{{ url_for('pacientes.novo') }}" class="btn btn-primary btn-lg w-100 mb-3">
-                <i class="fas fa-user-plus"></i><br>
+            <a href="{{ url_for('pacientes.novo') }}" class="btn btn-outline-primary btn-lg w-100 mb-3">
+                <i class="fas fa-user-plus fa-2x mb-2"></i><br>
                 Novo Paciente
             </a>
         </div>
         <div class="col-md-3">
-            <a href="{{ url_for('avaliacoes.nova') }}" class="btn btn-success btn-lg w-100 mb-3">
-                <i class="fas fa-plus-circle"></i><br>
+            <a href="{{ url_for('avaliacoes.nova') }}" class="btn btn-outline-success btn-lg w-100 mb-3">
+                <i class="fas fa-plus-circle fa-2x mb-2"></i><br>
                 Nova Avaliação
             </a>
         </div>
         <div class="col-md-3">
-            <a href="{{ url_for('instrumentos.listar') }}" class="btn btn-info btn-lg w-100 mb-3">
-                <i class="fas fa-tasks"></i><br>
-                Instrumentos
+            <a href="{{ url_for('avaliacoes.listar') }}" class="btn btn-outline-info btn-lg w-100 mb-3">
+                <i class="fas fa-search fa-2x mb-2"></i><br>
+                Consultar Avaliações
             </a>
         </div>
         <div class="col-md-3">
-            <a href="{{ url_for('relatorios.evolucao', paciente_id=0) }}" class="btn btn-warning btn-lg w-100 mb-3">
-                <i class="fas fa-chart-line"></i><br>
-                Relatórios
+            <a href="{{ url_for('pacientes.listar') }}" class="btn btn-outline-warning btn-lg w-100 mb-3">
+                <i class="fas fa-users fa-2x mb-2"></i><br>
+                Ver Pacientes
             </a>
         </div>
     </div>
+
+    <!-- Dicas -->
+    <div class="tips-section">
+        <h6><i class="fas fa-lightbulb"></i> Dicas de Uso</h6>
+        <ul class="mb-0">
+            <li>Use os filtros acima para analisar períodos específicos ou avaliadores individuais</li>
+            <li>Avaliações pendentes há mais de 7 dias merecem atenção especial</li>
+            <li>O heatmap ajuda a identificar padrões de disfunção sensorial por domínio</li>
+            <li>Acompanhe a evolução dos pacientes através de múltiplas avaliações ao longo do tempo</li>
+        </ul>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh tooltip
+    $(function () {
+        $('[data-bs-toggle="tooltip"]').tooltip();
+    });
+
+    // Atalhos de teclado
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+N = Nova Avaliação
+        if (e.ctrlKey && e.key === 'n') {
+            e.preventDefault();
+            window.location.href = "{{ url_for('avaliacoes.nova') }}";
+        }
+        // Ctrl+P = Novo Paciente
+        if (e.ctrlKey && e.key === 'p') {
+            e.preventDefault();
+            window.location.href = "{{ url_for('pacientes.novo') }}";
+        }
+    });
+
+    // Animação nos cards KPI ao carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.kpi-card');
+        cards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.5s, transform 0.5s';
+
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100);
+            }, index * 100);
+        });
+    });
+</script>
 {% endblock %}
