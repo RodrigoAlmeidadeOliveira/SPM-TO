@@ -475,11 +475,15 @@ $(document).ready(function() {
             valid = false;
         }
 
-        const respondente = $('[name="relacionamento_respondente"]').val();
-        console.log('Respondente:', respondente);
+        const respondenteElement = $('[name="relacionamento_respondente"]');
+        console.log('Respondente element:', respondenteElement);
+        console.log('Respondente element length:', respondenteElement.length);
+        const respondente = respondenteElement.val();
+        console.log('Respondente value:', respondente);
+        console.log('Respondente type:', typeof respondente);
         if (!respondente || respondente === '') {
             console.log('Respondente inválido');
-            $('[name="relacionamento_respondente"]').addClass('is-invalid');
+            respondenteElement.addClass('is-invalid');
             valid = false;
         }
 
