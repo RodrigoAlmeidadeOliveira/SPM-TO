@@ -114,6 +114,16 @@ class Prontuario(db.Model):
         }
         return classes.get(self.status, 'bg-secondary')
 
+    def get_status_display(self):
+        """Retorna rótulo legível para o status do prontuário"""
+        labels = {
+            'ativo': 'Ativo',
+            'alta': 'Alta',
+            'transferido': 'Transferido',
+            'inativo': 'Inativo'
+        }
+        return labels.get(self.status, 'Desconhecido')
+
     def get_ultimo_atendimento(self):
         """Retorna o último atendimento registrado"""
         return self.atendimentos.first()
