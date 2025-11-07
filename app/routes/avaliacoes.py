@@ -121,6 +121,7 @@ def nova():
     paciente_id = request.args.get('paciente_id', type=int)
     instrumento_id = request.args.get('instrumento_id', type=int)
 
+    # Criar formulário
     form = AvaliacaoForm()
 
     # Buscar pacientes ativos
@@ -129,34 +130,34 @@ def nova():
         (p.id, f"{p.nome} - {p.calcular_idade()[0]} anos") for p in pacientes
     ]
 
-    # Se paciente foi pré-selecionado na URL
-    if paciente_id and request.method == 'GET':
-        form.paciente_id.data = paciente_id
-
     # Buscar instrumentos disponíveis
-    instrumentos = Instrumento.query.filter_by(ativo=True).order_by(Instrumento.nome).all()
+    instrumentos_disponiveis = Instrumento.query.filter_by(ativo=True).order_by(Instrumento.nome).all()
+
+    # Se paciente foi pré-selecionado na URL e é GET, filtrar instrumentos por idade
+    if paciente_id and request.method == 'GET':
+        print(f"DEBUG: Pre-selecionando paciente_id={paciente_id}")
+        form.paciente_id.data = paciente_id
+        print(f"DEBUG: form.paciente_id.data setado para {form.paciente_id.data}")
+        paciente = Paciente.query.get(paciente_id)
+        if paciente:
+            idade_anos, idade_meses = paciente.calcular_idade()
+            print(f"DEBUG: Paciente {paciente.nome}, idade {idade_anos} anos")
+            # Filtrar instrumentos adequados para a idade
+            instrumentos_disponiveis = Instrumento.query.filter(
+                Instrumento.ativo.is_(True),
+                Instrumento.idade_minima <= idade_anos,
+                Instrumento.idade_maxima >= idade_anos
+            ).all()
+            print(f"DEBUG: Encontrados {len(instrumentos_disponiveis)} instrumentos adequados")
+
+    # Popular choices de instrumentos
     form.instrumento_id.choices = [(0, 'Selecione o instrumento...')] + [
-        (i.id, f"{i.nome} ({i.contexto})") for i in instrumentos
+        (i.id, f"{i.nome} ({i.contexto})") for i in instrumentos_disponiveis
     ]
 
     # Se instrumento foi pré-selecionado
     if instrumento_id and request.method == 'GET':
         form.instrumento_id.data = instrumento_id
-
-    # Se formulário já foi submetido, filtrar instrumentos por idade
-    if form.paciente_id.data and form.paciente_id.data != 0:
-        paciente = Paciente.query.get(form.paciente_id.data)
-        if paciente:
-            idade_anos, idade_meses = paciente.calcular_idade()
-            # Buscar instrumentos adequados para a idade
-            instrumentos = Instrumento.query.filter(
-                Instrumento.ativo.is_(True),
-                Instrumento.idade_minima <= idade_anos,
-                Instrumento.idade_maxima >= idade_anos
-            ).all()
-            form.instrumento_id.choices = [(0, 'Selecione o instrumento...')] + [
-                (i.id, f"{i.nome} ({i.contexto})") for i in instrumentos
-            ]
 
     if form.validate_on_submit():
         try:
