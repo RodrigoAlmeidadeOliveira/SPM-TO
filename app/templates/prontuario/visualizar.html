@@ -89,13 +89,11 @@
                 <i class="fas fa-calendar-check"></i> Atendimentos
             </button>
         </li>
-        {% if plano_ativo %}
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="plano-tab" data-bs-toggle="tab" data-bs-target="#plano" type="button">
-                <i class="fas fa-tasks"></i> Plano Ativo
+                <i class="fas fa-tasks"></i> Plano Terapêutico
             </button>
         </li>
-        {% endif %}
     </ul>
 
     <div class="tab-content border border-top-0 p-3" id="prontuarioTabsContent">
@@ -227,14 +225,70 @@
         <!-- Tab Plano Terapêutico -->
         {% if plano_ativo %}
         <div class="tab-pane fade" id="plano">
-            <h5>{{ plano_ativo.titulo }}</h5>
-            <p><strong>Período:</strong> {{ plano_ativo.data_inicio.strftime('%d/%m/%Y') }}
-            {% if plano_ativo.data_fim %} - {{ plano_ativo.data_fim.strftime('%d/%m/%Y') }}{% endif %}</p>
-            <p><strong>Progresso:</strong> {{ plano_ativo.get_progresso_percentual() }}%</p>
+            <div class="mb-3">
+                <a href="{{ url_for('plano_terapeutico.visualizar', plano_id=plano_ativo.id) }}" class="btn btn-success">
+                    <i class="fas fa-eye"></i> Ver Plano Completo
+                </a>
+                <a href="{{ url_for('plano_terapeutico.listar', paciente_id=paciente.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-list"></i> Todos os Planos
+                </a>
+            </div>
 
-            {% if plano_ativo.descricao %}
-            <p class="text-muted">{{ plano_ativo.descricao }}</p>
-            {% endif %}
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-tasks"></i> {{ plano_ativo.titulo }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Período:</strong> {{ plano_ativo.data_inicio.strftime('%d/%m/%Y') }}
+                            {% if plano_ativo.data_fim %} até {{ plano_ativo.data_fim.strftime('%d/%m/%Y') }}{% endif %}</p>
+                            <p><strong>Profissional:</strong> {{ plano_ativo.profissional.nome_completo }}</p>
+                            {% if plano_ativo.frequencia_semanal %}
+                            <p><strong>Frequência:</strong> {{ plano_ativo.frequencia_semanal }}x por semana</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Total de Objetivos:</strong> {{ plano_ativo.count_objetivos() }}</p>
+                            <p><strong>Objetivos Atingidos:</strong> {{ plano_ativo.count_objetivos_atingidos() }}</p>
+                            <p><strong>Progresso Geral:</strong></p>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar {% if plano_ativo.get_progresso_percentual() == 100 %}bg-success{% else %}bg-info{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ plano_ativo.get_progresso_percentual() }}%">
+                                    {{ plano_ativo.get_progresso_percentual() }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if plano_ativo.descricao %}
+                    <div class="alert alert-info">
+                        <strong>Descrição:</strong> {{ plano_ativo.descricao }}
+                    </div>
+                    {% endif %}
+
+                    {% if plano_ativo.areas_foco %}
+                    <div class="mb-2">
+                        <strong>Áreas de Foco:</strong>
+                        <div class="mt-1">
+                        {% for area in plano_ativo.get_areas_foco_list() %}
+                            <span class="badge bg-info me-1">{{ area }}</span>
+                        {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="tab-pane fade" id="plano">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Nenhum plano terapêutico ativo.
+                <a href="{{ url_for('plano_terapeutico.novo', paciente_id=paciente.id) }}" class="alert-link">
+                    Criar um plano terapêutico
+                </a>
+            </div>
         </div>
         {% endif %}
     </div>

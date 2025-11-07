@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - {{ plano.titulo }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', paciente_id=plano.paciente_id) }}">{{ plano.paciente.nome }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('plano_terapeutico.listar', paciente_id=plano.paciente_id) }}">Planos</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('plano_terapeutico.visualizar', plano_id=plano.id) }}">{{ plano.titulo }}</a></li>
+                    <li class="breadcrumb-item active">{{ titulo }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-bullseye"></i> {{ titulo }}</h4>
+                    <small>Plano: {{ plano.titulo }}</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.descricao.label(class="form-label") }}
+                            {{ form.descricao(class="form-control") }}
+                            {% if form.descricao.errors %}
+                                <div class="invalid-feedback d-block">{{ form.descricao.errors[0] }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Descreva o objetivo de forma clara e mensurável</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.area.label(class="form-label") }}
+                                {{ form.area(class="form-control") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.prioridade.label(class="form-label") }}
+                                {{ form.prioridade(class="form-select") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.tipo.label(class="form-label") }}
+                                {{ form.tipo(class="form-select") }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.criterio_sucesso.label(class="form-label") }}
+                            {{ form.criterio_sucesso(class="form-control") }}
+                            <small class="form-text text-muted">Como será avaliado o sucesso deste objetivo?</small>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.meta_quantitativa.label(class="form-label") }}
+                            {{ form.meta_quantitativa(class="form-control") }}
+                            <small class="form-text text-muted">Ex: 80% de acertos, 5 repetições consecutivas</small>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.estrategias.label(class="form-label") }}
+                            {{ form.estrategias(class="form-control") }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.recursos.label(class="form-label") }}
+                            {{ form.recursos(class="form-control") }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.prazo_estimado.label(class="form-label") }}
+                            {{ form.prazo_estimado(class="form-control") }}
+                            {% if form.prazo_estimado.errors %}
+                                <div class="invalid-feedback d-block">{{ form.prazo_estimado.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.observacoes.label(class="form-label") }}
+                            {{ form.observacoes(class="form-control") }}
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Salvar Objetivo
+                            </button>
+                            <a href="{{ url_for('plano_terapeutico.visualizar', plano_id=plano.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

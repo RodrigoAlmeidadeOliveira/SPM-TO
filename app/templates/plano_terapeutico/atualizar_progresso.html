@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Atualizar Progresso - {{ objetivo.descricao[:50] }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', paciente_id=plano.paciente_id) }}">{{ plano.paciente.nome }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('plano_terapeutico.visualizar', plano_id=plano.id) }}">{{ plano.titulo }}</a></li>
+                    <li class="breadcrumb-item active">Atualizar Progresso</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-7 mx-auto">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-chart-line"></i> Atualizar Progresso do Objetivo</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Informações do Objetivo -->
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-bullseye"></i> Objetivo:</h5>
+                        <p class="mb-2">{{ objetivo.descricao }}</p>
+                        <p class="mb-0">
+                            <span class="badge {{ objetivo.get_prioridade_badge_class() }}">{{ objetivo.get_prioridade_display() }}</span>
+                            <span class="badge bg-secondary">{{ objetivo.get_tipo_display() }}</span>
+                        </p>
+                    </div>
+
+                    <!-- Progresso Atual -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>Progresso Atual:</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="progress" style="height: 30px;">
+                                <div class="progress-bar {% if objetivo.percentual_progresso == 100 %}bg-success{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ objetivo.percentual_progresso }}%">
+                                    {{ objetivo.percentual_progresso }}%
+                                </div>
+                            </div>
+                            <p class="mt-2 mb-0"><strong>Status:</strong> <span class="badge {{ objetivo.get_status_badge_class() }}">{{ objetivo.get_status_display() }}</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Histórico de Evoluções -->
+                    {% if objetivo.get_evolucoes_list() %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong><i class="fas fa-history"></i> Histórico de Evoluções</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                            {% for evolucao in objetivo.get_evolucoes_list()[-5:] %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <small class="text-muted">{{ evolucao.data[:10] }}</small>
+                                        <span class="badge bg-primary">{{ evolucao.percentual }}%</span>
+                                    </div>
+                                    <p class="mb-0 mt-1">{{ evolucao.descricao }}</p>
+                                </div>
+                            {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Formulário de Atualização -->
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.percentual_progresso.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.percentual_progresso(class="form-control") }}
+                                <span class="input-group-text">%</span>
+                            </div>
+                            {% if form.percentual_progresso.errors %}
+                                <div class="invalid-feedback d-block">{{ form.percentual_progresso.errors[0] }}</div>
+                            {% endif %}
+                            <div class="form-range-container mt-2">
+                                <input type="range" class="form-range" min="0" max="100" step="5"
+                                       id="progressRange" value="{{ form.percentual_progresso.data or objetivo.percentual_progresso }}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.descricao_evolucao.label(class="form-label") }}
+                            {{ form.descricao_evolucao(class="form-control") }}
+                            {% if form.descricao_evolucao.errors %}
+                                <div class="invalid-feedback d-block">{{ form.descricao_evolucao.errors[0] }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Descreva o que foi observado, conquistas, dificuldades...</small>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Salvar Progresso
+                            </button>
+                            <a href="{{ url_for('plano_terapeutico.visualizar', plano_id=plano.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Sincronizar range slider com input number
+const progressRange = document.getElementById('progressRange');
+const progressInput = document.getElementById('percentual_progresso');
+
+if (progressRange && progressInput) {
+    progressRange.addEventListener('input', function() {
+        progressInput.value = this.value;
+    });
+
+    progressInput.addEventListener('input', function() {
+        progressRange.value = this.value;
+    });
+}
+</script>
+{% endblock %}
