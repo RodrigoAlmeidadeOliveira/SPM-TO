@@ -8,6 +8,8 @@ from app.models import Avaliacao, Paciente, Instrumento, Questao, Resposta, Domi
 from app.forms import AvaliacaoForm, RespostaForm
 from app.services.calculo_service import CalculoService
 from app.services.classificacao_service import ClassificacaoService
+from app.services.permission_service import PermissionService
+from app.utils.decorators import can_view_avaliacao, can_edit_avaliacao
 from sqlalchemy import func
 from datetime import datetime
 
@@ -35,8 +37,25 @@ def listar():
     # Query base
     query = Avaliacao.query.join(Paciente).join(Instrumento)
 
-    # Filtro por paciente
+    # Filtrar avaliações baseado nos pacientes que o usuário tem acesso
+    if not current_user.is_admin():
+        # Obter IDs de pacientes que o usuário pode acessar
+        pacientes_query = Paciente.query
+        pacientes_query = PermissionService.filtrar_pacientes_por_permissao(pacientes_query, current_user)
+        pacientes_ids = [p.id for p in pacientes_query.all()]
+
+        # Filtrar avaliações apenas destes pacientes
+        if pacientes_ids:
+            query = query.filter(Avaliacao.paciente_id.in_(pacientes_ids))
+        else:
+            query = query.filter(False)  # Nenhum resultado
+
+    # Filtro por paciente específico
     if paciente_id:
+        # Verificar se o usuário tem permissão para este paciente
+        if not PermissionService.pode_acessar_paciente(current_user, paciente_id):
+            flash('Você não tem permissão para visualizar avaliações deste paciente', 'danger')
+            return redirect(url_for('avaliacoes.listar'))
         query = query.filter(Avaliacao.paciente_id == paciente_id)
 
     # Filtro por avaliador
@@ -169,6 +188,7 @@ def nova():
 
 @avaliacoes_bp.route('/<int:id>')
 @login_required
+@can_view_avaliacao
 def visualizar(id):
     """Visualiza detalhes de uma avaliação"""
     avaliacao = Avaliacao.query.get_or_404(id)
@@ -210,6 +230,7 @@ def visualizar(id):
 
 @avaliacoes_bp.route('/<int:id>/responder', methods=['GET', 'POST'])
 @login_required
+@can_edit_avaliacao
 def responder(id):
     """Interface para responder questões da avaliação"""
     avaliacao = Avaliacao.query.get_or_404(id)
@@ -320,6 +341,7 @@ def responder(id):
 
 @avaliacoes_bp.route('/<int:id>/finalizar', methods=['GET', 'POST'])
 @login_required
+@can_edit_avaliacao
 def finalizar(id):
     """Finaliza uma avaliação e calcula os escores"""
     avaliacao = Avaliacao.query.get_or_404(id)
@@ -362,10 +384,16 @@ def finalizar(id):
 
 @avaliacoes_bp.route('/<int:id>/excluir', methods=['POST'])
 @login_required
+@can_edit_avaliacao
 def excluir(id):
     """Exclui uma avaliação"""
     avaliacao = Avaliacao.query.get_or_404(id)
     paciente_id = avaliacao.paciente_id
+
+    # Verificar se pode excluir (apenas se não estiver concluída ou se for admin/criador)
+    if avaliacao.status == 'concluida' and avaliacao.avaliador_id != current_user.id and not current_user.is_admin():
+        flash('Você não pode excluir avaliações concluídas de outros usuários', 'danger')
+        return redirect(url_for('avaliacoes.visualizar', id=id))
 
     try:
         # Excluir respostas associadas

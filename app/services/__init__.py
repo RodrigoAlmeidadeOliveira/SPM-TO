@@ -8,5 +8,13 @@ from app.services.classificacao_service import ClassificacaoService
 from app.services.grafico_service import GraficoService
 from app.services.pdf_service import PDFService
 from app.services.dashboard_service import DashboardService
+from app.services.permission_service import PermissionService
 
-__all__ = ['CalculoService', 'ClassificacaoService', 'GraficoService', 'PDFService', 'DashboardService']
+__all__ = [
+    'CalculoService',
+    'ClassificacaoService',
+    'GraficoService',
+    'PDFService',
+    'DashboardService',
+    'PermissionService'
+]
