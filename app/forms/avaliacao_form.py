@@ -2,7 +2,7 @@
 Formulário de criação e resposta de avaliações
 """
 from flask_wtf import FlaskForm
-from wtforms import SelectField, DateField, TextAreaField, HiddenField, RadioField
+from wtforms import SelectField, DateField, TextAreaField, HiddenField, RadioField, SubmitField
 from wtforms.validators import DataRequired, Optional, ValidationError
 from datetime import date
 
@@ -64,6 +64,8 @@ class AvaliacaoForm(FlaskForm):
             'rows': 3
         }
     )
+
+    submit = SubmitField('Salvar Avaliação', render_kw={'class': 'btn btn-primary btn-lg'})
 
     def validate_data_avaliacao(self, field):
         """Valida se a data da avaliação não é futura"""
