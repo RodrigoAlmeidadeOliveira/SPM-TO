@@ -1096,3 +1096,437 @@ class ModulosService:
             return 'Função motora grossa limitada - dificuldades importantes'
         else:
             return 'Função motora grossa severamente limitada'
+
+    # ==================== PERFIL SENSORIAL - INFANT E TODDLER ====================
+
+    @staticmethod
+    def calcular_perfil_sensorial_infant(avaliacao_id):
+        """
+        Calcula escores do Perfil Sensorial - Bebê (0-6 meses)
+
+        Args:
+            avaliacao_id: ID da avaliação
+
+        Returns:
+            dict: Escores por seção sensorial e quadrantes
+        """
+        avaliacao = Avaliacao.query.get(avaliacao_id)
+        if not avaliacao or not avaliacao.instrumento.codigo != 'PERFIL_SENS_INFANT_0_6':
+            return None
+
+        resultado = {
+            'secoes': {},
+            'quadrantes': {},
+            'respostas_por_codigo': {}
+        }
+
+        # Mapear todas as respostas
+        for resposta in avaliacao.respostas:
+            icone = resposta.questao.metadados.get('icone', '') if resposta.questao.metadados else ''
+            secao = resposta.questao.metadados.get('secao', '') if resposta.questao.metadados else ''
+            pontos = ModulosService.ESCALA_PERFIL_SENSORIAL.get(resposta.valor, 0)
+
+            resultado['respostas_por_codigo'][resposta.questao.codigo] = {
+                'pontos': pontos,
+                'icone': icone,
+                'secao': secao
+            }
+
+        # Calcular por domínio/seção
+        for dominio in avaliacao.instrumento.dominios:
+            escore_bruto = 0
+            questoes_respondidas = 0
+
+            for questao in dominio.questoes:
+                if questao.codigo in resultado['respostas_por_codigo']:
+                    pontos = resultado['respostas_por_codigo'][questao.codigo]['pontos']
+                    if pontos > 0:
+                        escore_bruto += pontos
+                        questoes_respondidas += 1
+
+            resultado['secoes'][dominio.codigo] = {
+                'nome': dominio.nome,
+                'escore_bruto': escore_bruto,
+                'questoes_respondidas': questoes_respondidas,
+                'classificacao': ModulosService._classificar_perfil_infant_secao(
+                    dominio.codigo, escore_bruto
+                )
+            }
+
+        # Calcular por quadrante
+        quadrantes = {'BS': 0, 'ES': 0, 'SS': 0, 'RB': 0}
+        contadores = {'BS': 0, 'ES': 0, 'SS': 0, 'RB': 0}
+
+        for codigo, dados in resultado['respostas_por_codigo'].items():
+            icone = dados['icone']
+            if icone in quadrantes:
+                if dados['pontos'] > 0:
+                    quadrantes[icone] += dados['pontos']
+                    contadores[icone] += 1
+
+        nomes_quadrantes = {
+            'BS': 'BUSCA_SENSORIAL',
+            'ES': 'ESQUIVA_SENSORIAL',
+            'SS': 'SENSIBILIDADE_SENSORIAL',
+            'RB': 'REGISTRO_BAIXO'
+        }
+
+        for icone, nome_quadrante in nomes_quadrantes.items():
+            escore = quadrantes[icone]
+            max_possivel = contadores[icone] * 5
+
+            resultado['quadrantes'][nome_quadrante] = {
+                'escore_bruto': escore,
+                'escore_maximo': max_possivel,
+                'questoes_respondidas': contadores[icone],
+                'classificacao': ModulosService._classificar_perfil_infant_quadrante(
+                    nome_quadrante, escore
+                )
+            }
+
+        return resultado
+
+    @staticmethod
+    def calcular_perfil_sensorial_toddler(avaliacao_id):
+        """
+        Calcula escores do Perfil Sensorial - Criança Pequena (7-35 meses)
+
+        Args:
+            avaliacao_id: ID da avaliação
+
+        Returns:
+            dict: Escores por seção sensorial e quadrantes
+        """
+        avaliacao = Avaliacao.query.get(avaliacao_id)
+        if not avaliacao or not avaliacao.instrumento.codigo != 'PERFIL_SENS_TODDLER_7_35':
+            return None
+
+        resultado = {
+            'secoes': {},
+            'quadrantes': {},
+            'respostas_por_codigo': {}
+        }
+
+        # Mapear todas as respostas
+        for resposta in avaliacao.respostas:
+            icone = resposta.questao.metadados.get('icone', '') if resposta.questao.metadados else ''
+            secao = resposta.questao.metadados.get('secao', '') if resposta.questao.metadados else ''
+            pontos = ModulosService.ESCALA_PERFIL_SENSORIAL.get(resposta.valor, 0)
+
+            resultado['respostas_por_codigo'][resposta.questao.codigo] = {
+                'pontos': pontos,
+                'icone': icone,
+                'secao': secao
+            }
+
+        # Calcular por domínio/seção
+        for dominio in avaliacao.instrumento.dominios:
+            escore_bruto = 0
+            questoes_respondidas = 0
+
+            for questao in dominio.questoes:
+                if questao.codigo in resultado['respostas_por_codigo']:
+                    pontos = resultado['respostas_por_codigo'][questao.codigo]['pontos']
+                    if pontos > 0:
+                        escore_bruto += pontos
+                        questoes_respondidas += 1
+
+            resultado['secoes'][dominio.codigo] = {
+                'nome': dominio.nome,
+                'escore_bruto': escore_bruto,
+                'questoes_respondidas': questoes_respondidas,
+                'classificacao': ModulosService._classificar_perfil_toddler_secao(
+                    dominio.codigo, escore_bruto
+                )
+            }
+
+        # Calcular por quadrante
+        quadrantes = {'BS': 0, 'ES': 0, 'SS': 0, 'RB': 0}
+        contadores = {'BS': 0, 'ES': 0, 'SS': 0, 'RB': 0}
+
+        for codigo, dados in resultado['respostas_por_codigo'].items():
+            icone = dados['icone']
+            if icone in quadrantes:
+                if dados['pontos'] > 0:
+                    quadrantes[icone] += dados['pontos']
+                    contadores[icone] += 1
+
+        nomes_quadrantes = {
+            'BS': 'BUSCA_SENSORIAL',
+            'ES': 'ESQUIVA_SENSORIAL',
+            'SS': 'SENSIBILIDADE_SENSORIAL',
+            'RB': 'REGISTRO_BAIXO'
+        }
+
+        for icone, nome_quadrante in nomes_quadrantes.items():
+            escore = quadrantes[icone]
+            max_possivel = contadores[icone] * 5
+
+            resultado['quadrantes'][nome_quadrante] = {
+                'escore_bruto': escore,
+                'escore_maximo': max_possivel,
+                'questoes_respondidas': contadores[icone],
+                'classificacao': ModulosService._classificar_perfil_toddler_quadrante(
+                    nome_quadrante, escore
+                )
+            }
+
+        return resultado
+
+    @staticmethod
+    def _classificar_perfil_infant_secao(secao, escore):
+        """Classifica seções do Perfil Sensorial - Bebê"""
+        tabelas = {
+            'GERAL': {
+                'MUITO_MENOS': (0, 8),
+                'MENOS': (9, 15),
+                'TIPICO': (16, 35),
+                'MAIS': (36, 42),
+                'MUITO_MAIS': (43, 50)
+            },
+            'AUDITIVO': {
+                'MUITO_MENOS': (0, 5),
+                'MENOS': (6, 10),
+                'TIPICO': (11, 25),
+                'MAIS': (26, 30),
+                'MUITO_MAIS': (31, 35)
+            },
+            'VISUAL': {
+                'MUITO_MENOS': (0, 5),
+                'MENOS': (6, 10),
+                'TIPICO': (11, 25),
+                'MAIS': (26, 30),
+                'MUITO_MAIS': (31, 35)
+            },
+            'TATIL': {
+                'MUITO_MENOS': (0, 5),
+                'MENOS': (6, 10),
+                'TIPICO': (11, 25),
+                'MAIS': (26, 30),
+                'MUITO_MAIS': (31, 35)
+            },
+            'VESTIBULAR': {
+                'MUITO_MENOS': (0, 3),
+                'MENOS': (4, 7),
+                'TIPICO': (8, 18),
+                'MAIS': (19, 21),
+                'MUITO_MAIS': (22, 25)
+            }
+        }
+
+        return ModulosService._aplicar_tabela_classificacao(secao, escore, tabelas)
+
+    @staticmethod
+    def _classificar_perfil_toddler_secao(secao, escore):
+        """Classifica seções do Perfil Sensorial - Criança Pequena"""
+        tabelas = {
+            'GERAL': {
+                'MUITO_MENOS': (0, 7),
+                'MENOS': (8, 13),
+                'TIPICO': (14, 32),
+                'MAIS': (33, 38),
+                'MUITO_MAIS': (39, 45)
+            },
+            'AUDITIVO': {
+                'MUITO_MENOS': (0, 5),
+                'MENOS': (6, 11),
+                'TIPICO': (12, 28),
+                'MAIS': (29, 34),
+                'MUITO_MAIS': (35, 40)
+            },
+            'VISUAL': {
+                'MUITO_MENOS': (0, 5),
+                'MENOS': (6, 11),
+                'TIPICO': (12, 28),
+                'MAIS': (29, 34),
+                'MUITO_MAIS': (35, 40)
+            },
+            'TATO': {
+                'MUITO_MENOS': (0, 6),
+                'MENOS': (7, 12),
+                'TIPICO': (13, 32),
+                'MAIS': (33, 38),
+                'MUITO_MAIS': (39, 45)
+            },
+            'MOVIMENTOS': {
+                'MUITO_MENOS': (0, 5),
+                'MENOS': (6, 11),
+                'TIPICO': (12, 28),
+                'MAIS': (29, 34),
+                'MUITO_MAIS': (35, 40)
+            },
+            'POSICAO_CORPO': {
+                'MUITO_MENOS': (0, 4),
+                'MENOS': (5, 9),
+                'TIPICO': (10, 25),
+                'MAIS': (26, 30),
+                'MUITO_MAIS': (31, 35)
+            },
+            'ORAL': {
+                'MUITO_MENOS': (0, 3),
+                'MENOS': (4, 6),
+                'TIPICO': (7, 18),
+                'MAIS': (19, 21),
+                'MUITO_MAIS': (22, 25)
+            }
+        }
+
+        return ModulosService._aplicar_tabela_classificacao(secao, escore, tabelas)
+
+    @staticmethod
+    def _classificar_perfil_infant_quadrante(quadrante, escore):
+        """Classifica quadrantes do Perfil Sensorial - Bebê"""
+        tabelas = {
+            'BUSCA_SENSORIAL': {
+                'max': 45,
+                'MUITO_MENOS': (0, 5),
+                'MENOS': (6, 12),
+                'TIPICO': (13, 32),
+                'MAIS': (33, 38),
+                'MUITO_MAIS': (39, 45)
+            },
+            'ESQUIVA_SENSORIAL': {
+                'max': 45,
+                'MUITO_MENOS': (0, 5),
+                'MENOS': (6, 12),
+                'TIPICO': (13, 32),
+                'MAIS': (33, 38),
+                'MUITO_MAIS': (39, 45)
+            },
+            'SENSIBILIDADE_SENSORIAL': {
+                'max': 45,
+                'MUITO_MENOS': (0, 5),
+                'MENOS': (6, 12),
+                'TIPICO': (13, 32),
+                'MAIS': (33, 38),
+                'MUITO_MAIS': (39, 45)
+            },
+            'REGISTRO_BAIXO': {
+                'max': 45,
+                'MUITO_MENOS': (0, 5),
+                'MENOS': (6, 12),
+                'TIPICO': (13, 32),
+                'MAIS': (33, 38),
+                'MUITO_MAIS': (39, 45)
+            }
+        }
+
+        return ModulosService._aplicar_tabela_quadrante(quadrante, escore, tabelas)
+
+    @staticmethod
+    def _classificar_perfil_toddler_quadrante(quadrante, escore):
+        """Classifica quadrantes do Perfil Sensorial - Criança Pequena"""
+        tabelas = {
+            'BUSCA_SENSORIAL': {
+                'max': 65,
+                'MUITO_MENOS': (0, 8),
+                'MENOS': (9, 17),
+                'TIPICO': (18, 46),
+                'MAIS': (47, 55),
+                'MUITO_MAIS': (56, 65)
+            },
+            'ESQUIVA_SENSORIAL': {
+                'max': 70,
+                'MUITO_MENOS': (0, 9),
+                'MENOS': (10, 18),
+                'TIPICO': (19, 50),
+                'MAIS': (51, 60),
+                'MUITO_MAIS': (61, 70)
+            },
+            'SENSIBILIDADE_SENSORIAL': {
+                'max': 70,
+                'MUITO_MENOS': (0, 9),
+                'MENOS': (10, 18),
+                'TIPICO': (19, 50),
+                'MAIS': (51, 60),
+                'MUITO_MAIS': (61, 70)
+            },
+            'REGISTRO_BAIXO': {
+                'max': 65,
+                'MUITO_MENOS': (0, 8),
+                'MENOS': (9, 17),
+                'TIPICO': (18, 46),
+                'MAIS': (47, 55),
+                'MUITO_MAIS': (56, 65)
+            }
+        }
+
+        return ModulosService._aplicar_tabela_quadrante(quadrante, escore, tabelas)
+
+    @staticmethod
+    def _aplicar_tabela_classificacao(secao, escore, tabelas):
+        """Aplica tabela de classificação genérica para seções"""
+        if secao not in tabelas:
+            return {'nivel': 'NAO_CLASSIFICADO', 'descricao': 'Seção não encontrada'}
+
+        tabela = tabelas[secao]
+        descricoes = {
+            'MUITO_MENOS': 'Muito menos que outros bebês',
+            'MENOS': 'Menos que outros bebês',
+            'TIPICO': 'Como a maioria dos bebês',
+            'MAIS': 'Mais que outros bebês',
+            'MUITO_MAIS': 'Muito mais que outros bebês'
+        }
+
+        for nivel, (min_val, max_val) in tabela.items():
+            if min_val <= escore <= max_val:
+                return {
+                    'nivel': nivel,
+                    'descricao': descricoes.get(nivel, ''),
+                    'escore': escore
+                }
+
+        return {'nivel': 'NAO_CLASSIFICADO', 'descricao': 'Escore fora dos limites', 'escore': escore}
+
+    @staticmethod
+    def _aplicar_tabela_quadrante(quadrante, escore, tabelas):
+        """Aplica tabela de classificação genérica para quadrantes"""
+        if quadrante not in tabelas:
+            return {'nivel': 'NAO_CLASSIFICADO', 'descricao': 'Quadrante não encontrado'}
+
+        tabela = tabelas[quadrante]
+
+        descricoes_quadrante = {
+            'BUSCA_SENSORIAL': {
+                'titulo': 'Busca Sensorial',
+                'descricao': 'Bebê/criança que busca estímulos sensoriais ativamente',
+                'cor': 'warning'
+            },
+            'ESQUIVA_SENSORIAL': {
+                'titulo': 'Esquiva Sensorial',
+                'descricao': 'Bebê/criança que se afasta de estímulos sensoriais',
+                'cor': 'primary'
+            },
+            'SENSIBILIDADE_SENSORIAL': {
+                'titulo': 'Sensibilidade Sensorial',
+                'descricao': 'Bebê/criança que detecta estímulos facilmente',
+                'cor': 'success'
+            },
+            'REGISTRO_BAIXO': {
+                'titulo': 'Registro Baixo',
+                'descricao': 'Bebê/criança que não percebe estímulos facilmente',
+                'cor': 'secondary'
+            }
+        }
+
+        interpretacoes_nivel = {
+            'MUITO_MENOS': 'Muito menos que outros(as)',
+            'MENOS': 'Menos que outros(as)',
+            'TIPICO': 'Como a maioria',
+            'MAIS': 'Mais que outros(as)',
+            'MUITO_MAIS': 'Muito mais que outros(as)'
+        }
+
+        for nivel, (min_val, max_val) in tabela.items():
+            if nivel == 'max':
+                continue
+            if min_val <= escore <= max_val:
+                return {
+                    'nivel': nivel,
+                    'nivel_descricao': interpretacoes_nivel.get(nivel, ''),
+                    'quadrante_info': descricoes_quadrante.get(quadrante, {}),
+                    'escore': escore,
+                    'escore_maximo': tabela['max']
+                }
+
+        return {'nivel': 'NAO_CLASSIFICADO', 'descricao': 'Escore fora dos limites'}
