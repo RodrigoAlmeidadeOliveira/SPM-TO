@@ -121,28 +121,42 @@ def nova():
     paciente_id = request.args.get('paciente_id', type=int)
     instrumento_id = request.args.get('instrumento_id', type=int)
 
-    if not paciente_id:
-        flash('Paciente não especificado!', 'danger')
+    if not paciente_id and request.method == 'GET':
+        flash('Selecione um paciente para iniciar a avaliação.', 'warning')
         return redirect(url_for('pacientes.listar'))
 
-    paciente = Paciente.query.get_or_404(paciente_id)
-
-    # Calcular idade para filtrar instrumentos
-    idade_anos, idade_meses = paciente.calcular_idade()
-
+    # Criar formulário
     form = AvaliacaoForm()
-    form.paciente_id.data = paciente_id
 
-    # Buscar instrumentos adequados para a idade
-    instrumentos = Instrumento.query.filter(
-        Instrumento.ativo.is_(True),
-        Instrumento.idade_minima <= idade_anos,
-        Instrumento.idade_maxima >= idade_anos
-    ).all()
+    # Buscar pacientes ativos
+    pacientes = Paciente.query.filter_by(ativo=True).order_by(Paciente.nome).all()
+    form.paciente_id.choices = [(0, 'Selecione o paciente...')] + [
+        (p.id, f"{p.nome} - {p.calcular_idade()[0]} anos") for p in pacientes
+    ]
 
-    # Popular choices do select de instrumentos
+    # Buscar instrumentos disponíveis
+    instrumentos_disponiveis = Instrumento.query.filter_by(ativo=True).order_by(Instrumento.nome).all()
+
+    # Se paciente foi pré-selecionado na URL e é GET, filtrar instrumentos por idade
+    if paciente_id and request.method == 'GET':
+        print(f"DEBUG: Pre-selecionando paciente_id={paciente_id}")
+        form.paciente_id.data = paciente_id
+        print(f"DEBUG: form.paciente_id.data setado para {form.paciente_id.data}")
+        paciente = Paciente.query.get(paciente_id)
+        if paciente:
+            idade_anos, idade_meses = paciente.calcular_idade()
+            print(f"DEBUG: Paciente {paciente.nome}, idade {idade_anos} anos")
+            # Filtrar instrumentos adequados para a idade
+            instrumentos_disponiveis = Instrumento.query.filter(
+                Instrumento.ativo.is_(True),
+                Instrumento.idade_minima <= idade_anos,
+                Instrumento.idade_maxima >= idade_anos
+            ).all()
+            print(f"DEBUG: Encontrados {len(instrumentos_disponiveis)} instrumentos adequados")
+
+    # Popular choices de instrumentos
     form.instrumento_id.choices = [(0, 'Selecione o instrumento...')] + [
-        (i.id, f"{i.nome} ({i.contexto})") for i in instrumentos
+        (i.id, f"{i.nome} ({i.contexto})") for i in instrumentos_disponiveis
     ]
 
     # Se instrumento foi pré-selecionado
@@ -151,20 +165,26 @@ def nova():
 
     if form.validate_on_submit():
         try:
+            paciente = Paciente.query.get(form.paciente_id.data)
             instrumento = Instrumento.query.get(form.instrumento_id.data)
+
+            if not paciente:
+                flash('Paciente inválido!', 'danger')
+                return render_template('avaliacoes/form.html', form=form, titulo='Nova Avaliação')
 
             if not instrumento:
                 flash('Instrumento inválido!', 'danger')
-                return render_template('avaliacoes/form.html', form=form, paciente=paciente)
+                return render_template('avaliacoes/form.html', form=form, titulo='Nova Avaliação')
 
             # Verificar se instrumento é adequado para a idade
+            idade_anos, idade_meses = paciente.calcular_idade()
             if idade_anos < instrumento.idade_minima or idade_anos > instrumento.idade_maxima:
                 flash(f'Este instrumento não é adequado para a idade do paciente ({idade_anos} anos)!', 'danger')
-                return render_template('avaliacoes/form.html', form=form, paciente=paciente)
+                return render_template('avaliacoes/form.html', form=form, titulo='Nova Avaliação')
 
             # Criar nova avaliação
             avaliacao = Avaliacao(
-                paciente_id=paciente_id,
+                paciente_id=paciente.id,
                 instrumento_id=instrumento.id,
                 avaliador_id=current_user.id,
                 data_avaliacao=form.data_avaliacao.data,
@@ -174,16 +194,22 @@ def nova():
             )
 
             db.session.add(avaliacao)
+            db.session.flush()  # Garantir que o ID seja gerado
+            avaliacao_id = avaliacao.id
             db.session.commit()
 
+            print(f"DEBUG: Avaliação criada com ID: {avaliacao_id}")
             flash(f'Avaliação criada com sucesso! Agora você pode responder às questões.', 'success')
-            return redirect(url_for('avaliacoes.responder', id=avaliacao.id))
+            return redirect(url_for('avaliacoes.responder', id=avaliacao_id))
 
         except Exception as e:
             db.session.rollback()
+            print(f"DEBUG: Erro ao criar avaliação: {str(e)}")
+            import traceback
+            traceback.print_exc()
             flash(f'Erro ao criar avaliação: {str(e)}', 'danger')
 
-    return render_template('avaliacoes/form.html', form=form, paciente=paciente, instrumentos=instrumentos)
+    return render_template('avaliacoes/form.html', form=form, titulo='Nova Avaliação')
 
 
 @avaliacoes_bp.route('/<int:id>')
@@ -259,14 +285,18 @@ def responder(id):
     }
 
     # Obter índice da questão atual (ou primeira não respondida)
-    questao_idx = request.args.get('q', 0, type=int)
+    questao_idx = request.args.get('q', None, type=int)
 
-    # Se não especificado, buscar primeira questão não respondida
-    if questao_idx == 0:
-        for idx, questao in enumerate(questoes):
-            if questao.id not in respostas_existentes:
-                questao_idx = idx
-                break
+    # Encontrar primeira questão não respondida
+    primeira_nao_respondida = 0
+    for idx, questao in enumerate(questoes):
+        if questao.id not in respostas_existentes:
+            primeira_nao_respondida = idx
+            break
+
+    # Se não especificado, usar primeira questão não respondida
+    if questao_idx is None:
+        questao_idx = primeira_nao_respondida
 
     # Validar índice
     if questao_idx < 0 or questao_idx >= len(questoes):
@@ -335,7 +365,10 @@ def responder(id):
         form=form,
         pode_voltar=questao_idx > 0,
         pode_avancar=questao_idx < total_questoes - 1,
-        resposta_existente=resposta_existente
+        resposta_existente=resposta_existente,
+        todas_questoes=questoes,
+        primeira_nao_respondida=primeira_nao_respondida,
+        respostas_existentes=respostas_existentes
     )
 
 
@@ -361,10 +394,10 @@ def finalizar(id):
     if request.method == 'POST':
         try:
             # Calcular escores
-            CalculoService.atualizar_escores_avaliacao(id)
+            CalculoService.atualizar_escores_avaliacao(avaliacao)
 
             # Classificar resultados
-            ClassificacaoService.classificar_avaliacao(id)
+            ClassificacaoService.classificar_avaliacao(avaliacao)
 
             # Atualizar status e data de conclusão
             avaliacao.status = 'concluida'
@@ -378,6 +411,8 @@ def finalizar(id):
         except Exception as e:
             db.session.rollback()
             flash(f'Erro ao finalizar avaliação: {str(e)}', 'danger')
+            import traceback
+            traceback.print_exc()
 
     return render_template('avaliacoes/finalizar.html', avaliacao=avaliacao, total_questoes=total_questoes)
 

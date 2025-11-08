@@ -10,7 +10,7 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">{{ paciente.nome }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', id=paciente.id) }}">{{ paciente.nome }}</a></li>
                     <li class="breadcrumb-item"><a href="{{ url_for('atendimento.listar', paciente_id=paciente.id) }}">Atendimentos</a></li>
                     <li class="breadcrumb-item active">Atendimento #{{ atendimento.id }}</li>
                 </ol>
@@ -23,7 +23,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h2><i class="fas fa-calendar-check"></i> {{ atendimento.get_tipo_display() }}</h2>
                 <div>
-                    {% if atendimento.status != 'finalizado' or current_user.eh_admin() %}
+                    {% if atendimento.status != 'finalizado' or current_user.is_admin() %}
                     <a href="{{ url_for('atendimento.editar', atendimento_id=atendimento.id) }}" class="btn btn-warning">
                         <i class="fas fa-edit"></i> Editar
                     </a>
@@ -36,7 +36,7 @@
                         </button>
                     </form>
                     {% endif %}
-                    {% if atendimento.status != 'finalizado' and (atendimento.profissional_id == current_user.id or current_user.eh_admin()) %}
+                    {% if atendimento.status != 'finalizado' and (atendimento.profissional_id == current_user.id or current_user.is_admin()) %}
                     <form action="{{ url_for('atendimento.excluir', atendimento_id=atendimento.id) }}" method="POST" style="display:inline;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir este atendimento?')">

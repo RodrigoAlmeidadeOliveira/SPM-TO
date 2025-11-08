@@ -16,11 +16,12 @@ def can_view_patient(f):
         def visualizar(id):
             ...
 
-    O decorator espera que a função tenha um parâmetro 'id' que é o paciente_id
+    O decorator espera que a função tenha um parâmetro 'id' ou 'paciente_id'
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        paciente_id = kwargs.get('id')
+        # Buscar tanto por 'id' quanto por 'paciente_id'
+        paciente_id = kwargs.get('id') or kwargs.get('paciente_id')
 
         if not paciente_id:
             flash('Paciente não especificado', 'danger')
@@ -54,7 +55,8 @@ def can_edit_patient(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        paciente_id = kwargs.get('id')
+        # Buscar tanto por 'id' quanto por 'paciente_id'
+        paciente_id = kwargs.get('id') or kwargs.get('paciente_id')
 
         if not paciente_id:
             flash('Paciente não especificado', 'danger')
@@ -88,7 +90,8 @@ def can_delete_patient(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        paciente_id = kwargs.get('id')
+        # Buscar tanto por 'id' quanto por 'paciente_id'
+        paciente_id = kwargs.get('id') or kwargs.get('paciente_id')
 
         if not paciente_id:
             flash('Paciente não especificado', 'danger')

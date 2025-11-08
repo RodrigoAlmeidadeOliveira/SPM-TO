@@ -38,6 +38,7 @@ instance/
 # Uploads
 uploads/
 *.log
+*.pdf
 
 # OS
 Thumbs.db

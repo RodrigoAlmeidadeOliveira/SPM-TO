@@ -72,6 +72,13 @@ class PermissionService:
         return compartilhamento is not None
 
     @staticmethod
+    def pode_visualizar_paciente(user, paciente_id):
+        """
+        Alias semântico para deixar claro quando o contexto é apenas leitura.
+        """
+        return PermissionService.pode_acessar_paciente(user, paciente_id)
+
+    @staticmethod
     def pode_editar_paciente(user, paciente_id):
         """
         Verifica se o usuário pode editar um paciente

@@ -68,12 +68,14 @@ def visualizar(atendimento_id):
     atendimento = Atendimento.query.get_or_404(atendimento_id)
 
     # Verificar permissão
-    if not PermissionService.pode_visualizar_paciente(atendimento.paciente_id, current_user):
+    if not PermissionService.pode_visualizar_paciente(current_user, atendimento.paciente_id):
         abort(403)
 
     # Registrar auditoria
     auditoria = AuditoriaAcesso(
         user_id=current_user.id,
+        recurso_tipo='atendimento',
+        recurso_id=atendimento.id,
         paciente_id=atendimento.paciente_id,
         acao='visualizar_atendimento',
         detalhes=f'Visualizou atendimento #{atendimento.id} do paciente {atendimento.paciente.nome}'
@@ -137,10 +139,13 @@ def novo(paciente_id):
             )
 
             db.session.add(atendimento)
+            db.session.flush()
 
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='atendimento',
+                recurso_id=atendimento.id,
                 paciente_id=paciente_id,
                 acao='criar_atendimento',
                 detalhes=f'Criou atendimento para paciente {paciente.nome}'
@@ -172,11 +177,11 @@ def editar(atendimento_id):
     atendimento = Atendimento.query.get_or_404(atendimento_id)
 
     # Verificar permissão
-    if not PermissionService.pode_editar_paciente(atendimento.paciente_id, current_user):
+    if not PermissionService.pode_editar_paciente(current_user, atendimento.paciente_id):
         abort(403)
 
     # Não permitir edição de atendimentos finalizados por outros usuários
-    if atendimento.status == 'finalizado' and atendimento.profissional_id != current_user.id and not current_user.eh_admin():
+    if atendimento.status == 'finalizado' and atendimento.profissional_id != current_user.id and not current_user.is_admin():
         flash('Você não pode editar atendimentos finalizados por outros profissionais!', 'danger')
         return redirect(url_for('atendimento.visualizar', atendimento_id=atendimento_id))
 
@@ -215,6 +220,8 @@ def editar(atendimento_id):
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='atendimento',
+                recurso_id=atendimento.id,
                 paciente_id=atendimento.paciente_id,
                 acao='editar_atendimento',
                 detalhes=f'Editou atendimento #{atendimento_id} do paciente {atendimento.paciente.nome}'
@@ -247,7 +254,7 @@ def finalizar(atendimento_id):
     atendimento = Atendimento.query.get_or_404(atendimento_id)
 
     # Verificar permissão
-    if not PermissionService.pode_editar_paciente(atendimento.paciente_id, current_user):
+    if not PermissionService.pode_editar_paciente(current_user, atendimento.paciente_id):
         abort(403)
 
     if atendimento.status == 'finalizado':
@@ -260,6 +267,8 @@ def finalizar(atendimento_id):
         # Registrar auditoria
         auditoria = AuditoriaAcesso(
             user_id=current_user.id,
+            recurso_tipo='atendimento',
+            recurso_id=atendimento.id,
             paciente_id=atendimento.paciente_id,
             acao='finalizar_atendimento',
             detalhes=f'Finalizou atendimento #{atendimento_id} do paciente {atendimento.paciente.nome}'
@@ -284,11 +293,11 @@ def excluir(atendimento_id):
     atendimento = Atendimento.query.get_or_404(atendimento_id)
 
     # Verificar permissão
-    if not PermissionService.pode_editar_paciente(atendimento.paciente_id, current_user):
+    if not PermissionService.pode_editar_paciente(current_user, atendimento.paciente_id):
         abort(403)
 
     # Apenas criador ou admin pode excluir
-    if atendimento.profissional_id != current_user.id and not current_user.eh_admin():
+    if atendimento.profissional_id != current_user.id and not current_user.is_admin():
         flash('Apenas o profissional que criou o atendimento ou administradores podem excluí-lo!', 'danger')
         return redirect(url_for('atendimento.visualizar', atendimento_id=atendimento_id))
 
@@ -304,6 +313,8 @@ def excluir(atendimento_id):
         # Registrar auditoria
         auditoria = AuditoriaAcesso(
             user_id=current_user.id,
+            recurso_tipo='atendimento',
+            recurso_id=atendimento.id,
             paciente_id=paciente_id,
             acao='excluir_atendimento',
             detalhes=f'Excluiu atendimento #{atendimento_id} do paciente {paciente_nome}'

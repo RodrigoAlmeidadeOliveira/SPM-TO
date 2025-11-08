@@ -133,7 +133,8 @@
                             <i class="fas fa-clipboard-check"></i> {{ titulo }}
                         </h4>
                         <span class="badge bg-light text-dark">
-                            <i class="fas fa-clock"></i> {{ "now"|date("%d/%m/%Y") }}
+                            <i class="fas fa-clock"></i>
+                            <script>document.write(new Date().toLocaleDateString('pt-BR'));</script>
                         </span>
                     </div>
                 </div>
@@ -253,6 +254,24 @@
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">
+                                        {{ form.contexto.label.text }}
+                                        <i class="fas fa-question-circle help-icon"
+                                           data-bs-toggle="tooltip"
+                                           title="Onde a avaliação será aplicada? Casa (pais) ou Escola (professores)"></i>
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.contexto(class="form-select" + (" is-invalid" if form.contexto.errors else "")) }}
+                                    {% if form.contexto.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.contexto.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold">
                                         {{ form.relacionamento_respondente.label.text }}
                                         <i class="fas fa-question-circle help-icon"
                                            data-bs-toggle="tooltip"
@@ -326,10 +345,26 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
+    console.log('JavaScript loaded!');
+
+    // Usar setTimeout para garantir que o DOM está completamente carregado
+    setTimeout(function() {
+        console.log('DOM check...');
+        console.log('Form element:', $('#avaliacaoForm'));
+        console.log('Submit button by ID:', $('#submitBtn'));
+        console.log('Submit button by type:', $('button[type="submit"]'));
+        console.log('All buttons:', $('button'));
+    }, 100);
+
     // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Usar seletor alternativo e event delegation
+    $(document).on('click', 'button[type="submit"]', function(e) {
+        console.log('Submit button clicked via delegation!');
     });
 
     // Objeto com dados dos pacientes (será preenchido dinamicamente)
@@ -356,6 +391,7 @@ $(document).ready(function() {
         const paciente = $('#paciente_id').val();
         const instrumento = $('#instrumento_id').val();
         const data = $('[name="data_avaliacao"]').val();
+        const contexto = $('[name="contexto"]').val();
         const respondente = $('[name="relacionamento_respondente"]').val();
 
         if (paciente) {
@@ -370,7 +406,7 @@ $(document).ready(function() {
             $('#step3').addClass('active');
         }
 
-        if (data && respondente) {
+        if (data && contexto && respondente) {
             $('#step3').addClass('completed');
             $('#step4').addClass('active');
         }
@@ -387,85 +423,153 @@ $(document).ready(function() {
             $('#patientAge').text(paciente.idade + ' anos');
             $('#patientInfo').slideDown();
 
-            // Sugerir instrumento baseado na idade
-            suggestInstrument(paciente.idade);
+            // Filtrar instrumentos baseado na idade
+            filterInstrumentsByAge(paciente.idade);
         } else {
             $('#patientInfo').slideUp();
             $('#instrumentSuggestion').slideUp();
+            // Restaurar todos os instrumentos
+            $('#instrumento_id option').show();
+            $('#instrumento_id').val('0');
         }
 
         updateWizardSteps();
     });
 
-    // Sugerir instrumento baseado na idade
-    function suggestInstrument(idade) {
-        let sugestao = '';
+    // Filtrar instrumentos baseado na idade do paciente
+    function filterInstrumentsByAge(idade) {
         let instrumentoSugerido = '';
+        let sugestao = '';
 
+        // Resetar seleção
+        $('#instrumento_id').val('0');
+
+        // Esconder todos os instrumentos primeiro (exceto a opção padrão)
+        $('#instrumento_id option').each(function() {
+            if ($(this).val() !== '0') {
+                $(this).hide();
+            }
+        });
+
+        // Determinar qual instrumento mostrar baseado na idade
         if (idade >= 3 && idade < 5) {
-            sugestao = 'Para crianças de 3-5 anos, recomendamos o <strong>SPM-P (Pré-escolar)</strong>';
+            // SPM-P para 3-5 anos
             instrumentoSugerido = 'SPM-P';
+            sugestao = 'Mostrando apenas instrumentos adequados para crianças de 3-5 anos';
         } else if (idade >= 5 && idade <= 12) {
-            sugestao = 'Para crianças de 5-12 anos, recomendamos o <strong>SPM (Escolar)</strong>';
+            // SPM para 5-12 anos
             instrumentoSugerido = 'SPM';
+            sugestao = 'Mostrando apenas instrumentos adequados para crianças de 5-12 anos';
         } else if (idade < 3) {
-            sugestao = '<span class="text-warning">Atenção: Criança com menos de 3 anos. Os instrumentos disponíveis são para 3-12 anos.</span>';
+            sugestao = '<span class="text-warning">Atenção: Não há instrumentos disponíveis para crianças com menos de 3 anos.</span>';
         } else {
-            sugestao = '<span class="text-warning">Atenção: Criança com mais de 12 anos. Os instrumentos disponíveis são para 3-12 anos.</span>';
+            sugestao = '<span class="text-warning">Atenção: Não há instrumentos disponíveis para crianças com mais de 12 anos.</span>';
         }
 
+        // Mostrar apenas os instrumentos adequados e auto-selecionar
+        if (instrumentoSugerido) {
+            let instrumentoEncontrado = false;
+            $('#instrumento_id option').each(function() {
+                const optionText = $(this).text();
+                // Verifica se o texto contém SPM-P ou SPM (mas não SPM-P quando procurando SPM)
+                if (instrumentoSugerido === 'SPM' && optionText.includes('SPM') && !optionText.includes('SPM-P')) {
+                    $(this).show();
+                    if (!instrumentoEncontrado) {
+                        $('#instrumento_id').val($(this).val());
+                        instrumentoEncontrado = true;
+                    }
+                } else if (instrumentoSugerido === 'SPM-P' && optionText.includes('SPM-P')) {
+                    $(this).show();
+                    if (!instrumentoEncontrado) {
+                        $('#instrumento_id').val($(this).val());
+                        instrumentoEncontrado = true;
+                    }
+                }
+            });
+        }
+
+        // Mostrar mensagem informativa
         if (sugestao) {
             $('#suggestionText').html(sugestao);
             $('#instrumentSuggestion').slideDown();
-
-            // Auto-selecionar instrumento se houver match
-            if (instrumentoSugerido) {
-                $('#instrumento_id option').each(function() {
-                    if ($(this).text().includes(instrumentoSugerido)) {
-                        $('#instrumento_id').val($(this).val()).trigger('change');
-                    }
-                });
-            }
+        } else {
+            $('#instrumentSuggestion').slideUp();
         }
     }
 
     // Monitorar mudanças para atualizar wizard
-    $('#instrumento_id, [name="data_avaliacao"], [name="relacionamento_respondente"]').on('change', updateWizardSteps);
+    $('#instrumento_id, [name="data_avaliacao"], [name="contexto"], [name="relacionamento_respondente"]').on('change', updateWizardSteps);
 
     // Validação ao submeter
     $('#avaliacaoForm').on('submit', function(e) {
+        console.log('Form submit event triggered!');
         let valid = true;
 
         // Remover validações anteriores
         $('.is-invalid').removeClass('is-invalid');
 
         // Validar campos obrigatórios
-        if (!$('#paciente_id').val()) {
+        const pacienteId = $('#paciente_id').val();
+        console.log('Paciente ID:', pacienteId);
+        if (!pacienteId || pacienteId === '0' || pacienteId === 0) {
+            console.log('Paciente inválido');
             $('#paciente_id').addClass('is-invalid');
             valid = false;
         }
 
-        if (!$('#instrumento_id').val()) {
+        const instrumentoId = $('#instrumento_id').val();
+        console.log('Instrumento ID:', instrumentoId);
+        if (!instrumentoId || instrumentoId === '0' || instrumentoId === 0) {
+            console.log('Instrumento inválido');
             $('#instrumento_id').addClass('is-invalid');
             valid = false;
         }
 
-        if (!$('[name="data_avaliacao"]').val()) {
+        const dataAvaliacao = $('[name="data_avaliacao"]').val();
+        console.log('Data:', dataAvaliacao);
+        if (!dataAvaliacao) {
+            console.log('Data inválida');
             $('[name="data_avaliacao"]').addClass('is-invalid');
             valid = false;
         }
 
-        if (!$('[name="relacionamento_respondente"]').val()) {
-            $('[name="relacionamento_respondente"]').addClass('is-invalid');
+        const contexto = $('[name="contexto"]').val();
+        console.log('Contexto:', contexto);
+        if (!contexto || contexto === '') {
+            console.log('Contexto inválido');
+            $('[name="contexto"]').addClass('is-invalid');
             valid = false;
         }
 
+        const respondenteElement = $('[name="relacionamento_respondente"]');
+        console.log('Respondente element:', respondenteElement);
+        console.log('Respondente element length:', respondenteElement.length);
+        const respondente = respondenteElement.val();
+        console.log('Respondente value:', respondente);
+        console.log('Respondente type:', typeof respondente);
+        if (!respondente || respondente === '') {
+            console.log('Respondente inválido');
+            respondenteElement.addClass('is-invalid');
+            valid = false;
+        }
+
+        console.log('Validation result:', valid);
+
         if (!valid) {
             e.preventDefault();
+            console.log('Form submission prevented - validation failed');
             alert('Por favor, preencha todos os campos obrigatórios (*)');
+
+            // Scroll para o primeiro campo inválido
+            if ($('.is-invalid').length > 0) {
+                $('html, body').animate({
+                    scrollTop: $('.is-invalid').first().offset().top - 100
+                }, 500);
+            }
             return false;
         }
 
+        console.log('Form validation passed, submitting...');
         // Desabilitar botão e mostrar loading
         $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Criando avaliação...');
     });

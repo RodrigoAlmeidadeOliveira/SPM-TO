@@ -31,6 +31,8 @@ def visualizar(paciente_id):
     # Registrar auditoria
     auditoria = AuditoriaAcesso(
         user_id=current_user.id,
+        recurso_tipo='prontuario',
+        recurso_id=prontuario.id,
         paciente_id=paciente_id,
         acao='visualizar_prontuario',
         detalhes=f'Visualizou prontuário do paciente {paciente.nome}'
@@ -105,10 +107,13 @@ def criar(paciente_id):
             )
 
             db.session.add(prontuario)
+            db.session.flush()  # garante ID para auditoria antes do commit
 
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='prontuario',
+                recurso_id=prontuario.id,
                 paciente_id=paciente_id,
                 acao='criar_prontuario',
                 detalhes=f'Criou prontuário para paciente {paciente.nome}'
@@ -192,6 +197,8 @@ def editar(paciente_id):
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='prontuario',
+                recurso_id=prontuario.id,
                 paciente_id=paciente_id,
                 acao='editar_prontuario',
                 detalhes=f'Editou prontuário do paciente {paciente.nome}'
@@ -233,6 +240,8 @@ def encerrar(paciente_id):
             # Registrar auditoria
             auditoria = AuditoriaAcesso(
                 user_id=current_user.id,
+                recurso_tipo='prontuario',
+                recurso_id=prontuario.id,
                 paciente_id=paciente_id,
                 acao='encerrar_prontuario',
                 detalhes=f'Encerrou prontuário do paciente {paciente.nome} - Status: {form.status.data}'
@@ -271,6 +280,8 @@ def reativar(paciente_id):
         # Registrar auditoria
         auditoria = AuditoriaAcesso(
             user_id=current_user.id,
+            recurso_tipo='prontuario',
+            recurso_id=prontuario.id,
             paciente_id=paciente_id,
             acao='reativar_prontuario',
             detalhes=f'Reativou prontuário do paciente {paciente.nome}'

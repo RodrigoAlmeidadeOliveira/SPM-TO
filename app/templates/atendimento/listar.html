@@ -10,7 +10,7 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">{{ paciente.nome }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', id=paciente.id) }}">{{ paciente.nome }}</a></li>
                     <li class="breadcrumb-item active">Atendimentos</li>
                 </ol>
             </nav>
@@ -90,7 +90,7 @@
                     <a href="{{ url_for('atendimento.visualizar', atendimento_id=atendimento.id) }}" class="btn btn-sm btn-primary">
                         <i class="fas fa-eye"></i> Ver Detalhes
                     </a>
-                    {% if atendimento.status != 'finalizado' or current_user.eh_admin() %}
+                    {% if atendimento.status != 'finalizado' or current_user.is_admin() %}
                     <a href="{{ url_for('atendimento.editar', atendimento_id=atendimento.id) }}" class="btn btn-sm btn-warning">
                         <i class="fas fa-edit"></i> Editar
                     </a>

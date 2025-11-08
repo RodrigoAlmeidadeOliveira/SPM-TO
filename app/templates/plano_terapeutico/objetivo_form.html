@@ -10,7 +10,7 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', paciente_id=plano.paciente_id) }}">{{ plano.paciente.nome }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pacientes.visualizar', id=plano.paciente_id) }}">{{ plano.paciente.nome }}</a></li>
                     <li class="breadcrumb-item"><a href="{{ url_for('plano_terapeutico.listar', paciente_id=plano.paciente_id) }}">Planos</a></li>
                     <li class="breadcrumb-item"><a href="{{ url_for('plano_terapeutico.visualizar', plano_id=plano.id) }}">{{ plano.titulo }}</a></li>
                     <li class="breadcrumb-item active">{{ titulo }}</li>

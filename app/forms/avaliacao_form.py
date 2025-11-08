@@ -2,15 +2,19 @@
 Formulário de criação e resposta de avaliações
 """
 from flask_wtf import FlaskForm
-from wtforms import SelectField, DateField, TextAreaField, HiddenField, RadioField
+from wtforms import SelectField, DateField, TextAreaField, HiddenField, RadioField, SubmitField
 from wtforms.validators import DataRequired, Optional, ValidationError
 from datetime import date
-
 
 class AvaliacaoForm(FlaskForm):
     """Formulário para criar uma nova avaliação"""
 
-    paciente_id = HiddenField('Paciente ID', validators=[DataRequired()])
+    paciente_id = SelectField(
+        'Paciente',
+        coerce=int,
+        validators=[DataRequired(message='Selecione um paciente')],
+        render_kw={'class': 'form-select'}
+    )
 
     instrumento_id = SelectField(
         'Instrumento de Avaliação',
@@ -20,13 +24,13 @@ class AvaliacaoForm(FlaskForm):
     )
 
     contexto = SelectField(
-        'Contexto da Avaliação',
+        'Contexto da Avaliação (opcional)',
         choices=[
-            ('', 'Selecione o contexto...'),
+            ('', 'Selecione o contexto (opcional)...'),
             ('casa', 'Casa - Avaliação pelos pais/responsáveis'),
             ('escola', 'Escola - Avaliação por professores/educadores')
         ],
-        validators=[DataRequired(message='Selecione o contexto da avaliação')],
+        validators=[Optional()],
         render_kw={'class': 'form-select'}
     )
 
@@ -65,6 +69,8 @@ class AvaliacaoForm(FlaskForm):
         }
     )
 
+    submit = SubmitField('Salvar Avaliação', render_kw={'class': 'btn btn-primary btn-lg'})
+
     def validate_data_avaliacao(self, field):
         """Valida se a data da avaliação não é futura"""
         if field.data > date.today():
@@ -87,3 +93,5 @@ class RespostaForm(FlaskForm):
         validators=[DataRequired(message='Selecione uma resposta')],
         render_kw={'class': 'form-check-input'}
     )
+
+    submit = SubmitField('Salvar Resposta')
