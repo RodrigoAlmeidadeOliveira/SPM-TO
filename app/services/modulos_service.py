@@ -760,3 +760,339 @@ class ModulosService:
             )
 
         return " ".join(interpretacao)
+
+    # ==================== NOVOS MÓDULOS ====================
+
+    @staticmethod
+    def calcular_escores_copm(avaliacao_id):
+        """
+        Calcula escores do COPM
+
+        Args:
+            avaliacao_id: ID da avaliação
+
+        Returns:
+            dict: Escores de desempenho e satisfação, mudança clínica
+        """
+        avaliacao = Avaliacao.query.get(avaliacao_id)
+        if not avaliacao or not avaliacao.instrumento.codigo.startswith('COPM'):
+            return None
+
+        escores = {
+            'problemas': [],
+            'desempenho_medio': 0,
+            'satisfacao_media': 0
+        }
+
+        # Identificar até 5 problemas e seus escores
+        for i in range(1, 6):
+            # Buscar respostas de desempenho e satisfação para cada problema
+            resp_desemp = Resposta.query.join(Questao).filter(
+                Resposta.avaliacao_id == avaliacao_id,
+                Questao.codigo == f'COPM_DESEMP_{i}'
+            ).first()
+
+            resp_satis = Resposta.query.join(Questao).filter(
+                Resposta.avaliacao_id == avaliacao_id,
+                Questao.codigo == f'COPM_SATIS_{i}'
+            ).first()
+
+            if resp_desemp and resp_satis:
+                try:
+                    desemp_valor = int(resp_desemp.valor)
+                    satis_valor = int(resp_satis.valor)
+
+                    escores['problemas'].append({
+                        'numero': i,
+                        'desempenho': desemp_valor,
+                        'satisfacao': satis_valor
+                    })
+                except (ValueError, TypeError):
+                    continue
+
+        # Calcular médias
+        if escores['problemas']:
+            escores['desempenho_medio'] = sum(p['desempenho'] for p in escores['problemas']) / len(escores['problemas'])
+            escores['satisfacao_media'] = sum(p['satisfacao'] for p in escores['problemas']) / len(escores['problemas'])
+
+        return escores
+
+    @staticmethod
+    def calcular_escores_abc(avaliacao_id):
+        """
+        Calcula escores da ABC Scale
+
+        Args:
+            avaliacao_id: ID da avaliação
+
+        Returns:
+            dict: Escore total e classificação de risco
+        """
+        avaliacao = Avaliacao.query.get(avaliacao_id)
+        if not avaliacao or not avaliacao.instrumento.codigo.startswith('ABC'):
+            return None
+
+        total = 0
+        count = 0
+
+        for resposta in avaliacao.respostas:
+            try:
+                # Valor é a porcentagem de confiança (0-100)
+                valor = int(resposta.valor)
+                total += valor
+                count += 1
+            except (ValueError, TypeError):
+                continue
+
+        media = (total / count) if count > 0 else 0
+
+        # Classificação de risco de queda
+        if media > 80:
+            risco = 'BAIXO'
+            descricao = 'Alta confiança no equilíbrio - Baixo risco de queda'
+        elif media >= 50:
+            risco = 'MODERADO'
+            descricao = 'Confiança moderada - Risco moderado de queda'
+        else:
+            risco = 'ALTO'
+            descricao = 'Baixa confiança - Alto risco de queda'
+
+        return {
+            'escore_total': round(media, 1),
+            'itens_respondidos': count,
+            'risco_queda': risco,
+            'descricao': descricao
+        }
+
+    ESCALA_FIM = {
+        '1': 1,  # Ajuda total
+        '2': 2,  # Ajuda máxima
+        '3': 3,  # Ajuda moderada
+        '4': 4,  # Ajuda mínima
+        '5': 5,  # Supervisão
+        '6': 6,  # Independência modificada
+        '7': 7   # Independência completa
+    }
+
+    @staticmethod
+    def calcular_escores_fim(avaliacao_id):
+        """
+        Calcula escores do FIM
+
+        Args:
+            avaliacao_id: ID da avaliação
+
+        Returns:
+            dict: Escores motor, cognitivo e total
+        """
+        avaliacao = Avaliacao.query.get(avaliacao_id)
+        if not avaliacao or not avaliacao.instrumento.codigo.startswith('FIM'):
+            return None
+
+        escore_motor = 0
+        escore_cognitivo = 0
+
+        for resposta in avaliacao.respostas:
+            # Verificar metadados da questão para categoria
+            categoria = resposta.questao.metadados.get('categoria', 'MOTOR') if resposta.questao.metadados else 'MOTOR'
+            pontos = ModulosService.ESCALA_FIM.get(resposta.valor, 0)
+
+            if categoria == 'MOTOR':
+                escore_motor += pontos
+            else:
+                escore_cognitivo += pontos
+
+        escore_total = escore_motor + escore_cognitivo
+
+        return {
+            'motor': {
+                'escore': escore_motor,
+                'maximo': 91,
+                'nivel': ModulosService._classificar_fim(escore_motor, 91)
+            },
+            'cognitivo': {
+                'escore': escore_cognitivo,
+                'maximo': 35,
+                'nivel': ModulosService._classificar_fim(escore_cognitivo, 35)
+            },
+            'total': {
+                'escore': escore_total,
+                'maximo': 126,
+                'nivel': ModulosService._classificar_fim(escore_total, 126)
+            }
+        }
+
+    @staticmethod
+    def calcular_escores_weefim(avaliacao_id):
+        """
+        Calcula escores do WeeFIM (estrutura idêntica ao FIM)
+
+        Args:
+            avaliacao_id: ID da avaliação
+
+        Returns:
+            dict: Escores motor, cognitivo e total
+        """
+        avaliacao = Avaliacao.query.get(avaliacao_id)
+        if not avaliacao or not avaliacao.instrumento.codigo.startswith('WEEFIM'):
+            return None
+
+        # Usar mesma lógica do FIM
+        escore_motor = 0
+        escore_cognitivo = 0
+
+        for resposta in avaliacao.respostas:
+            categoria = resposta.questao.metadados.get('categoria', 'MOTOR') if resposta.questao.metadados else 'MOTOR'
+            pontos = ModulosService.ESCALA_FIM.get(resposta.valor, 0)
+
+            if categoria == 'MOTOR':
+                escore_motor += pontos
+            else:
+                escore_cognitivo += pontos
+
+        escore_total = escore_motor + escore_cognitivo
+
+        return {
+            'motor': {
+                'escore': escore_motor,
+                'maximo': 91,
+                'nivel': ModulosService._classificar_fim(escore_motor, 91)
+            },
+            'cognitivo': {
+                'escore': escore_cognitivo,
+                'maximo': 35,
+                'nivel': ModulosService._classificar_fim(escore_cognitivo, 35)
+            },
+            'total': {
+                'escore': escore_total,
+                'maximo': 126,
+                'nivel': ModulosService._classificar_fim(escore_total, 126)
+            }
+        }
+
+    ESCALA_GMFM = {
+        '0': 0,  # Não inicia
+        '1': 1,  # Inicia
+        '2': 2,  # Completa parcialmente
+        '3': 3   # Completa
+    }
+
+    @staticmethod
+    def calcular_escores_gmfm(avaliacao_id):
+        """
+        Calcula escores do GMFM-88
+
+        Args:
+            avaliacao_id: ID da avaliação
+
+        Returns:
+            dict: Escores por dimensão e total
+        """
+        avaliacao = Avaliacao.query.get(avaliacao_id)
+        if not avaliacao or not avaliacao.instrumento.codigo.startswith('GMFM'):
+            return None
+
+        escores = {}
+        total_geral = 0
+        num_dimensoes = 0
+
+        # Calcular por dimensão
+        for dominio in avaliacao.instrumento.dominios:
+            escore_dimensao = 0
+            questoes_dimensao = dominio.questoes.all()
+
+            for questao in questoes_dimensao:
+                resposta = Resposta.query.filter_by(
+                    avaliacao_id=avaliacao_id,
+                    questao_id=questao.id
+                ).first()
+
+                if resposta:
+                    pontos = ModulosService.ESCALA_GMFM.get(resposta.valor, 0)
+                    escore_dimensao += pontos
+
+            # Calcular porcentagem para a dimensão
+            max_possivel = len(questoes_dimensao) * 3
+            porcentagem = (escore_dimensao / max_possivel * 100) if max_possivel > 0 else 0
+
+            escores[dominio.codigo] = {
+                'nome': dominio.nome,
+                'escore_bruto': escore_dimensao,
+                'escore_maximo': max_possivel,
+                'porcentagem': round(porcentagem, 1),
+                'itens': len(questoes_dimensao)
+            }
+
+            total_geral += porcentagem
+            num_dimensoes += 1
+
+        # Escore total GMFM = média das 5 dimensões
+        gmfm_total = (total_geral / num_dimensoes) if num_dimensoes > 0 else 0
+
+        escores['TOTAL'] = {
+            'escore_gmfm': round(gmfm_total, 1),
+            'interpretacao': ModulosService._classificar_gmfm(gmfm_total)
+        }
+
+        return escores
+
+    @staticmethod
+    def _classificar_fim(escore, maximo):
+        """
+        Classifica nível de independência no FIM/WeeFIM
+
+        Args:
+            escore: Escore obtido
+            maximo: Escore máximo possível
+
+        Returns:
+            dict: Classificação
+        """
+        porcentagem = (escore / maximo * 100) if maximo > 0 else 0
+
+        if escore == maximo:
+            return {
+                'nivel': 'INDEPENDENCIA_COMPLETA',
+                'descricao': 'Independência completa em todas as atividades',
+                'cor': 'success'
+            }
+        elif porcentagem >= 80:
+            return {
+                'nivel': 'INDEPENDENCIA_MODIFICADA',
+                'descricao': 'Independente com modificações ou ajudas técnicas',
+                'cor': 'info'
+            }
+        elif porcentagem >= 50:
+            return {
+                'nivel': 'DEPENDENCIA_MODERADA',
+                'descricao': 'Necessita assistência moderada',
+                'cor': 'warning'
+            }
+        else:
+            return {
+                'nivel': 'DEPENDENCIA_COMPLETA',
+                'descricao': 'Necessita assistência substancial ou total',
+                'cor': 'danger'
+            }
+
+    @staticmethod
+    def _classificar_gmfm(porcentagem):
+        """
+        Classifica função motora grossa no GMFM
+
+        Args:
+            porcentagem: Porcentagem GMFM total (0-100)
+
+        Returns:
+            str: Interpretação do nível funcional
+        """
+        if porcentagem >= 90:
+            return 'Função motora grossa excelente - próximo ao desenvolvimento típico'
+        elif porcentagem >= 70:
+            return 'Função motora grossa boa - dificuldades leves'
+        elif porcentagem >= 50:
+            return 'Função motora grossa moderada - dificuldades moderadas'
+        elif porcentagem >= 30:
+            return 'Função motora grossa limitada - dificuldades importantes'
+        else:
+            return 'Função motora grossa severamente limitada'
