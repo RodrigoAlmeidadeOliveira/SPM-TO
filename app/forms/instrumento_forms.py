@@ -27,12 +27,26 @@ class InstrumentoForm(FlaskForm):
         render_kw={'placeholder': 'Ex: SPM-P 3-5 anos - Casa', 'class': 'form-control'}
     )
 
+    descricao = TextAreaField(
+        'Descrição',
+        validators=[Optional(), Length(max=2000, message='A descrição deve ter no máximo 2000 caracteres')],
+        render_kw={
+            'placeholder': 'Resumo do objetivo do instrumento, população alvo, etc.',
+            'class': 'form-control',
+            'rows': 3
+        }
+    )
+
     contexto = SelectField(
         'Contexto',
         choices=[
             ('', 'Selecione...'),
             ('casa', 'Casa'),
-            ('escola', 'Escola')
+            ('escola', 'Escola'),
+            ('clinica', 'Clínica'),
+            ('hospital', 'Hospital'),
+            ('geral', 'Geral'),
+            ('comunidade', 'Comunidade')
         ],
         validators=[DataRequired(message='Selecione o contexto do instrumento')],
         render_kw={'class': 'form-select'}
@@ -42,18 +56,18 @@ class InstrumentoForm(FlaskForm):
         'Idade mínima (anos)',
         validators=[
             DataRequired(message='Informe a idade mínima'),
-            NumberRange(min=0, max=18, message='A idade mínima deve estar entre 0 e 18 anos')
+            NumberRange(min=0, max=120, message='A idade mínima deve estar entre 0 e 120 anos')
         ],
-        render_kw={'class': 'form-control', 'min': 0, 'max': 18}
+        render_kw={'class': 'form-control', 'min': 0, 'max': 120}
     )
 
     idade_maxima = IntegerField(
         'Idade máxima (anos)',
         validators=[
             DataRequired(message='Informe a idade máxima'),
-            NumberRange(min=0, max=18, message='A idade máxima deve estar entre 0 e 18 anos')
+            NumberRange(min=0, max=120, message='A idade máxima deve estar entre 0 e 120 anos')
         ],
-        render_kw={'class': 'form-control', 'min': 0, 'max': 18}
+        render_kw={'class': 'form-control', 'min': 0, 'max': 120}
     )
 
     instrucoes = TextAreaField(

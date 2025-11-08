@@ -133,13 +133,17 @@ def criar_questoes_abc(dominio):
     ]
 
     questoes_criadas = 0
+    numero_global = 0
 
     for numero, texto in questoes_dados:
+        numero_global += 1
         questao = Questao(
             codigo=f'ABC_{numero:02d}',
             texto=f'Quão CONFIANTE você está de que não perderá o equilíbrio ou ficará instável quando você... {texto}?',
             dominio_id=dominio.id,
             ordem=numero,
+            numero=numero,
+            numero_global=numero_global,
             tipo_resposta='ESCALA_PERCENTUAL',
             obrigatoria=True,
             opcoes_resposta=[

@@ -49,6 +49,18 @@
                             {% endif %}
                         </div>
 
+                        <div class="mb-3">
+                            <label for="{{ form.descricao.id }}" class="form-label">
+                                {{ form.descricao.label.text }}
+                            </label>
+                            {{ form.descricao(class="form-control" + (" is-invalid" if form.descricao.errors else "")) }}
+                            {% if form.descricao.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.descricao.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label for="{{ form.contexto.id }}" class="form-label">

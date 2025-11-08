@@ -286,6 +286,8 @@ def criar_questoes_gmfm(dominios):
                 texto=texto,
                 dominio_id=dominio.id,
                 ordem=i,
+                numero=i,
+                numero_global=numero_global,
                 tipo_resposta='ESCALA_LIKERT',
                 obrigatoria=True,
                 opcoes_resposta=opcoes_padrao,

@@ -213,15 +213,19 @@ def criar_questoes_weefim(dominios):
     ]
 
     questoes_criadas = 0
+    numero_global = 0
 
     for dominio_codigo, numero, texto in questoes_dados:
         dominio = dominios[dominio_codigo]
 
+        numero_global += 1
         questao = Questao(
             codigo=f'WEEFIM_{numero:02d}',
             texto=texto,
             dominio_id=dominio.id,
             ordem=numero,
+            numero=numero,
+            numero_global=numero_global,
             tipo_resposta='ESCALA_LIKERT',
             obrigatoria=True,
             opcoes_resposta=opcoes_padrao,

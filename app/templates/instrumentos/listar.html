@@ -32,6 +32,10 @@
                     <option value="">Todos</option>
                     <option value="casa" {% if contexto == 'casa' %}selected{% endif %}>Casa</option>
                     <option value="escola" {% if contexto == 'escola' %}selected{% endif %}>Escola</option>
+                    <option value="clinica" {% if contexto == 'clinica' %}selected{% endif %}>Clínica</option>
+                    <option value="hospital" {% if contexto == 'hospital' %}selected{% endif %}>Hospital</option>
+                    <option value="geral" {% if contexto == 'geral' %}selected{% endif %}>Geral</option>
+                    <option value="comunidade" {% if contexto == 'comunidade' %}selected{% endif %}>Comunidade</option>
                 </select>
             </div>
             <div class="col-md-3">
@@ -75,13 +79,16 @@
                         </td>
                         <td><code>{{ instrumento.codigo }}</code></td>
                         <td>
-                            {% if instrumento.contexto == 'casa' %}
-                                <span class="badge bg-primary">Casa</span>
-                            {% elif instrumento.contexto == 'escola' %}
-                                <span class="badge bg-info text-dark">Escola</span>
-                            {% else %}
-                                <span class="badge bg-secondary">{{ instrumento.contexto }}</span>
-                            {% endif %}
+                    {% set contexto_labels = {
+                        'casa': 'Casa',
+                        'escola': 'Escola',
+                        'clinica': 'Clínica',
+                        'hospital': 'Hospital',
+                        'geral': 'Geral',
+                        'comunidade': 'Comunidade'
+                    } %}
+                    {% set ctx_label = contexto_labels.get(instrumento.contexto, instrumento.contexto or 'N/D') %}
+                    <span class="badge bg-secondary">{{ ctx_label }}</span>
                         </td>
                         <td>{{ instrumento.idade_minima }} - {{ instrumento.idade_maxima }} anos</td>
                         <td>

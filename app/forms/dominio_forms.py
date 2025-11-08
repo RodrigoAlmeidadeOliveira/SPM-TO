@@ -2,8 +2,8 @@
 Formulários para gerenciamento de domínios de instrumento
 """
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, Length, NumberRange
+from wtforms import StringField, IntegerField, BooleanField, SubmitField, TextAreaField, SelectField
+from wtforms.validators import DataRequired, Length, NumberRange, Optional
 
 
 class DominioForm(FlaskForm):
@@ -27,6 +27,12 @@ class DominioForm(FlaskForm):
         render_kw={'placeholder': 'Ex: Participação Social', 'class': 'form-control'}
     )
 
+    descricao = TextAreaField(
+        'Descrição',
+        validators=[Optional(), Length(max=2000, message='A descrição deve ter no máximo 2000 caracteres')],
+        render_kw={'class': 'form-control', 'rows': 3}
+    )
+
     ordem = IntegerField(
         'Ordem',
         validators=[
@@ -34,6 +40,20 @@ class DominioForm(FlaskForm):
             NumberRange(min=1, max=20, message='A ordem deve estar entre 1 e 20')
         ],
         render_kw={'class': 'form-control', 'min': 1, 'max': 20}
+    )
+
+    categoria = SelectField(
+        'Categoria',
+        choices=[
+            ('', 'Selecione...'),
+            ('MOTOR', 'Motor'),
+            ('COGNITIVO', 'Cognitivo'),
+            ('FUNCIONAL', 'Funcional'),
+            ('OCUPACIONAL', 'Ocupacional'),
+            ('SENSORIAL', 'Sensorial')
+        ],
+        validators=[Optional()],
+        render_kw={'class': 'form-select'}
     )
 
     escala_invertida = BooleanField(

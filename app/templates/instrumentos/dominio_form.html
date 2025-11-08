@@ -51,6 +51,18 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="{{ form.descricao.id }}" class="form-label">
+                                {{ form.descricao.label.text }}
+                            </label>
+                            {{ form.descricao(class="form-control" + (" is-invalid" if form.descricao.errors else "")) }}
+                            {% if form.descricao.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.descricao.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
                             <label for="{{ form.ordem.id }}" class="form-label">
                                 {{ form.ordem.label.text }} <span class="text-danger">*</span>
                             </label>
@@ -63,6 +75,18 @@
                             <small class="form-text text-muted">
                                 Ordem de apresentação do domínio no instrumento.
                             </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.categoria.id }}" class="form-label">
+                                {{ form.categoria.label.text }}
+                            </label>
+                            {{ form.categoria(class="form-select" + (" is-invalid" if form.categoria.errors else "")) }}
+                            {% if form.categoria.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.categoria.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
 
                         <div class="form-check mb-4">

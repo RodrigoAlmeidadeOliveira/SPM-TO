@@ -147,15 +147,19 @@ def criar_questoes_copm(dominios):
     ]
 
     questoes_criadas = 0
+    numero_global = 0
 
     for dominio_codigo, numero, texto in questoes_dados:
         dominio = dominios[dominio_codigo]
 
+        numero_global += 1
         questao = Questao(
             codigo=f'COPM_{numero:02d}',
             texto=texto,
             dominio_id=dominio.id,
             ordem=numero,
+            numero=numero,
+            numero_global=numero_global,
             tipo_resposta='TEXTO_LONGO',
             obrigatoria=False,
             opcoes_resposta=None,
@@ -176,11 +180,14 @@ def criar_questoes_copm(dominios):
     # Estas serão usadas após identificação dos problemas
     for i in range(1, 6):  # Até 5 problemas
         # Questão de desempenho
+        numero_global += 1
         questao_desemp = Questao(
             codigo=f'COPM_DESEMP_{i}',
             texto=f'Problema {i} - Como você avalia seu DESEMPENHO nesta atividade?',
             dominio_id=dominios['AUTOCUIDADO'].id,  # Domínio será determinado dinamicamente
             ordem=100 + i,
+            numero=100 + i,
+            numero_global=numero_global,
             tipo_resposta='ESCALA_NUMERICA',
             obrigatoria=False,
             opcoes_resposta=[
@@ -206,11 +213,14 @@ def criar_questoes_copm(dominios):
         questoes_criadas += 1
 
         # Questão de satisfação
+        numero_global += 1
         questao_satis = Questao(
             codigo=f'COPM_SATIS_{i}',
             texto=f'Problema {i} - Quão SATISFEITO você está com seu desempenho?',
             dominio_id=dominios['AUTOCUIDADO'].id,
             ordem=200 + i,
+            numero=200 + i,
+            numero_global=numero_global,
             tipo_resposta='ESCALA_NUMERICA',
             obrigatoria=False,
             opcoes_resposta=[

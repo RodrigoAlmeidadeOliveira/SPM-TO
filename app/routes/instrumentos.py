@@ -10,6 +10,7 @@ from app.forms import InstrumentoForm, DominioForm, QuestaoForm, TabelaReferenci
 from app.models import Instrumento, Dominio, Questao, TabelaReferencia
 
 instrumentos_bp = Blueprint('instrumentos', __name__)
+CONTEXTOS_PERMITIDOS = {'casa', 'escola', 'clinica', 'hospital', 'geral', 'comunidade'}
 
 
 @instrumentos_bp.route('/')
@@ -27,7 +28,7 @@ def listar():
         query = query.filter(or_(Instrumento.nome.ilike(like),
                                  Instrumento.codigo.ilike(like)))
 
-    if contexto in ('casa', 'escola'):
+    if contexto in CONTEXTOS_PERMITIDOS:
         query = query.filter(Instrumento.contexto == contexto)
 
     if status == 'ativo':
@@ -62,6 +63,7 @@ def novo():
             instrumento = Instrumento(
                 codigo=codigo,
                 nome=form.nome.data.strip(),
+                descricao=form.descricao.data.strip() if form.descricao.data else None,
                 contexto=form.contexto.data,
                 idade_minima=form.idade_minima.data,
                 idade_maxima=form.idade_maxima.data,
@@ -108,6 +110,7 @@ def editar(id):
         else:
             instrumento.codigo = codigo
             instrumento.nome = form.nome.data.strip()
+            instrumento.descricao = form.descricao.data.strip() if form.descricao.data else None
             instrumento.contexto = form.contexto.data
             instrumento.idade_minima = form.idade_minima.data
             instrumento.idade_maxima = form.idade_maxima.data
@@ -150,6 +153,8 @@ def novo_dominio(instrumento_id):
                 codigo=codigo,
                 nome=form.nome.data.strip(),
                 ordem=form.ordem.data,
+                 descricao=form.descricao.data.strip() if form.descricao.data else None,
+                 categoria=form.categoria.data or None,
                 escala_invertida=form.escala_invertida.data
             )
             db.session.add(dominio)
@@ -195,6 +200,8 @@ def editar_dominio(dominio_id):
             dominio.codigo = codigo
             dominio.nome = form.nome.data.strip()
             dominio.ordem = form.ordem.data
+            dominio.descricao = form.descricao.data.strip() if form.descricao.data else None
+            dominio.categoria = form.categoria.data or None
             dominio.escala_invertida = form.escala_invertida.data
 
             db.session.commit()

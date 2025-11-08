@@ -2,6 +2,7 @@
 Modelos de Instrumento, Domínio, Questão e Tabela de Referência
 """
 from datetime import datetime
+from sqlalchemy.ext.mutable import MutableDict, MutableList
 from app import db
 
 
@@ -12,6 +13,7 @@ class Instrumento(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     codigo = db.Column(db.String(50), unique=True, nullable=False, index=True)
     nome = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text)
 
     # Vinculação com módulo (para arquitetura modular)
     modulo_id = db.Column(db.Integer, db.ForeignKey('modulos.id'), nullable=True, index=True)
@@ -50,6 +52,8 @@ class Dominio(db.Model):
     codigo = db.Column(db.String(10), nullable=False)  # SOC, VIS, HEA, TOU, BOD, BAL, PLA
     nome = db.Column(db.String(200), nullable=False)
     ordem = db.Column(db.Integer, nullable=False)
+    descricao = db.Column(db.Text)
+    categoria = db.Column(db.String(50))
 
     # Escala de pontuação
     # Normal: Nunca=4, Ocasional=3, Frequente=2, Sempre=1
@@ -74,7 +78,13 @@ class Questao(db.Model):
     dominio_id = db.Column(db.Integer, db.ForeignKey('dominios.id'), nullable=False)
     numero = db.Column(db.Integer, nullable=False)  # Número sequencial dentro do domínio
     numero_global = db.Column(db.Integer, nullable=False)  # Número global no instrumento
+    codigo = db.Column(db.String(100), unique=True, index=True)
+    ordem = db.Column(db.Integer)
     texto = db.Column(db.Text, nullable=False)
+    tipo_resposta = db.Column(db.String(50), default='TEXTO_LONGO')
+    obrigatoria = db.Column(db.Boolean, default=True, nullable=False)
+    opcoes_resposta = MutableList.as_mutable(db.JSON)
+    metadados = MutableDict.as_mutable(db.JSON)
     ativo = db.Column(db.Boolean, default=True, nullable=False)
 
     # Relacionamentos
