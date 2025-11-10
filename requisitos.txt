@@ -1,0 +1,33 @@
+requisitos
+0) leia os artefatos que estão na pasta SPM-TO/DOCTOS
+1) criar um sistema de cadastros dos testse SPM. Sistema web que ficará hospedado no fly.io
+2) usará banco de dados postgresSQL
+3) seguir boas práticas de design patterns
+4) usar flask (ou outra coisa melhor) e python
+5) precisar cadastrar os testes por paciente, podendo registrar vários testes por data. Mostrar gráficos
+de evolução dos testes. Comparar os resultados dos testes com os baselines dos testes
+6) Os testes são baseados em padrões porém precisará tem uma interface de manutenção dos testes (incluir, alterar, excluir questões)
+
+
+alguns requisitos:
+
+Requisitos Funcionais Essenciais
+
+Cadastro de avaliações por criança com dados gerais (nome/ID, relacionamento do respondente, data, sexo, idade, raça/etnia, comentários) espelhando o cabeçalho de DOCTOS/Planilha PEI SPM 5-12 - escola.xlsx.
+Seleção do instrumento adequado por faixa etária (SPM 5‑12, SPM‑P 3‑5) e contexto (casa, escola), aplicando automaticamente o conjunto de itens correspondente conforme DOCTOS/Planilha PEI SPM 5-12 - casa.xlsx e DOCTOS/Planilha PEI SPM-P 3-5 - escola.xlsx.
+Registro das respostas item a item usando a escala de frequência (“Nunca”, “Ocasional”, “Frequente”, “Sempre”) e pesos específicos por domínio—incluindo inversões como em “4. Tato” na planilha escolar—para gerar os escores brutos.
+Cálculo automático dos escores por domínio (Participação Social, Visão, Audição, Tato, Olfato e Paladar, Consciência Corporal, Equilíbrio e Movimento, Planejamento e Ideação) e do total, replicando as linhas de agregação SCORE das planilhas.
+Classificação dos resultados com base nas tabelas de referência (TAB. REFERÊNCIA das planilhas), atribuindo T‑scores, percentis e rótulos (“Típico”, “Provável Disfunção”, “Disfunção Definitiva”).
+Geração de gráficos comparativos entre o avaliado e os intervalos de referência, similar à aba Gráfico e às imagens DOCTOS/Grafico ...jpg, com opção de exportar em PDF/PNG.
+Requisitos Funcionais Complementares
+
+Módulo de Plano Educacional Individualizado (PEI) que permita marcar itens críticos (coluna “PLANO” na aba Plano) e produzir um relatório consolidado das necessidades/intervenções.
+Histórico longitudinal por criança, permitindo comparar avaliações sucessivas (ex.: escola vs casa) e anexar arquivos de suporte como DOCTOS/SPM P 3-5 anos - Class.pdf.
+Área administrativa para gerenciar usuários (terapeutas, professores, familiares) e controlar quem pode lançar ou visualizar resultados específicos.
+Emissão de relatórios completos com texto introdutório (instruções das planilhas) e possibilidade de customizar comentários finais antes do download ou envio.
+Requisitos Não Funcionais
+
+Interface responsiva e em português para facilitar o uso em consultórios e escolas, preservando a terminologia original dos instrumentos.
+Persistência segura dos dados (criptografia em repouso e em trânsito), pois há informações sensíveis sobre crianças e responsáveis.
+Trilha de auditoria registrando acessos, edições e exportações de relatórios para garantir rastreabilidade das avaliações.
+Arquitetura apta a importar/atualizar novas tabelas normativas sem reescrever código (por exemplo, carregando arquivos equivalentes às abas TAB. REFERÊNCIA).
