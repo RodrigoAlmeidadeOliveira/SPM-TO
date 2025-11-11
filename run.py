@@ -57,11 +57,9 @@ def createadmin():
 @app.cli.command()
 def seed():
     """Popula banco com dados das planilhas"""
-    from scripts.seed_database import seed_database
     from scripts.seed_perfil_sensorial import seed_perfil_sensorial
-    seed_database()
     seed_perfil_sensorial()
-    print('Banco de dados populado com sucesso!')
+    print('Módulo Perfil Sensorial carregado com sucesso!')
 
 
 if __name__ == '__main__':

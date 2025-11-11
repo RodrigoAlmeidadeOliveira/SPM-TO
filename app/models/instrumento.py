@@ -49,7 +49,7 @@ class Dominio(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     instrumento_id = db.Column(db.Integer, db.ForeignKey('instrumentos.id'), nullable=False)
-    codigo = db.Column(db.String(10), nullable=False)  # SOC, VIS, HEA, TOU, BOD, BAL, PLA
+    codigo = db.Column(db.String(30), nullable=False)  # ex: POSICAO_CORPO, SOCIOEMOCIONAL
     nome = db.Column(db.String(200), nullable=False)
     ordem = db.Column(db.Integer, nullable=False)
     descricao = db.Column(db.Text)
