@@ -396,8 +396,13 @@ class TestAvaliacaoPermissions:
         pode = PermissionService.pode_editar_avaliacao(terapeuta_user, avaliacao.id)
         assert pode is True
 
-    def test_nao_pode_editar_avaliacao_concluida_de_outro(self, db_session, professor_user, avaliacao_completa):
-        """Não pode editar avaliação concluída de outro usuário"""
+    def test_pode_editar_avaliacao_concluida(self, db_session, terapeuta_user, avaliacao_completa):
+        """Avaliador pode editar mesmo após a conclusão"""
+        pode = PermissionService.pode_editar_avaliacao(terapeuta_user, avaliacao_completa.id)
+        assert pode is True
+
+    def test_nao_pode_editar_avaliacao_sem_permissao(self, db_session, professor_user, avaliacao_completa):
+        """Usuário sem vínculo não pode editar avaliação"""
         pode = PermissionService.pode_editar_avaliacao(professor_user, avaliacao_completa.id)
         assert pode is False
 

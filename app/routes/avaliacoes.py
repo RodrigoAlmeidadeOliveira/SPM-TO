@@ -260,10 +260,7 @@ def visualizar(id):
 def responder(id):
     """Interface para responder questões da avaliação"""
     avaliacao = Avaliacao.query.get_or_404(id)
-
-    if avaliacao.status == 'concluida':
-        flash('Esta avaliação já foi concluída!', 'info')
-        return redirect(url_for('avaliacoes.visualizar', id=id))
+    avaliacao_concluida = avaliacao.status == 'concluida'
 
     # Buscar todas as questões do instrumento, ordenadas por domínio e número
     questoes = (
@@ -336,6 +333,13 @@ def responder(id):
                 db.session.add(resposta)
 
             db.session.commit()
+
+            # Se avaliação já estava concluída, recalcular escores automaticamente
+            if avaliacao_concluida:
+                CalculoService.atualizar_escores_avaliacao(avaliacao)
+                ClassificacaoService.classificar_avaliacao(avaliacao)
+                flash('Resposta atualizada! Resultados recalculados.', 'success')
+                return redirect(url_for('avaliacoes.responder', id=id, q=questao_idx))
 
             # Verificar se é a última questão
             if questao_idx == len(questoes) - 1:

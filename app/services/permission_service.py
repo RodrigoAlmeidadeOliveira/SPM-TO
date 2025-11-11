@@ -262,8 +262,8 @@ class PermissionService:
 
         Regras:
         - Admin: edita tudo
-        - Avaliador que criou: pode editar se status não for 'concluida'
-        - Pode editar paciente E avaliação não concluída: pode editar
+        - Avaliador que criou: pode editar independentemente do status
+        - Quem pode editar o paciente também pode editar suas avaliações
 
         Args:
             user: Usuário atual
@@ -283,15 +283,12 @@ class PermissionService:
         if not avaliacao:
             return False
 
-        # Avaliador que criou pode editar se não concluída
-        if avaliacao.avaliador_id == user.id and avaliacao.status != 'concluida':
+        # Avaliador que criou pode editar sempre
+        if avaliacao.avaliador_id == user.id:
             return True
 
-        # Se pode editar paciente e avaliação não concluída
-        if avaliacao.status != 'concluida':
-            return PermissionService.pode_editar_paciente(user, avaliacao.paciente_id)
-
-        return False
+        # Outros usuários precisam ter permissão de edição do paciente
+        return PermissionService.pode_editar_paciente(user, avaliacao.paciente_id)
 
     @staticmethod
     def registrar_acesso(user, recurso_tipo, recurso_id, acao):

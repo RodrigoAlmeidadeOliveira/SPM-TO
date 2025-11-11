@@ -27,6 +27,11 @@
                         <i class="bi bi-play-circle me-1"></i>
                         Continuar
                     </a>
+                    {% elif avaliacao.status == 'concluida' %}
+                    <a href="{{ url_for('avaliacoes.responder', id=avaliacao.id) }}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-pencil-square me-1"></i>
+                        Editar Respostas
+                    </a>
                     {% endif %}
                     <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir">
                         <i class="bi bi-trash me-1"></i>
@@ -305,10 +310,10 @@
                 <div class="card-body text-center text-muted">
                     <i class="bi bi-hourglass-split" style="font-size: 3rem;"></i>
                     <p class="mt-3">Os resultados serão calculados após todas as questões serem respondidas.</p>
-                    {% if avaliacao.status == 'em_andamento' %}
+                    {% if avaliacao.status in ['em_andamento', 'concluida'] %}
                     <a href="{{ url_for('avaliacoes.responder', id=avaliacao.id) }}" class="btn btn-primary">
                         <i class="bi bi-play-circle me-1"></i>
-                        Continuar Respondendo
+                        {{ 'Editar Respostas' if avaliacao.status == 'concluida' else 'Continuar Respondendo' }}
                     </a>
                     {% endif %}
                 </div>

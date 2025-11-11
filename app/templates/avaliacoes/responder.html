@@ -52,7 +52,16 @@
                 </div>
             </div>
         </div>
+</div>
+
+    {% if avaliacao.status == 'concluida' %}
+    <div class="alert alert-info border-info d-flex align-items-center gap-2">
+        <i class="bi bi-info-circle-fill"></i>
+        <div>
+            Esta avaliação já foi concluída. Qualquer alteração nas respostas atualiza automaticamente os escores e classificações.
+        </div>
     </div>
+    {% endif %}
 
     <!-- Informações da Avaliação -->
     <div class="row mb-4">
