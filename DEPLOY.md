@@ -132,6 +132,16 @@ fly ssh console -a spm-to -C "pip install --no-cache-dir -r requirements.txt"
 
 > 💡 Execute este comando sempre que adicionar novas dependências ao `requirements.txt`, principalmente antes de gerar relatórios em PDF.
 
+### Passo 6.2: Ajustar Memória das Máquinas
+
+Os gráficos em PDF utilizam o Kaleido, que requer pelo menos **1 GB de RAM**. Ajuste o tamanho da memória logo após o primeiro deploy (ou sempre que recriar a app):
+
+```bash
+fly scale memory 1024 -a spm-to
+```
+
+Se preferir registrar isso no `fly.toml`, mantenha `memory_mb = 1024` em `[[vm]]`. Reimplantações futuras herdarão esse valor automaticamente.
+
 ## Passo 7: Inicializar o Banco de Dados
 
 Após o deploy bem-sucedido, você precisa inicializar o banco de dados.

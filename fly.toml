@@ -12,6 +12,7 @@ primary_region = "gru"  # São Paulo, Brasil
   FLASK_ENV = "production"
   FLASK_APP = "run.py"
   PORT = "8080"
+  WEB_CONCURRENCY = "1"
 
 [http_service]
   internal_port = 8080
@@ -31,7 +32,7 @@ primary_region = "gru"  # São Paulo, Brasil
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
-  memory_mb = 512
+  memory_mb = 1024
 
 [[statics]]
   guest_path = "/app/static"

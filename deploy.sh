@@ -67,6 +67,8 @@ if fly apps list | grep -q "$APP_NAME"; then
             fly deploy -a "$APP_NAME"
             info "Garantindo dependências atualizadas (incluindo suporte a gráficos/PDFs)..."
             fly ssh console -a "$APP_NAME" -C "pip install --no-cache-dir -r requirements.txt"
+            info "Ajustando memória da instância para 1024 MB..."
+            fly scale memory 1024 -a "$APP_NAME"
             info "Dependências atualizadas com sucesso!"
             info "Deploy concluído!"
             info "Acesse: https://${APP_NAME}.fly.dev"
@@ -126,6 +128,8 @@ info "Iniciando deploy..."
 fly deploy -a "$APP_NAME"
 info "Instalando dependências na instância (inclui Kaleido para PDFs)..."
 fly ssh console -a "$APP_NAME" -C "pip install --no-cache-dir -r requirements.txt"
+info "Ajustando memória da instância para 1024 MB..."
+fly scale memory 1024 -a "$APP_NAME"
 info "Dependências atualizadas!"
 
 # Inicializar banco de dados
