@@ -206,7 +206,10 @@ class GraficoService:
         fig.add_trace(go.Bar(
             x=categorias,
             y=valores,
-            marker_color=cores,
+            marker=dict(
+                color=cores,
+                line=dict(color='#2c3e50', width=1)
+            ),
             text=valores,
             textposition='outside'
         ))
