@@ -8,6 +8,7 @@ from app.models import Avaliacao, Paciente, Instrumento, Questao, Resposta, Domi
 from app.forms import AvaliacaoForm, RespostaForm
 from app.services.calculo_service import CalculoService
 from app.services.classificacao_service import ClassificacaoService
+from app.services.modulos_service import ModulosService
 from app.services.permission_service import PermissionService
 from app.utils.decorators import can_view_avaliacao, can_edit_avaliacao
 from sqlalchemy import func
@@ -244,13 +245,18 @@ def visualizar(id):
     questoes_respondidas = len(respostas)
     progresso = int((questoes_respondidas / total_questoes * 100)) if total_questoes > 0 else 0
 
+    perfil_sensorial_relatorio = None
+    if avaliacao.instrumento and avaliacao.instrumento.codigo.startswith('PERFIL_SENS'):
+        perfil_sensorial_relatorio = ModulosService.gerar_relatorio_perfil_sensorial(avaliacao.id)
+
     return render_template(
         'avaliacoes/visualizar.html',
         avaliacao=avaliacao,
         respostas_por_dominio=respostas_por_dominio,
         total_questoes=total_questoes,
         questoes_respondidas=questoes_respondidas,
-        progresso=progresso
+        progresso=progresso,
+        perfil_sensorial_relatorio=perfil_sensorial_relatorio
     )
 
 
@@ -305,6 +311,31 @@ def responder(id):
     # Criar formulário
     form = RespostaForm()
     form.questao_id.data = questao_atual.id
+
+    # Configurar opções dinamicamente conforme o instrumento
+    opcao_descricoes = dict(RespostaForm.DEFAULT_DESCRIPTIONS)
+    if questao_atual.opcoes_resposta:
+        choices = []
+        descricoes = {}
+        for raw in questao_atual.opcoes_resposta:
+            if '|' in raw:
+                valor_opcao, label_text = raw.split('|', 1)
+            else:
+                valor_opcao, label_text = raw, raw
+
+            valor_opcao = valor_opcao.strip()
+            label_principal, _, complemento = label_text.partition('(')
+            label_principal = label_principal.strip()
+            choices.append((valor_opcao, label_principal))
+
+            complemento = complemento.strip().rstrip(')')
+            if complemento:
+                descricoes[valor_opcao] = complemento
+
+        form.valor.choices = choices
+        opcao_descricoes = descricoes or dict(RespostaForm.DEFAULT_DESCRIPTIONS)
+    else:
+        form.valor.choices = RespostaForm.DEFAULT_CHOICES
 
     # Preencher com resposta existente
     if resposta_existente and request.method == 'GET':
@@ -372,7 +403,8 @@ def responder(id):
         resposta_existente=resposta_existente,
         todas_questoes=questoes,
         primeira_nao_respondida=primeira_nao_respondida,
-        respostas_existentes=respostas_existentes
+        respostas_existentes=respostas_existentes,
+        opcao_descricoes=opcao_descricoes
     )
 
 

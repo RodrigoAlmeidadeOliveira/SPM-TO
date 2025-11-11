@@ -11,6 +11,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
 from datetime import datetime
 from app.services.grafico_service import GraficoService
+from app.services.modulos_service import ModulosService
 
 
 class PDFService:
@@ -164,6 +165,48 @@ class PDFService:
                 story.append(Paragraph("Escores por Domínio", grafico_titulo_style))
                 story.append(Image(BytesIO(grafico_barras_dados['png_bytes']), width=14*cm, height=9*cm))
                 story.append(Spacer(1, 0.5*cm))
+
+            perfil_relatorio = None
+            if avaliacao.instrumento and avaliacao.instrumento.codigo.startswith('PERFIL_SENS'):
+                perfil_relatorio = ModulosService.gerar_relatorio_perfil_sensorial(avaliacao.id)
+
+            if perfil_relatorio:
+                story.append(Paragraph("PERFIL SENSORIAL 2 - Seções Sensoriais", subtitulo_style))
+                tabela_secoes = [["Seção", "Escore", "Classificação"]]
+                for secao in perfil_relatorio['secoes']:
+                    tabela_secoes.append([
+                        secao['nome'],
+                        str(secao['escore']),
+                        secao['classificacao']['descricao']
+                    ])
+
+                tabela_ps = Table(tabela_secoes, colWidths=[7*cm, 3*cm, 6*cm])
+                tabela_ps.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#9b59b6')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ]))
+                story.append(tabela_ps)
+                story.append(Spacer(1, 0.4*cm))
+
+                story.append(Paragraph("PERFIL SENSORIAL 2 - Quadrantes", subtitulo_style))
+                for quad in perfil_relatorio['quadrantes']:
+                    info = quad['dados']['classificacao'].get('quadrante_info', {})
+                    titulo = info.get('titulo', quad['quadrante'].title())
+                    descricao = info.get('descricao', '')
+                    nivel = quad['dados']['classificacao'].get('nivel_descricao', '')
+                    escore = quad['dados'].get('escore_bruto', 0)
+                    escore_max = quad['dados'].get('escore_maximo', 0)
+
+                    story.append(Paragraph(
+                        f"<b>{titulo}</b> - {nivel}", styles['Normal']
+                    ))
+                    story.append(Paragraph(f"Escore: {escore} / {escore_max}", styles['Normal']))
+                    if descricao:
+                        story.append(Paragraph(descricao, styles['Italic']))
+                    story.append(Spacer(1, 0.2*cm))
 
             # Tabela de escores
             dados_escores = [

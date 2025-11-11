@@ -6,9 +6,11 @@ from flask import Blueprint, render_template, Response, make_response, request, 
 from flask_login import login_required
 from app import db
 from app.models.avaliacao import Avaliacao
+from app.models.instrumento import Instrumento
 from app.models.paciente import Paciente
 from app.models.plano import PlanoItem, PlanoTemplateItem
 from app.services.grafico_service import GraficoService
+from app.services.modulos_service import ModulosService
 from io import BytesIO
 
 relatorios_bp = Blueprint('relatorios', __name__)
@@ -26,6 +28,8 @@ def avaliacao(id):
     grafico_radar_img = None
     grafico_barras_img = None
 
+    perfil_sensorial_relatorio = None
+
     if avaliacao_obj.status == 'concluida':
         dados_radar = GraficoService.obter_grafico_radar(avaliacao_obj)
         dados_barras = GraficoService.obter_grafico_barras(avaliacao_obj)
@@ -35,12 +39,16 @@ def avaliacao(id):
         grafico_radar_img = dados_radar.get('png_base64')
         grafico_barras_img = dados_barras.get('png_base64')
 
+        if avaliacao_obj.instrumento and avaliacao_obj.instrumento.codigo.startswith('PERFIL_SENS'):
+            perfil_sensorial_relatorio = ModulosService.gerar_relatorio_perfil_sensorial(avaliacao_obj.id)
+
     return render_template('relatorios/avaliacao.html',
                           avaliacao=avaliacao_obj,
                           grafico_radar=grafico_radar,
                           grafico_barras=grafico_barras,
                           grafico_radar_img=grafico_radar_img,
-                          grafico_barras_img=grafico_barras_img)
+                          grafico_barras_img=grafico_barras_img,
+                          perfil_sensorial_relatorio=perfil_sensorial_relatorio)
 
 
 @relatorios_bp.route('/avaliacao/<int:id>/pdf')

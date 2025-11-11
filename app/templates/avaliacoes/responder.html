@@ -117,9 +117,17 @@
                 <div class="mb-4">
                     <label class="form-label fw-bold mb-3">Selecione a frequência:</label>
 
+                    {% set total_opcoes = form.valor|length %}
+                    {% set col_class = 'col-12 col-md-6 col-xl-4' %}
+                    {% if total_opcoes <= 4 %}
+                        {% set col_class = 'col-6 col-md-3' %}
+                    {% elif total_opcoes == 5 %}
+                        {% set col_class = 'col-6 col-md-4' %}
+                    {% endif %}
+
                     <div class="row g-3">
                         {% for subfield in form.valor %}
-                        <div class="col-6 col-md-3">
+                        <div class="{{ col_class }}">
                             <div class="card h-100 resposta-option {{ 'border-primary' if resposta_existente and resposta_existente.valor == subfield.data else '' }}"
                                  onclick="document.getElementById('{{ subfield.id }}').click()">
                                 <div class="card-body text-center p-3">
@@ -129,17 +137,12 @@
                                     <label class="form-check-label d-block mt-2 fw-bold" for="{{ subfield.id }}">
                                         {{ subfield.label.text }}
                                     </label>
+                                    {% set desc = opcao_descricoes.get(subfield.data) if opcao_descricoes else None %}
+                                    {% if desc %}
                                     <small class="text-muted d-block mt-1">
-                                        {% if subfield.data == 'NUNCA' %}
-                                            Não observado
-                                        {% elif subfield.data == 'OCASIONAL' %}
-                                            Às vezes
-                                        {% elif subfield.data == 'FREQUENTE' %}
-                                            Muitas vezes
-                                        {% elif subfield.data == 'SEMPRE' %}
-                                            Constantemente
-                                        {% endif %}
+                                        {{ desc }}
                                     </small>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

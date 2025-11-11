@@ -599,9 +599,10 @@ class ModulosService:
 
         tabela = tabelas_quadrantes[quadrante]
 
-        for nivel, (min_val, max_val) in tabela.items():
+        for nivel, limites in tabela.items():
             if nivel == 'max':
                 continue
+            min_val, max_val = limites
             if min_val <= escore <= max_val:
                 descricoes_quadrante = {
                     'EXPLORACAO': {

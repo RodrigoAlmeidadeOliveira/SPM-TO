@@ -9,7 +9,7 @@ from datetime import datetime, date
 from app import create_app, db
 from app.models import (
     User, Paciente, Instrumento, Dominio, Questao,
-    Avaliacao, Resposta, TabelaReferencia, AnexoAvaliacao
+    Avaliacao, Resposta, TabelaReferencia, AnexoAvaliacao, Modulo
 )
 
 
@@ -61,6 +61,7 @@ def db_session(app):
         db.session.query(Dominio).delete()
         db.session.query(TabelaReferencia).delete()
         db.session.query(Instrumento).delete()
+        db.session.query(Modulo).delete()
         db.session.query(Paciente).delete()
         db.session.query(User).delete()
         db.session.commit()
@@ -213,6 +214,64 @@ def avaliacao(db_session, paciente, instrumento, terapeuta_user):
         status='em_andamento'
     )
     db_session.add(avaliacao)
+    db_session.commit()
+    return avaliacao
+
+
+@pytest.fixture
+def perfil_sensorial_instrumento(db_session):
+    """Instrumento Perfil Sensorial 2 populado via seed."""
+    from scripts.seed_perfil_sensorial import seed_perfil_sensorial
+    seed_perfil_sensorial()
+    instrumento = Instrumento.query.filter_by(codigo='PERFIL_SENS_CRIANCA').first()
+    return instrumento
+
+
+@pytest.fixture
+def avaliacao_perfil_sensorial(db_session, paciente, terapeuta_user, perfil_sensorial_instrumento):
+    """Avaliação preenchida para o Perfil Sensorial 2."""
+    avaliacao = Avaliacao(
+        paciente_id=paciente.id,
+        instrumento_id=perfil_sensorial_instrumento.id,
+        avaliador_id=terapeuta_user.id,
+        data_avaliacao=datetime.now().date(),
+        relacionamento_respondente='Mãe',
+        status='concluida'
+    )
+    db_session.add(avaliacao)
+    db_session.flush()
+
+    def responder(numero, valor):
+        questao = Questao.query.filter_by(codigo=f'PS_{numero:03d}').first()
+        resposta = Resposta.query.filter_by(
+            avaliacao_id=avaliacao.id,
+            questao_id=questao.id
+        ).first()
+
+        if resposta:
+            resposta.valor = valor
+        else:
+            resposta = Resposta(
+                avaliacao_id=avaliacao.id,
+                questao_id=questao.id,
+                valor=valor,
+                pontuacao=0
+            )
+            db_session.add(resposta)
+
+    # Tornar seções auditivo e visual altas, demais baixas
+    for numero in range(1, 9):
+        responder(numero, 'QUASE_SEMPRE')
+    for numero in range(9, 16):
+        responder(numero, 'FREQUENTEMENTE')
+    for numero in range(16, 27):
+        responder(numero, 'QUASE_NUNCA')
+    # Alguns itens para quadrantes
+    for numero in [21, 22, 25, 27, 48]:
+        responder(numero, 'QUASE_SEMPRE')
+    for numero in [63, 64, 65, 66]:
+        responder(numero, 'QUASE_NUNCA')
+
     db_session.commit()
     return avaliacao
 

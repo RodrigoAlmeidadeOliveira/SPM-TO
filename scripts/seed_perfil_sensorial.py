@@ -53,20 +53,31 @@ def criar_instrumento_perfil_sensorial(modulo):
     """Cria o instrumento para Perfil Sensorial 2 - Criança"""
     print("\nCriando instrumento...")
 
-    instrumento = Instrumento(
-        codigo='PERFIL_SENS_CRIANCA',
-        nome='Perfil Sensorial 2 - Questionário do Cuidador (3-14 anos)',
-        modulo_id=modulo.id,
-        idade_minima=3,
-        idade_maxima=14,
-        contexto='casa',
-        descricao='Questionário do cuidador para avaliação de processamento sensorial em crianças de 3 a 14 anos'
-    )
+    instrumento = Instrumento.query.filter_by(codigo='PERFIL_SENS_CRIANCA').first()
 
-    db.session.add(instrumento)
-    db.session.flush()
+    if instrumento:
+        instrumento.nome = 'Perfil Sensorial 2 - Questionário do Cuidador (3-14 anos)'
+        instrumento.modulo_id = modulo.id
+        instrumento.idade_minima = 3
+        instrumento.idade_maxima = 14
+        instrumento.contexto = 'casa'
+        instrumento.descricao = 'Questionário do cuidador para avaliação de processamento sensorial em crianças de 3 a 14 anos'
+        print("✓ Instrumento já existia, atualizado")
+    else:
+        instrumento = Instrumento(
+            codigo='PERFIL_SENS_CRIANCA',
+            nome='Perfil Sensorial 2 - Questionário do Cuidador (3-14 anos)',
+            modulo_id=modulo.id,
+            idade_minima=3,
+            idade_maxima=14,
+            contexto='casa',
+            descricao='Questionário do cuidador para avaliação de processamento sensorial em crianças de 3 a 14 anos'
+        )
 
-    print(f"✓ Instrumento criado: {instrumento.nome}")
+        db.session.add(instrumento)
+        db.session.flush()
+        print(f"✓ Instrumento criado: {instrumento.nome}")
+
     return instrumento
 
 
@@ -88,16 +99,27 @@ def criar_dominios_perfil_sensorial(instrumento):
 
     dominios = {}
     for dado in dominios_dados:
-        dominio = Dominio(
-            codigo=dado['codigo'],
-            nome=dado['nome'],
+        dominio = Dominio.query.filter_by(
             instrumento_id=instrumento.id,
-            ordem=dado['ordem']
-        )
-        db.session.add(dominio)
-        db.session.flush()
+            codigo=dado['codigo']
+        ).first()
+
+        if dominio:
+            dominio.nome = dado['nome']
+            dominio.ordem = dado['ordem']
+            print(f"  ✓ Domínio atualizado: {dominio.nome}")
+        else:
+            dominio = Dominio(
+                codigo=dado['codigo'],
+                nome=dado['nome'],
+                instrumento_id=instrumento.id,
+                ordem=dado['ordem']
+            )
+            db.session.add(dominio)
+            db.session.flush()
+            print(f"  ✓ Domínio criado: {dominio.nome}")
+
         dominios[dado['codigo']] = dominio
-        print(f"  ✓ Domínio: {dominio.nome}")
 
     return dominios
 
@@ -220,8 +242,9 @@ def criar_questoes_perfil_sensorial(dominios):
         dominio = dominios[dominio_codigo]
 
         numero_global += 1
-        questao = Questao(
-            codigo=f'PS_{numero:03d}',  # PS_001, PS_002, etc.
+        questao = Questao.query.filter_by(codigo=f'PS_{numero:03d}').first()
+
+        dados_questao = dict(
             texto=f'Meu/minha filho(a)... {texto}',
             dominio_id=dominio.id,
             ordem=numero,
@@ -239,25 +262,45 @@ def criar_questoes_perfil_sensorial(dominios):
             ],
             metadados={
                 'numero': numero,
-                'icone': icone if icone else 'SEM_QUADRANTE',  # EX, EV, SN, OB ou vazio
+                'icone': icone if icone else 'SEM_QUADRANTE',
                 'secao': dominio_codigo
             }
         )
 
-        db.session.add(questao)
-        questoes_criadas += 1
-
-        if questoes_criadas % 10 == 0:
-            print(f"  ✓ {questoes_criadas} questões criadas...")
+        if questao:
+            for campo, valor in dados_questao.items():
+                setattr(questao, campo, valor)
+            print(f"  - Questão atualizada: PS_{numero:03d}")
+        else:
+            questao = Questao(codigo=f'PS_{numero:03d}', **dados_questao)
+            db.session.add(questao)
+            questoes_criadas += 1
+            if questoes_criadas % 10 == 0:
+                print(f"  ✓ {questoes_criadas} questões criadas...")
 
     db.session.flush()
-    print(f"✓ Total de {questoes_criadas} questões criadas!")
+    print(f"✓ Total de {questoes_criadas} questões novas adicionadas/atualizadas!")
 
     return questoes_criadas
 
 
+def seed_perfil_sensorial():
+    """Executa o seed do Perfil Sensorial dentro de um app context ativo."""
+    modulo = criar_modulo_perfil_sensorial()
+    instrumento = criar_instrumento_perfil_sensorial(modulo)
+    dominios = criar_dominios_perfil_sensorial(instrumento)
+    total_questoes = criar_questoes_perfil_sensorial(dominios)
+    db.session.commit()
+    return {
+        'modulo': modulo,
+        'instrumento': instrumento,
+        'dominios': dominios,
+        'total_questoes': total_questoes
+    }
+
+
 def main():
-    """Função principal"""
+    """Função principal para execução via linha de comando"""
     print("=" * 80)
     print("SEED - Perfil Sensorial 2 (Criança 3-14 anos)")
     print("=" * 80)
@@ -266,28 +309,15 @@ def main():
 
     with app.app_context():
         try:
-            # Criar módulo
-            modulo = criar_modulo_perfil_sensorial()
-
-            # Criar instrumento
-            instrumento = criar_instrumento_perfil_sensorial(modulo)
-
-            # Criar domínios
-            dominios = criar_dominios_perfil_sensorial(instrumento)
-
-            # Criar questões
-            total_questoes = criar_questoes_perfil_sensorial(dominios)
-
-            # Commit
-            db.session.commit()
+            resultado = seed_perfil_sensorial()
 
             print("\n" + "=" * 80)
             print("✓ SEED CONCLUÍDO COM SUCESSO!")
             print("=" * 80)
-            print(f"Módulo: Perfil Sensorial 2")
-            print(f"Instrumento: 1 (Criança 3-14 anos)")
-            print(f"Domínios: 9 seções sensoriais")
-            print(f"Questões: {total_questoes}")
+            print(f"Módulo: {resultado['modulo'].nome}")
+            print("Instrumento: Perfil Sensorial 2 - Criança")
+            print("Domínios: 9 seções sensoriais")
+            print(f"Questões (novas ou atualizadas): {resultado['total_questoes']}")
             print("=" * 80)
 
         except Exception as e:

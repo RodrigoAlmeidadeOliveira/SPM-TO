@@ -129,6 +129,81 @@
         {% endif %}
     </div>
 
+    {% if perfil_sensorial_relatorio %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-bullseye"></i>
+                Perfil Sensorial 2 - Seções e Quadrantes
+            </h5>
+        </div>
+        <div class="card-body">
+            <h6 class="text-uppercase text-muted fw-bold">Seções Sensoriais</h6>
+            {% set badge_classes = {
+                'MUITO_MAIS': 'bg-danger',
+                'MAIS': 'bg-warning text-dark',
+                'TIPICO': 'bg-success',
+                'MENOS': 'bg-primary',
+                'MUITO_MENOS': 'bg-secondary'
+            } %}
+
+            <div class="table-responsive mb-4">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Seção</th>
+                            <th class="text-center">Escore Bruto</th>
+                            <th class="text-center">Classificação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for secao in perfil_sensorial_relatorio.secoes %}
+                        <tr>
+                            <td>{{ secao.nome }}</td>
+                            <td class="text-center fw-bold">{{ secao.escore }}</td>
+                            <td class="text-center">
+                                {% set nivel = secao.classificacao.nivel %}
+                                <span class="badge {{ badge_classes.get(nivel, 'bg-secondary') }}">
+                                    {{ secao.classificacao.descricao }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h6 class="text-uppercase text-muted fw-bold">Quadrantes</h6>
+            <div class="row g-3">
+                {% for quad in perfil_sensorial_relatorio.quadrantes %}
+                {% set info = quad.dados.classificacao.quadrante_info %}
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="card h-100 border-{{ info.cor if info.cor else 'secondary' }}">
+                        <div class="card-body">
+                            <h5 class="fw-bold text-{{ info.cor if info.cor else 'secondary' }}">
+                                {{ info.titulo if info else quad.quadrante.title() }}
+                            </h5>
+                            <p class="text-muted mb-1">
+                                {{ info.descricao if info else '' }}
+                            </p>
+                            <p class="mb-1">
+                                <strong>Escore:</strong>
+                                {{ quad.dados.escore_bruto }} / {{ quad.dados.escore_maximo }}
+                            </p>
+                            <p class="mb-0">
+                                <span class="badge {{ badge_classes.get(quad.dados.classificacao.nivel, 'bg-secondary') }}">
+                                    {{ quad.dados.classificacao.nivel_descricao }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Tabela de Resultados -->
     <div class="row mb-4">
         <div class="col-md-12">

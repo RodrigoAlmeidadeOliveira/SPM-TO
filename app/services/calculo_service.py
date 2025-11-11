@@ -34,8 +34,20 @@ class CalculoService:
         Returns:
             int: Pontuação (1-4)
         """
+        if not valor:
+            return 0
+
+        valor_upper = valor.upper()
         escala = CalculoService.ESCALA_INVERTIDA if escala_invertida else CalculoService.ESCALA_NORMAL
-        return escala.get(valor.upper(), 0)
+        if valor_upper in escala:
+            return escala.get(valor_upper, 0)
+
+        # Suporte para instrumentos com escala expandida (ex: Perfil Sensorial 2)
+        try:
+            from app.services.modulos_service import ModulosService
+            return ModulosService.ESCALA_PERFIL_SENSORIAL.get(valor_upper, 0)
+        except Exception:
+            return 0
 
     @staticmethod
     def calcular_escores(avaliacao):
