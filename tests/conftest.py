@@ -223,7 +223,7 @@ def perfil_sensorial_instrumento(db_session):
     """Instrumento Perfil Sensorial 2 populado via seed."""
     from scripts.seed_perfil_sensorial import seed_perfil_sensorial
     seed_perfil_sensorial()
-    instrumento = Instrumento.query.filter_by(codigo='PERFIL_SENS_CRIANCA').first()
+    instrumento = Instrumento.query.filter_by(codigo='PERFIL_SENS_CUIDADOR').first()
     return instrumento
 
 
@@ -241,8 +241,7 @@ def avaliacao_perfil_sensorial(db_session, paciente, terapeuta_user, perfil_sens
     db_session.add(avaliacao)
     db_session.flush()
 
-    def responder(numero, valor):
-        questao = Questao.query.filter_by(codigo=f'PS_{numero:03d}').first()
+    def responder(questao, valor):
         resposta = Resposta.query.filter_by(
             avaliacao_id=avaliacao.id,
             questao_id=questao.id
@@ -259,18 +258,19 @@ def avaliacao_perfil_sensorial(db_session, paciente, terapeuta_user, perfil_sens
             )
             db_session.add(resposta)
 
-    # Tornar seções auditivo e visual altas, demais baixas
-    for numero in range(1, 9):
-        responder(numero, 'QUASE_SEMPRE')
-    for numero in range(9, 16):
-        responder(numero, 'FREQUENTEMENTE')
-    for numero in range(16, 27):
-        responder(numero, 'QUASE_NUNCA')
-    # Alguns itens para quadrantes
-    for numero in [21, 22, 25, 27, 48]:
-        responder(numero, 'QUASE_SEMPRE')
-    for numero in [63, 64, 65, 66]:
-        responder(numero, 'QUASE_NUNCA')
+    questoes = Questao.query.join(Dominio).filter(
+        Dominio.instrumento_id == perfil_sensorial_instrumento.id
+    ).all()
+
+    for questao in questoes:
+        dominio_codigo = questao.dominio.codigo
+        if dominio_codigo == 'AUDITIVO':
+            valor = 'QUASE_SEMPRE'
+        elif dominio_codigo == 'VISUAL':
+            valor = 'FREQUENTEMENTE'
+        else:
+            valor = 'QUASE_NUNCA'
+        responder(questao, valor)
 
     db_session.commit()
     return avaliacao

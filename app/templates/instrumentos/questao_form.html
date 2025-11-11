@@ -72,6 +72,21 @@
                             {% endif %}
                         </div>
 
+                        <div class="mb-3">
+                            <label for="{{ form.icone.id }}" class="form-label">
+                                {{ form.icone.label.text }}
+                            </label>
+                            {{ form.icone(class="form-select" + (" is-invalid" if form.icone.errors else "")) }}
+                            {% if form.icone.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.icone.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Selecione o quadrante associado (quando aplicável). Caso contrário, mantenha “Sem quadrante”.
+                            </small>
+                        </div>
+
                         <div class="form-check mb-4">
                             {{ form.ativo(class="form-check-input") }}
                             <label class="form-check-label" for="{{ form.ativo.id }}">

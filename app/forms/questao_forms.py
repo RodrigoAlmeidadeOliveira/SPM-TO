@@ -2,7 +2,7 @@
 Formulários para gerenciamento de questões de instrumento
 """
 from flask_wtf import FlaskForm
-from wtforms import IntegerField, TextAreaField, BooleanField, SubmitField
+from wtforms import IntegerField, TextAreaField, BooleanField, SubmitField, SelectField
 from wtforms.validators import DataRequired, NumberRange, Length
 
 
@@ -34,6 +34,19 @@ class QuestaoForm(FlaskForm):
             Length(max=2000, message='A descrição deve ter no máximo 2000 caracteres')
         ],
         render_kw={'class': 'form-control', 'rows': 4}
+    )
+
+    icone = SelectField(
+        'Quadrante (opcional)',
+        choices=[
+            ('SEM_QUADRANTE', 'Sem quadrante definido'),
+            ('EX', 'Exploração (EX)'),
+            ('EV', 'Esquiva (EV)'),
+            ('SN', 'Sensibilidade (SN)'),
+            ('OB', 'Observação (OB)')
+        ],
+        default='SEM_QUADRANTE',
+        render_kw={'class': 'form-select'}
     )
 
     ativo = BooleanField(

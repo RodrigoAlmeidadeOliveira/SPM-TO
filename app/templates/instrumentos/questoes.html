@@ -24,13 +24,19 @@
         {% for bloco in dominios %}
         {% set dominio = bloco.dominio %}
         <div class="card mb-4" id="dominio-{{ dominio.id }}">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    {{ dominio.codigo }} &middot; {{ dominio.nome }}
-                </h5>
-                <span class="badge bg-light text-primary">
-                    {{ bloco.questoes|length }} questões
-                </span>
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <h5 class="mb-0">
+                        {{ dominio.codigo }} &middot; {{ dominio.nome }}
+                    </h5>
+                    <span class="badge bg-light text-primary">
+                        {{ bloco.questoes|length }} questões
+                    </span>
+                </div>
+                <a href="{{ url_for('instrumentos.nova_questao', dominio_id=dominio.id) }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Nova questão
+                </a>
             </div>
             <div class="card-body p-0">
                 {% if bloco.questoes %}
@@ -40,6 +46,7 @@
                             <tr>
                                 <th style="width: 8rem;">Número</th>
                                 <th>Descrição</th>
+                                <th style="width: 8rem;" class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -51,12 +58,20 @@
                                     </span>
                                 </td>
                                 <td>{{ questao.texto }}</td>
-                                <td class="text-end">
+                                <td class="text-center">
                                     <div class="btn-group btn-group-sm">
                                         <a href="{{ url_for('instrumentos.editar_questao', questao_id=questao.id) }}"
                                            class="btn btn-outline-warning" title="Editar questão">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
+                                        <form method="POST"
+                                              action="{{ url_for('instrumentos.excluir_questao', questao_id=questao.id) }}"
+                                              onsubmit="return confirm('Deseja realmente excluir esta questão?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-outline-danger" title="Excluir questão">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

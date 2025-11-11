@@ -248,7 +248,13 @@ def nova_questao(dominio_id):
                 numero=numero,
                 numero_global=numero_global,
                 texto=form.texto.data.strip(),
-                ativo=form.ativo.data
+                ativo=form.ativo.data,
+                opcoes_resposta=ESCALA_PADRAO_PERFIL,
+                metadados={
+                    'numero': numero,
+                    'icone': form.icone.data,
+                    'secao': dominio.codigo
+                }
             )
             db.session.add(questao)
             db.session.commit()
@@ -273,6 +279,8 @@ def editar_questao(questao_id):
     dominio = questao.dominio
     instrumento = dominio.instrumento
     form = QuestaoForm(obj=questao)
+    if request.method == 'GET':
+        form.icone.data = questao.metadados.get('icone', 'SEM_QUADRANTE') if questao.metadados else 'SEM_QUADRANTE'
 
     if form.validate_on_submit():
         numero = form.numero.data
@@ -297,6 +305,12 @@ def editar_questao(questao_id):
             questao.numero_global = numero_global
             questao.texto = form.texto.data.strip()
             questao.ativo = form.ativo.data
+            questao.opcoes_resposta = questao.opcoes_resposta or ESCALA_PADRAO_PERFIL
+            questao.metadados = {
+                'numero': numero,
+                'icone': form.icone.data,
+                'secao': dominio.codigo
+            }
 
             db.session.commit()
             flash('Questão atualizada com sucesso!', 'success')
@@ -450,3 +464,26 @@ def excluir_tabela(tabela_id):
     
     flash('Tabela de referência excluída com sucesso!', 'success')
     return redirect(url_for('instrumentos.listar_tabelas', id=instrumento_id))
+ESCALA_PADRAO_PERFIL = [
+    'QUASE_NUNCA|Quase nunca (10% ou menos)',
+    'OCASIONALMENTE|Ocasionalmente (25%)',
+    'METADE_TEMPO|Metade do tempo (50%)',
+    'FREQUENTEMENTE|Frequentemente (75%)',
+    'QUASE_SEMPRE|Quase sempre (90% ou mais)',
+    'NAO_APLICA|Não se aplica'
+]
+@instrumentos_bp.route('/questoes/<int:questao_id>/excluir', methods=['POST'])
+@login_required
+def excluir_questao(questao_id):
+    """Exclui uma questão, se não houver respostas associadas."""
+    questao = Questao.query.get_or_404(questao_id)
+    instrumento = questao.dominio.instrumento
+
+    if questao.respostas.count() > 0:
+        flash('Não é possível excluir uma questão que já possui respostas registradas.', 'warning')
+        return redirect(url_for('instrumentos.listar_questoes', id=instrumento.id))
+
+    db.session.delete(questao)
+    db.session.commit()
+    flash('Questão excluída com sucesso!', 'success')
+    return redirect(url_for('instrumentos.listar_questoes', id=instrumento.id))
