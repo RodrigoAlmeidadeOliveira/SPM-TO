@@ -170,34 +170,28 @@ class GraficoService:
     def _montar_figura_barras(avaliacao):
         """Cria o objeto Figure para o gráfico de barras comparativo."""
         dominios_info = [
-            ('Participação Social', avaliacao.escore_soc, avaliacao.classificacao_soc),
-            ('Visão', avaliacao.escore_vis, avaliacao.classificacao_vis),
-            ('Audição', avaliacao.escore_hea, avaliacao.classificacao_hea),
-            ('Tato', avaliacao.escore_tou, avaliacao.classificacao_tou),
-            ('Consciência Corporal', avaliacao.escore_bod, avaliacao.classificacao_bod),
-            ('Equilíbrio e Movimento', avaliacao.escore_bal, avaliacao.classificacao_bal),
-            ('Planejamento e Ideação', avaliacao.escore_pla, avaliacao.classificacao_pla)
+            ('SOC', 'Participação Social', avaliacao.escore_soc, avaliacao.classificacao_soc),
+            ('VIS', 'Visão', avaliacao.escore_vis, avaliacao.classificacao_vis),
+            ('HEA', 'Audição', avaliacao.escore_hea, avaliacao.classificacao_hea),
+            ('TOU', 'Tato', avaliacao.escore_tou, avaliacao.classificacao_tou),
+            ('BOD', 'Consciência Corporal', avaliacao.escore_bod, avaliacao.classificacao_bod),
+            ('BAL', 'Equilíbrio e Movimento', avaliacao.escore_bal, avaliacao.classificacao_bal),
+            ('PLA', 'Planejamento e Ideação', avaliacao.escore_pla, avaliacao.classificacao_pla)
         ]
 
         if avaliacao.escore_olf is not None:
-            dominios_info.insert(3, ('Olfato e Paladar', avaliacao.escore_olf, avaliacao.classificacao_olf))
+            dominios_info.insert(3, ('OLF', 'Olfato e Paladar', avaliacao.escore_olf, avaliacao.classificacao_olf))
 
         categorias = []
         valores = []
         cores = []
 
-        for nome, escore, classificacao in dominios_info:
+        for codigo, nome, escore, classificacao in dominios_info:
             if escore is not None:
                 categorias.append(nome)
                 valores.append(escore)
-                if classificacao == 'TIPICO':
-                    cores.append('#2ecc71')
-                elif classificacao == 'PROVAVEL_DISFUNCAO':
-                    cores.append('#f39c12')
-                elif classificacao == 'DISFUNCAO_DEFINITIVA':
-                    cores.append('#e74c3c')
-                else:
-                    cores.append('#95a5a6')
+                cor = GraficoService.CORES_DOMINIOS.get(codigo, '#95a5a6')
+                cores.append(cor)
 
         if not valores:
             return None
