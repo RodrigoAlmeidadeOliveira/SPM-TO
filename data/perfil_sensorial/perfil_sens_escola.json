@@ -1,0 +1,214 @@
+{
+  "codigo": "PERFIL_SENS_ESCOLA",
+  "nome": "Perfil Sensorial 2 - Escolar (3-14 anos)",
+  "idade_minima": 3,
+  "idade_maxima": 14,
+  "contexto": "escola",
+  "dominios": [
+    {
+      "codigo": "AUDITIVO",
+      "nome": "Processamento Auditivo",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_002",
+          "numero": 2,
+          "numero_global": 1,
+          "texto": "Para de prestar atenção em mim ou parece que não me ignora.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_003",
+          "numero": 3,
+          "numero_global": 2,
+          "texto": "Tem dificuldade em concluir tarefas em uma condição barulhenta.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_004",
+          "numero": 4,
+          "numero_global": 3,
+          "texto": "Fica angustiado(a) durante ruídos, embora ou outros grandes encontros.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_005",
+          "numero": 5,
+          "numero_global": 4,
+          "texto": "Parece de incômodo, livrar-se de chão, portas batendo, anônimos.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_006",
+          "numero": 6,
+          "numero_global": 5,
+          "texto": "Tem dificuldade em participar de atividades em grupo nas quais há muito barulho.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "VISUAL",
+      "nome": "Processamento Visual",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_008",
+          "numero": 8,
+          "numero_global": 6,
+          "texto": "Tem dificuldade para manter materiais e acessórios organizados para uso durante o dia.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_009",
+          "numero": 9,
+          "numero_global": 7,
+          "texto": "Deixa itens em branco em uma folha de tarefas com muitas informações escritas, aparece de saber as respostas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_010",
+          "numero": 10,
+          "numero_global": 8,
+          "texto": "Se desvia de tarefas para observar coisas ao redor da sala.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_011",
+          "numero": 11,
+          "numero_global": 9,
+          "texto": "Não faz contato visual com durantes interações no dia a dia.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_012",
+          "numero": 12,
+          "numero_global": 10,
+          "texto": "Parece incomodado(a) por computadores ou gráficos coloridos, em ritmo acelerado.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "TATO",
+      "nome": "Processamento do Tato",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_014",
+          "numero": 14,
+          "numero_global": 11,
+          "texto": "Parece perceber quando seu rosto é molhado continuando sujos.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_015",
+          "numero": 15,
+          "numero_global": 12,
+          "texto": "Evita a necessidade de tocar objetos, superfícies ou texturas (por exemplo, quer outro sensível de tudo ao redor).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_016",
+          "numero": 16,
+          "numero_global": 13,
+          "texto": "Parece incomodado(a) com materiais que parecem estranhos à maioria das crianças (por exemplo, se abrange em algumas pontas).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_017",
+          "numero": 17,
+          "numero_global": 14,
+          "texto": "Manipulações com pontas dos dedos para trabalhar em projetos que exigem manipulação.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_018",
+          "numero": 18,
+          "numero_global": 15,
+          "texto": "Se esquiva de recuar quando seu corpo é tocado ou quando outras pessoas chegam muito perto.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "MOVIMENTOS",
+      "nome": "Processamento de Movimentos",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_020",
+          "numero": 20,
+          "numero_global": 16,
+          "texto": "Inicia com ou manipula objetos (por exemplo, lápis, cadernos, pastas) de maneira desajeitada.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_021",
+          "numero": 21,
+          "numero_global": 17,
+          "texto": "Parece ser de forma organizada, entrar na posição, relaxa o corpo, aumenta-se ou estende-se na cadeira.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_022",
+          "numero": 22,
+          "numero_global": 18,
+          "texto": "Embriaga em colas, sem conseguir notar objetos ou pessoas ao caminho.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_023",
+          "numero": 23,
+          "numero_global": 19,
+          "texto": "Parece encontrar dificuldades para se aproximar de um professor.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_024",
+          "numero": 24,
+          "numero_global": 20,
+          "texto": "Fica lento(a) para participar de tarefas ou atividades físicas em altas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_025",
+          "numero": 25,
+          "numero_global": 21,
+          "texto": "Parece que estudantes da mesma idade.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "CONDUTA",
+      "nome": "Respostas Comportamentais",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_027",
+          "numero": 27,
+          "numero_global": 22,
+          "texto": "Parece estar cansado(a) (por exemplo, não engaja, lentidão).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_028",
+          "numero": 28,
+          "numero_global": 23,
+          "texto": "Parece desmotivado(a) ou desinteressado(a) em atividades.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_029",
+          "numero": 29,
+          "numero_global": 24,
+          "texto": "Parece inquieto(a) ou hiperativo(a) (por exemplo, mexe-se muito).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ESCOLA_030",
+          "numero": 30,
+          "numero_global": 25,
+          "texto": "Parece que incomoda quando as regras são quebradas.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    }
+  ]
+}

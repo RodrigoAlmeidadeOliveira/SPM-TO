@@ -13,9 +13,12 @@ Uso:
 
 import sys
 import os
+import json
 
 # Adicionar o diretório raiz ao PYTHONPATH
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
+DATA_DIR = os.path.join(BASE_DIR, 'data', 'perfil_sensorial')
 
 from app import create_app, db
 from app.models import Modulo, Instrumento, Dominio, Questao
@@ -284,16 +287,121 @@ def criar_questoes_perfil_sensorial(dominios):
     return questoes_criadas
 
 
+def carregar_instrumento_json(filename):
+    path = os.path.join(DATA_DIR, filename)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f'Arquivo não encontrado: {path}')
+    with open(path, 'r', encoding='utf-8') as fp:
+        return json.load(fp)
+
+
+def criar_instrumento_from_json(modulo, data):
+    print(f"\nCriando instrumento {data['codigo']} a partir de JSON...")
+
+    instrumento = Instrumento.query.filter_by(codigo=data['codigo']).first()
+    if instrumento:
+        instrumento.nome = data['nome']
+        instrumento.idade_minima = data['idade_minima']
+        instrumento.idade_maxima = data['idade_maxima']
+        instrumento.contexto = data.get('contexto', 'casa')
+        instrumento.modulo_id = modulo.id
+        print("✓ Instrumento já existia, atualizado")
+    else:
+        instrumento = Instrumento(
+            codigo=data['codigo'],
+            nome=data['nome'],
+            idade_minima=data['idade_minima'],
+            idade_maxima=data['idade_maxima'],
+            contexto=data.get('contexto', 'casa'),
+            modulo_id=modulo.id
+        )
+        db.session.add(instrumento)
+        db.session.flush()
+        print(f"✓ Instrumento criado: {instrumento.nome}")
+
+    opcoes = [
+        'QUASE_NUNCA|Quase nunca (10% ou menos)',
+        'OCASIONALMENTE|Ocasionalmente (25%)',
+        'METADE_TEMPO|Metade do tempo (50%)',
+        'FREQUENTEMENTE|Frequentemente (75%)',
+        'QUASE_SEMPRE|Quase sempre (90% ou mais)',
+        'NAO_APLICA|Não se aplica'
+    ]
+
+    codigo_para_dominio = {}
+    for ordem, dominio_data in enumerate(data['dominios'], start=1):
+        dominio = Dominio.query.filter_by(
+            instrumento_id=instrumento.id,
+            codigo=dominio_data['codigo']
+        ).first()
+
+        if dominio:
+            dominio.nome = dominio_data['nome']
+            dominio.ordem = ordem
+        else:
+            dominio = Dominio(
+                instrumento_id=instrumento.id,
+                codigo=dominio_data['codigo'],
+                nome=dominio_data['nome'],
+                ordem=ordem
+            )
+            db.session.add(dominio)
+            db.session.flush()
+        codigo_para_dominio[dominio_data['codigo']] = dominio
+
+        for questao_data in dominio_data['questoes']:
+            questao = Questao.query.filter_by(codigo=questao_data['codigo']).first()
+            metadados = {
+                'numero': questao_data['numero'],
+                'icone': questao_data.get('icone', 'SEM_QUADRANTE'),
+                'secao': dominio_data['codigo']
+            }
+
+            if questao:
+                questao.texto = questao_data['texto']
+                questao.numero = questao_data['numero']
+                questao.numero_global = questao_data['numero_global']
+                questao.dominio_id = dominio.id
+                questao.metadados = metadados
+                questao.opcoes_resposta = opcoes
+            else:
+                questao = Questao(
+                    codigo=questao_data['codigo'],
+                    texto=questao_data['texto'],
+                    dominio_id=dominio.id,
+                    numero=questao_data['numero'],
+                    numero_global=questao_data['numero_global'],
+                    tipo_resposta='ESCALA_LIKERT',
+                    obrigatoria=True,
+                    opcoes_resposta=opcoes,
+                    metadados=metadados
+                )
+                db.session.add(questao)
+
+    return instrumento
+
+
 def seed_perfil_sensorial():
     """Executa o seed do Perfil Sensorial dentro de um app context ativo."""
     modulo = criar_modulo_perfil_sensorial()
     instrumento = criar_instrumento_perfil_sensorial(modulo)
     dominios = criar_dominios_perfil_sensorial(instrumento)
     total_questoes = criar_questoes_perfil_sensorial(dominios)
+
+    adicionais = []
+    for filename in ['perfil_sens_bebe.json', 'perfil_sens_peq.json', 'perfil_sens_escola.json', 'perfil_sens_abrev.json']:
+        try:
+            data = carregar_instrumento_json(filename)
+        except FileNotFoundError:
+            continue
+        instrumento_extra = criar_instrumento_from_json(modulo, data)
+        adicionais.append(instrumento_extra)
+
     db.session.commit()
     return {
         'modulo': modulo,
         'instrumento': instrumento,
+        'instrumentos_adicionais': adicionais,
         'dominios': dominios,
         'total_questoes': total_questoes
     }
@@ -315,9 +423,12 @@ def main():
             print("✓ SEED CONCLUÍDO COM SUCESSO!")
             print("=" * 80)
             print(f"Módulo: {resultado['modulo'].nome}")
-            print("Instrumento: Perfil Sensorial 2 - Criança")
+            print("Instrumento base: Perfil Sensorial 2 - Criança")
             print("Domínios: 9 seções sensoriais")
             print(f"Questões (novas ou atualizadas): {resultado['total_questoes']}")
+            if resultado['instrumentos_adicionais']:
+                extras = ', '.join(inst.codigo for inst in resultado['instrumentos_adicionais'])
+                print(f"Instrumentos adicionais carregados: {extras}")
             print("=" * 80)
 
         except Exception as e:

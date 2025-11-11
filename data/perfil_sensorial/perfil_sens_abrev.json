@@ -1,0 +1,110 @@
+{
+  "codigo": "PERFIL_SENS_ABREV",
+  "nome": "Perfil Sensorial 2 - Questionário Abreviado (3-14 anos)",
+  "idade_minima": 3,
+  "idade_maxima": 14,
+  "contexto": "casa",
+  "dominios": [
+    {
+      "codigo": "AUDITIVO",
+      "nome": "Processamento Auditivo",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_ABREV_002",
+          "numero": 2,
+          "numero_global": 1,
+          "texto": "Ignora instruções verbais ou sons familiares.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ABREV_003",
+          "numero": 3,
+          "numero_global": 2,
+          "texto": "Reage de forma exagerada a ruídos (ex.: choro ou agitação).",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "VISUAL",
+      "nome": "Processamento Visual",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_ABREV_005",
+          "numero": 5,
+          "numero_global": 3,
+          "texto": "Desvia o olhar durante interações ou atividades.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ABREV_006",
+          "numero": 6,
+          "numero_global": 4,
+          "texto": "Fica fascinado(a) por movimentos visuais (ex.: ventiladores).",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "TATO",
+      "nome": "Processamento do Tato",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_ABREV_008",
+          "numero": 8,
+          "numero_global": 5,
+          "texto": "Reage negativamente a toques inesperados.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ABREV_009",
+          "numero": 9,
+          "numero_global": 6,
+          "texto": "Parece incomodado(a) com roupas ou mãos sujas.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "MOVIMENTOS",
+      "nome": "Processamento de Movimentos",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_ABREV_011",
+          "numero": 11,
+          "numero_global": 7,
+          "texto": "Evita atividades que envolvam movimento (ex.: balançar).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ABREV_012",
+          "numero": 12,
+          "numero_global": 8,
+          "texto": "Parece desajeitado(a) ao manipular objetos.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ABREV_013",
+          "numero": 13,
+          "numero_global": 9,
+          "texto": "Mostra inquietude ou hiperatividade.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ABREV_014",
+          "numero": 14,
+          "numero_global": 10,
+          "texto": "Parece apático(a) ou desinteressado(a).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_ABREV_015",
+          "numero": 15,
+          "numero_global": 11,
+          "texto": "Tem dificuldade em se acalmar em novos ambientes.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    }
+  ]
+}

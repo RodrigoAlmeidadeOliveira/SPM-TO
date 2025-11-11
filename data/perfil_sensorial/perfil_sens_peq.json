@@ -1,0 +1,605 @@
+{
+  "codigo": "PERFIL_SENS_PEQ",
+  "nome": "Perfil Sensorial 2 - Criança Pequena (7-35 meses)",
+  "idade_minima": 1,
+  "idade_maxima": 3,
+  "contexto": "casa",
+  "dominios": [
+    {
+      "codigo": "GERAL",
+      "nome": "Processamento Geral",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_PEQ_002",
+          "numero": 2,
+          "numero_global": 1,
+          "texto": "age de uma forma que interfere nas programações e planos da família.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_003",
+          "numero": 3,
+          "numero_global": 2,
+          "texto": "resiste em brincar ou não meio de outras crianças.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_004",
+          "numero": 4,
+          "numero_global": 3,
+          "texto": "leva mais tempo do que crianças da mesma idade para responder a perguntas ou ações.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_005",
+          "numero": 5,
+          "numero_global": 4,
+          "texto": "se afasta de situações.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_006",
+          "numero": 6,
+          "numero_global": 5,
+          "texto": "tem um padrão de sono imprevisível.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_007",
+          "numero": 7,
+          "numero_global": 6,
+          "texto": "tem um padrão de alimentação imprevisível.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_008",
+          "numero": 8,
+          "numero_global": 7,
+          "texto": "é desorganizado(a) frequentemente.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_009",
+          "numero": 9,
+          "numero_global": 8,
+          "texto": "não faz contato visual com cuidado durante interações no dia a dia.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_010",
+          "numero": 10,
+          "numero_global": 9,
+          "texto": "fica ansioso(a) em situações novas.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "AUDITIVO",
+      "nome": "Processamento Auditivo",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_PEQ_012",
+          "numero": 12,
+          "numero_global": 10,
+          "texto": "presta atenção apenas quando eu toco (e a audição é normal).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_013",
+          "numero": 13,
+          "numero_global": 11,
+          "texto": "por exemplo, cachorro latindo, crianças gritando).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_014",
+          "numero": 14,
+          "numero_global": 12,
+          "texto": "se distrai em condições barulhentas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_015",
+          "numero": 15,
+          "numero_global": 13,
+          "texto": "ignora sons, incluindo a minha voz.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_016",
+          "numero": 16,
+          "numero_global": 14,
+          "texto": "fica agitado(a) ou sons inesperados ou barulhos (por exemplo, sino).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_017",
+          "numero": 17,
+          "numero_global": 15,
+          "texto": "leva bastante tempo para responder ao próprio nome.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_002",
+          "numero": 2,
+          "numero_global": 49,
+          "texto": "para de prestar atenção em mim ou parece que não me ignora.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_003",
+          "numero": 3,
+          "numero_global": 50,
+          "texto": "tem dificuldade em concluir tarefas em uma condição barulhenta.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_004",
+          "numero": 4,
+          "numero_global": 51,
+          "texto": "fica angustiado(a) durante ruídos, embora ou outros grandes encontros.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_005",
+          "numero": 5,
+          "numero_global": 52,
+          "texto": "parece de incômodo, livrar-se de chão, portas batendo, anônimos.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_006",
+          "numero": 6,
+          "numero_global": 53,
+          "texto": "tem dificuldade em participar de atividades em grupo nas quais há muito barulho.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "VISUAL",
+      "nome": "Processamento Visual",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_PEQ_019",
+          "numero": 19,
+          "numero_global": 16,
+          "texto": "evita olhar para objetos brilhantes.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_020",
+          "numero": 20,
+          "numero_global": 17,
+          "texto": "se atrai por luzes brilhantes ou cores coloridas, em ritmo acelerado.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_021",
+          "numero": 21,
+          "numero_global": 18,
+          "texto": "se assusta com luzes brilhantes ou cores coloridas (por exemplo, ao se descordar de um ambiente interno a um externo).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_022",
+          "numero": 22,
+          "numero_global": 19,
+          "texto": "não se incomoda com luzes brilhantes do que outras crianças da mesma idade.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_023",
+          "numero": 23,
+          "numero_global": 20,
+          "texto": "empurra brincadeiras de colocação brilhante para longe de si.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_024",
+          "numero": 24,
+          "numero_global": 21,
+          "texto": "não responde à sua imagem no espelho.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_025",
+          "numero": 25,
+          "numero_global": 22,
+          "texto": "tem medo de Portraits brutas VISUAL.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_008",
+          "numero": 8,
+          "numero_global": 54,
+          "texto": "tem dificuldade para manter materiais e acessórios organizados para uso durante o dia.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_009",
+          "numero": 9,
+          "numero_global": 55,
+          "texto": "deixa itens em branco em uma folha de tarefas com muitas informações escritas, aparece de saber as respostas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_010",
+          "numero": 10,
+          "numero_global": 56,
+          "texto": "se desvia de tarefas para observar coisas ao redor da sala.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_011",
+          "numero": 11,
+          "numero_global": 57,
+          "texto": "não faz contato visual com durantes interações no dia a dia.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_012",
+          "numero": 12,
+          "numero_global": 58,
+          "texto": "parece incomodado(a) por computadores ou gráficos coloridos, em ritmo acelerado.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "TATO",
+      "nome": "Processamento do Tato",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_PEQ_027",
+          "numero": 27,
+          "numero_global": 23,
+          "texto": "resiste a ser abraçado.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_028",
+          "numero": 28,
+          "numero_global": 24,
+          "texto": "se incomoda ao se despir entre espaços com temperaturas muito diferentes (por exemplo, mais frio, mais morno).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_029",
+          "numero": 29,
+          "numero_global": 25,
+          "texto": "se afasta de tocar com superfícies ásperas, frias ou grudentes (por exemplo, carpete, bancadas).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_030",
+          "numero": 30,
+          "numero_global": 26,
+          "texto": "evita tocar em coisas, sem conseguir notar objetos ou pessoas ao caminho.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_031",
+          "numero": 31,
+          "numero_global": 27,
+          "texto": "remove roupas ou testa a vontade-las.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_032",
+          "numero": 32,
+          "numero_global": 28,
+          "texto": "gosta de brincar de espirrar água durante o banho ou na toalha.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_033",
+          "numero": 33,
+          "numero_global": 29,
+          "texto": "se incomoda se suas próprias roupas, mãos ou rosto estão sujos.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_034",
+          "numero": 34,
+          "numero_global": 30,
+          "texto": "demonstra ansiedade ao caminhar ou engatinhar em certas superfícies (por exemplo, grama, areia, carpete, azulejos).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_035",
+          "numero": 35,
+          "numero_global": 31,
+          "texto": "se afasta de toques inesperados.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_014",
+          "numero": 14,
+          "numero_global": 59,
+          "texto": "parece perceber quando seu rosto é molhado continuando sujos.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_015",
+          "numero": 15,
+          "numero_global": 60,
+          "texto": "evita a necessidade de tocar objetos, superfícies ou texturas (por exemplo, quer outro sensível de tudo ao redor).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_016",
+          "numero": 16,
+          "numero_global": 61,
+          "texto": "parece incomodado(a) com materiais que parecem estranhos à maioria das crianças (por exemplo, se abrange em algumas pontas).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_017",
+          "numero": 17,
+          "numero_global": 62,
+          "texto": "manipulações com pontas dos dedos para trabalhar em projetos que exigem manipulação.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_018",
+          "numero": 18,
+          "numero_global": 63,
+          "texto": "se esquiva de recuar quando seu corpo é tocado ou quando outras pessoas chegam muito perto.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "MOVIMENTOS",
+      "nome": "Processamento de Movimentos",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_PEQ_037",
+          "numero": 37,
+          "numero_global": 32,
+          "texto": "passeia de carro.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_038",
+          "numero": 38,
+          "numero_global": 33,
+          "texto": "se incomoda quando coloco de barriga para cima (por exemplo, para trocar).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_039",
+          "numero": 39,
+          "numero_global": 34,
+          "texto": "parece ter problemas para acidentes ou ser desastrado(a).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_040",
+          "numero": 40,
+          "numero_global": 35,
+          "texto": "reclama quando o movimento é alterado (por exemplo, ao caminhar, ao ser erguido).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_041",
+          "numero": 41,
+          "numero_global": 36,
+          "texto": "parece fora de equilíbrio em grupos com muitos movimentos (por exemplo, ao brincar).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_020",
+          "numero": 20,
+          "numero_global": 64,
+          "texto": "inicia com ou manipula objetos (por exemplo, lápis, cadernos, pastas) de maneira desajeitada.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_021",
+          "numero": 21,
+          "numero_global": 65,
+          "texto": "parece ser de forma organizada, entrar na posição, relaxa o corpo, aumenta-se ou estende-se na cadeira.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_022",
+          "numero": 22,
+          "numero_global": 66,
+          "texto": "embriaga em colas, sem conseguir notar objetos ou pessoas ao caminho.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_023",
+          "numero": 23,
+          "numero_global": 67,
+          "texto": "parece encontrar dificuldades para se aproximar de um professor.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_024",
+          "numero": 24,
+          "numero_global": 68,
+          "texto": "fica lento(a) para participar de tarefas ou atividades físicas em altas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_025",
+          "numero": 25,
+          "numero_global": 69,
+          "texto": "parece que estudantes da mesma idade.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_026",
+          "numero": 26,
+          "numero_global": 70,
+          "texto": "perde tempo, move-se lentamente, difícil do que necessário (por exemplo, lentidão).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_027",
+          "numero": 27,
+          "numero_global": 71,
+          "texto": "parece estar cansado(a) (por exemplo, não engaja, lentidão).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_028",
+          "numero": 28,
+          "numero_global": 72,
+          "texto": "parece desmotivado(a) ou desinteressado(a) em atividades.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_029",
+          "numero": 29,
+          "numero_global": 73,
+          "texto": "parece inquieto(a) ou hiperativo(a) (por exemplo, mexe-se muito).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_030",
+          "numero": 30,
+          "numero_global": 74,
+          "texto": "parece que incomoda quando as regras são quebradas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_031",
+          "numero": 31,
+          "numero_global": 75,
+          "texto": "faz birra.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_032",
+          "numero": 32,
+          "numero_global": 76,
+          "texto": "é muito apático e dependente.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_033",
+          "numero": 33,
+          "numero_global": 77,
+          "texto": "se acalma somente quando o seguem (no colo).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_034",
+          "numero": 34,
+          "numero_global": 78,
+          "texto": "mostra inquietude ou irritabilidade.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_035",
+          "numero": 35,
+          "numero_global": 79,
+          "texto": "se incomoda com novos ambientes.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_036",
+          "numero": 36,
+          "numero_global": 80,
+          "texto": "fica incomodado(a) em novos ambientes que se torna difícil de acalma-lo(a).",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "ORAL",
+      "nome": "Processamento de Sensibilidade Oral",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_PEQ_043",
+          "numero": 43,
+          "numero_global": 37,
+          "texto": "baba.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_044",
+          "numero": 44,
+          "numero_global": 38,
+          "texto": "prefere uma textura de alimentos (por exemplo, macio, crocante).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_045",
+          "numero": 45,
+          "numero_global": 39,
+          "texto": "bebe para se acalmar.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_046",
+          "numero": 46,
+          "numero_global": 40,
+          "texto": "tem ansiedade ao vomitar com alimentos ou bebidas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_047",
+          "numero": 47,
+          "numero_global": 41,
+          "texto": "mantém a comida nas bochechas antes de engolir.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_048",
+          "numero": 48,
+          "numero_global": 42,
+          "texto": "apresenta dificuldade na transição do leite materno para a alimentação sólida.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_049",
+          "numero": 49,
+          "numero_global": 43,
+          "texto": "faz birra.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_050",
+          "numero": 50,
+          "numero_global": 44,
+          "texto": "é muito apático e dependente.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_051",
+          "numero": 51,
+          "numero_global": 45,
+          "texto": "se acalma somente quando o seguem (no colo).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_052",
+          "numero": 52,
+          "numero_global": 46,
+          "texto": "mostra inquietude ou irritabilidade.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_053",
+          "numero": 53,
+          "numero_global": 47,
+          "texto": "se incomoda com novos ambientes.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_PEQ_054",
+          "numero": 54,
+          "numero_global": 48,
+          "texto": "fica incomodado(a) em novos ambientes que se torna difícil de acalma-lo(a).",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    }
+  ]
+}

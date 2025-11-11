@@ -1,0 +1,367 @@
+{
+  "codigo": "PERFIL_SENS_BEBE",
+  "nome": "Perfil Sensorial 2 - Bebê (0-6 meses)",
+  "idade_minima": 0,
+  "idade_maxima": 1,
+  "contexto": "casa",
+  "dominios": [
+    {
+      "codigo": "GERAL",
+      "nome": "Processamento Geral",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_BEBE_002",
+          "numero": 2,
+          "numero_global": 1,
+          "texto": "Não parece se sentir entrosado ou saindo do conforto em relação aos planos da família.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_003",
+          "numero": 3,
+          "numero_global": 2,
+          "texto": "A criança da mesma rotina para permanecer satisfeita(o) ou calma(o).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_004",
+          "numero": 4,
+          "numero_global": 3,
+          "texto": "A criança leva mais tempo do que crianças da mesma idade para responder a perguntas ou ações.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_005",
+          "numero": 5,
+          "numero_global": 4,
+          "texto": "A criança parece desorganizada frequentemente.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_006",
+          "numero": 6,
+          "numero_global": 5,
+          "texto": "A criança tem um padrão de sono imprevisível.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_007",
+          "numero": 7,
+          "numero_global": 6,
+          "texto": "A criança tem um padrão de alimentação imprevisível.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_008",
+          "numero": 8,
+          "numero_global": 7,
+          "texto": "A criança presta atenção apenas se eu falar alto.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "AUDITIVO",
+      "nome": "Processamento Auditivo",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_BEBE_010",
+          "numero": 10,
+          "numero_global": 8,
+          "texto": "A criança me ignora quando estou falando.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_011",
+          "numero": 11,
+          "numero_global": 9,
+          "texto": "A criança presta atenção apenas quando eu toco (e a audição é normal).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_012",
+          "numero": 12,
+          "numero_global": 10,
+          "texto": "A criança se incomoda com sons contínuos (por exemplo, conversas ou brinquedos sonoros).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_002",
+          "numero": 2,
+          "numero_global": 21,
+          "texto": "Para de prestar atenção em mim ou parece que não me ignora.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_003",
+          "numero": 3,
+          "numero_global": 22,
+          "texto": "Tem dificuldade em concluir tarefas em uma condição barulhenta.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_004",
+          "numero": 4,
+          "numero_global": 23,
+          "texto": "Fica angustiado(a) durante ruídos, embora ou outros grandes encontros.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_005",
+          "numero": 5,
+          "numero_global": 24,
+          "texto": "Parece de incômodo, livrar-se de chão, portas batendo, anônimos.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_006",
+          "numero": 6,
+          "numero_global": 25,
+          "texto": "Tem dificuldade em participar de atividades em grupo nas quais há muito barulho.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "VISUAL",
+      "nome": "Processamento Visual",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_BEBE_014",
+          "numero": 14,
+          "numero_global": 11,
+          "texto": "A criança desvia o olhar de brinquedos ou objetos brilhantes com o som.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_015",
+          "numero": 15,
+          "numero_global": 12,
+          "texto": "A criança presta bastante atenção a objetos ou pessoas no caminho.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_016",
+          "numero": 16,
+          "numero_global": 13,
+          "texto": "A criança parece incomodada por luzes brilhantes ou cores coloridas, em ritmo acelerado.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_008",
+          "numero": 8,
+          "numero_global": 26,
+          "texto": "Tem dificuldade para manter materiais e acessórios organizados para uso durante o dia.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_009",
+          "numero": 9,
+          "numero_global": 27,
+          "texto": "Deixa itens em branco em uma folha de tarefas com muitas informações escritas, aparece de saber as respostas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_010",
+          "numero": 10,
+          "numero_global": 28,
+          "texto": "Se desvia de tarefas para observar coisas ao redor da sala.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_011",
+          "numero": 11,
+          "numero_global": 29,
+          "texto": "Não faz contato visual com durantes interações no dia a dia.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_012",
+          "numero": 12,
+          "numero_global": 30,
+          "texto": "Parece incomodado(a) por computadores ou gráficos coloridos, em ritmo acelerado.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "TATO",
+      "nome": "Processamento do Tato",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_BEBE_018",
+          "numero": 18,
+          "numero_global": 14,
+          "texto": "A criança se incomoda ao se despir entre espaços com temperaturas muito diferentes.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_019",
+          "numero": 19,
+          "numero_global": 15,
+          "texto": "A criança parece perceber diferenças de textura (por exemplo, na grama, em tapetes, ou cobertor).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_020",
+          "numero": 20,
+          "numero_global": 16,
+          "texto": "A criança evita tocar objetos, superfícies ou texturas (por exemplo, quer outro sensível de tudo ao redor).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_014",
+          "numero": 14,
+          "numero_global": 31,
+          "texto": "Parece perceber quando seu rosto é molhado continuando sujos.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_015",
+          "numero": 15,
+          "numero_global": 32,
+          "texto": "Evita a necessidade de tocar objetos, superfícies ou texturas (por exemplo, quer outro sensível de tudo ao redor).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_016",
+          "numero": 16,
+          "numero_global": 33,
+          "texto": "Parece incomodado(a) com materiais que parecem estranhos à maioria das crianças (por exemplo, se abrange em algumas pontas).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_017",
+          "numero": 17,
+          "numero_global": 34,
+          "texto": "Manipulações com pontas dos dedos para trabalhar em projetos que exigem manipulação.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_018",
+          "numero": 18,
+          "numero_global": 35,
+          "texto": "Se esquiva de recuar quando seu corpo é tocado ou quando outras pessoas chegam muito perto.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "MOVIMENTOS",
+      "nome": "Processamento de Movimentos",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_BEBE_022",
+          "numero": 22,
+          "numero_global": 17,
+          "texto": "A criança chora ou reclama quando está sendo colocada ou segurada no colo.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_023",
+          "numero": 23,
+          "numero_global": 18,
+          "texto": "A criança parece fora de equilíbrio em grupos com muitos movimentos (por exemplo, ao brincar).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_024",
+          "numero": 24,
+          "numero_global": 19,
+          "texto": "A criança parece ter problemas para acidentes ou ser desastrado(a).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_020",
+          "numero": 20,
+          "numero_global": 36,
+          "texto": "Inicia com ou manipula objetos (por exemplo, lápis, cadernos, pastas) de maneira desajeitada.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_021",
+          "numero": 21,
+          "numero_global": 37,
+          "texto": "Parece ser de forma organizada, entrar na posição, relaxa o corpo, aumenta-se ou estende-se na cadeira.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_022",
+          "numero": 22,
+          "numero_global": 38,
+          "texto": "Embriaga em colas, sem conseguir notar objetos ou pessoas ao caminho.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_023",
+          "numero": 23,
+          "numero_global": 39,
+          "texto": "Parece encontrar dificuldades para se aproximar de um professor.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_024",
+          "numero": 24,
+          "numero_global": 40,
+          "texto": "Fica lento(a) para participar de tarefas ou atividades físicas em altas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_025",
+          "numero": 25,
+          "numero_global": 41,
+          "texto": "Parece que estudantes da mesma idade.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_026",
+          "numero": 26,
+          "numero_global": 42,
+          "texto": "Perde tempo, move-se lentamente, difícil do que necessário (por exemplo, lentidão).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_027",
+          "numero": 27,
+          "numero_global": 43,
+          "texto": "Parece estar cansado(a) (por exemplo, não engaja, lentidão).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_028",
+          "numero": 28,
+          "numero_global": 44,
+          "texto": "Parece desmotivado(a) ou desinteressado(a) em atividades.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_029",
+          "numero": 29,
+          "numero_global": 45,
+          "texto": "Parece inquieto(a) ou hiperativo(a) (por exemplo, mexe-se muito).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_BEBE_030",
+          "numero": 30,
+          "numero_global": 46,
+          "texto": "Parece que incomoda quando as regras são quebradas.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "ORAL",
+      "nome": "Processamento de Sensibilidade Oral",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_BEBE_026",
+          "numero": 26,
+          "numero_global": 20,
+          "texto": "A criança baba.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    }
+  ]
+}

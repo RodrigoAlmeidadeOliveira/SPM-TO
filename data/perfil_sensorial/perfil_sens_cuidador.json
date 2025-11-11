@@ -1,0 +1,215 @@
+{
+  "codigo": "PERFIL_SENS_CUIDADOR",
+  "nome": "Perfil Sensorial 2 - Questionário do Cuidador (3-14 anos)",
+  "idade_minima": 3,
+  "idade_maxima": 14,
+  "contexto": "casa",
+  "dominios": [
+    {
+      "codigo": "AUDITIVO",
+      "nome": "Processamento Auditivo",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_002",
+          "numero": 2,
+          "numero_global": 1,
+          "texto": "Para de prestar atenção ou parece ignorar instruções faladas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_003",
+          "numero": 3,
+          "numero_global": 2,
+          "texto": "Tem dificuldade em completar tarefas em ambientes barulhentos.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_004",
+          "numero": 4,
+          "numero_global": 3,
+          "texto": "Fica angustiado(a) com ruídos altos ou inesperados.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_005",
+          "numero": 5,
+          "numero_global": 4,
+          "texto": "Parece incomodado(a) com sons como portas batendo ou barulho de fundo.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_006",
+          "numero": 6,
+          "numero_global": 5,
+          "texto": "Tem dificuldade em participar de atividades em grupo com muito barulho.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "VISUAL",
+      "nome": "Processamento Visual",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_008",
+          "numero": 8,
+          "numero_global": 6,
+          "texto": "Tem dificuldade em manter materiais organizados durante o dia.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_009",
+          "numero": 9,
+          "numero_global": 7,
+          "texto": "Deixa itens em branco em tarefas escritas, mesmo sabendo as respostas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_010",
+          "numero": 10,
+          "numero_global": 8,
+          "texto": "Se distrai olhando ao redor durante atividades.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_011",
+          "numero": 11,
+          "numero_global": 9,
+          "texto": "Evita contato visual durante interações.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_012",
+          "numero": 12,
+          "numero_global": 10,
+          "texto": "Parece incomodado(a) com luzes brilhantes ou gráficos em movimento.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "TATO",
+      "nome": "Processamento do Tato",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_014",
+          "numero": 14,
+          "numero_global": 11,
+          "texto": "Parece notar quando o rosto ou mãos estão sujos.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_015",
+          "numero": 15,
+          "numero_global": 12,
+          "texto": "Evita tocar objetos ou superfícies diferentes.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_016",
+          "numero": 16,
+          "numero_global": 13,
+          "texto": "Reage negativamente a materiais incomuns para outras crianças.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_017",
+          "numero": 17,
+          "numero_global": 14,
+          "texto": "Usa apenas as pontas dos dedos para manipular objetos.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_018",
+          "numero": 18,
+          "numero_global": 15,
+          "texto": "Se esquiva de toques ou proximidade com outras pessoas.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    },
+    {
+      "codigo": "MOVIMENTOS",
+      "nome": "Processamento de Movimentos",
+      "questoes": [
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_020",
+          "numero": 20,
+          "numero_global": 16,
+          "texto": "Manipula objetos de forma desajeitada (ex.: lápis, brinquedos).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_021",
+          "numero": 21,
+          "numero_global": 17,
+          "texto": "Parece desorganizado(a) ao sentar ou mover o corpo.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_022",
+          "numero": 22,
+          "numero_global": 18,
+          "texto": "Esbarra em objetos ou pessoas sem perceber.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_023",
+          "numero": 23,
+          "numero_global": 19,
+          "texto": "Tem dificuldade em se aproximar de adultos ou colegas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_024",
+          "numero": 24,
+          "numero_global": 20,
+          "texto": "É lento(a) para participar de atividades físicas.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_025",
+          "numero": 25,
+          "numero_global": 21,
+          "texto": "Parece menos coordenado(a) que outras crianças da mesma idade.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_026",
+          "numero": 26,
+          "numero_global": 22,
+          "texto": "Perde tempo ou se move lentamente sem necessidade.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_027",
+          "numero": 27,
+          "numero_global": 23,
+          "texto": "Parece cansado(a) ou desengajado(a).",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_028",
+          "numero": 28,
+          "numero_global": 24,
+          "texto": "Mostra desinteresse ou desmotivação em atividades.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_029",
+          "numero": 29,
+          "numero_global": 25,
+          "texto": "Apresenta inquietude ou hiperatividade.",
+          "icone": "SEM_QUADRANTE"
+        },
+        {
+          "codigo": "PERFIL_SENS_CUIDADOR_030",
+          "numero": 30,
+          "numero_global": 26,
+          "texto": "Reage mal quando as regras são quebradas.",
+          "icone": "SEM_QUADRANTE"
+        }
+      ]
+    }
+  ]
+}
