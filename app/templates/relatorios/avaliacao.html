@@ -80,27 +80,49 @@
     {% if avaliacao.status == 'concluida' %}
     <!-- Gráficos -->
     <div class="row mb-4">
-        {% if grafico_radar %}
+        {% if grafico_radar or grafico_radar_img %}
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-info text-white">
                     <h5><i class="fas fa-chart-area"></i> Perfil Sensorial</h5>
                 </div>
                 <div class="card-body">
-                    {{ grafico_radar|safe }}
+                    {% if grafico_radar %}
+                    <div class="d-print-none">
+                        {{ grafico_radar|safe }}
+                    </div>
+                    {% endif %}
+                    {% if grafico_radar_img %}
+                    <div class="d-none d-print-block text-center">
+                        <img src="data:image/png;base64,{{ grafico_radar_img }}"
+                             alt="Gráfico radar"
+                             class="img-fluid">
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% endif %}
 
-        {% if grafico_barras %}
+        {% if grafico_barras or grafico_barras_img %}
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-warning text-dark">
                     <h5><i class="fas fa-chart-bar"></i> Escores por Domínio</h5>
                 </div>
                 <div class="card-body">
-                    {{ grafico_barras|safe }}
+                    {% if grafico_barras %}
+                    <div class="d-print-none">
+                        {{ grafico_barras|safe }}
+                    </div>
+                    {% endif %}
+                    {% if grafico_barras_img %}
+                    <div class="d-none d-print-block text-center">
+                        <img src="data:image/png;base64,{{ grafico_barras_img }}"
+                             alt="Gráfico de barras"
+                             class="img-fluid">
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

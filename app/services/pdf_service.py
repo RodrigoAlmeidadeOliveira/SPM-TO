@@ -10,6 +10,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
 from datetime import datetime
+from app.services.grafico_service import GraficoService
 
 
 class PDFService:
@@ -61,6 +62,15 @@ class PDFService:
             textColor=colors.HexColor('#34495e'),
             spaceAfter=12,
             spaceBefore=20
+        )
+
+        grafico_titulo_style = ParagraphStyle(
+            'GraphTitle',
+            parent=styles['Heading3'],
+            fontSize=12,
+            textColor=colors.HexColor('#2c3e50'),
+            spaceBefore=12,
+            spaceAfter=6
         )
 
         # Cabeçalho
@@ -133,6 +143,27 @@ class PDFService:
         if avaliacao.status == 'concluida':
             story.append(PageBreak())
             story.append(Paragraph("RESULTADOS", subtitulo_style))
+
+            grafico_radar_dados = GraficoService.obter_grafico_radar(
+                avaliacao,
+                incluir_html=False,
+                incluir_png=True
+            )
+            grafico_barras_dados = GraficoService.obter_grafico_barras(
+                avaliacao,
+                incluir_html=False,
+                incluir_png=True
+            )
+
+            if grafico_radar_dados.get('png_bytes'):
+                story.append(Paragraph("Perfil Sensorial", grafico_titulo_style))
+                story.append(Image(BytesIO(grafico_radar_dados['png_bytes']), width=14*cm, height=9*cm))
+                story.append(Spacer(1, 0.3*cm))
+
+            if grafico_barras_dados.get('png_bytes'):
+                story.append(Paragraph("Escores por Domínio", grafico_titulo_style))
+                story.append(Image(BytesIO(grafico_barras_dados['png_bytes']), width=14*cm, height=9*cm))
+                story.append(Spacer(1, 0.5*cm))
 
             # Tabela de escores
             dados_escores = [

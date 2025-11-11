@@ -122,6 +122,16 @@ Em outro terminal:
 fly logs -a spm-to
 ```
 
+### Passo 6.1: Atualizar Dependências (inclui Kaleido para PDFs)
+
+Após o deploy, garanta que todas as bibliotecas — especialmente o `kaleido`, necessário para gerar os gráficos em PDF — estejam instaladas dentro da instância Fly:
+
+```bash
+fly ssh console -a spm-to -C "pip install --no-cache-dir -r requirements.txt"
+```
+
+> 💡 Execute este comando sempre que adicionar novas dependências ao `requirements.txt`, principalmente antes de gerar relatórios em PDF.
+
 ## Passo 7: Inicializar o Banco de Dados
 
 Após o deploy bem-sucedido, você precisa inicializar o banco de dados.

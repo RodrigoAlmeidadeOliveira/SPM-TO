@@ -59,17 +59,20 @@ info "Nome da aplicação: $APP_NAME"
 
 # Verificar se app já existe
 if fly apps list | grep -q "$APP_NAME"; then
-    warn "Aplicação $APP_NAME já existe!"
-    read -p "Deseja fazer apenas um redeploy? (s/N): " REDEPLOY
+        warn "Aplicação $APP_NAME já existe!"
+        read -p "Deseja fazer apenas um redeploy? (s/N): " REDEPLOY
 
-    if [[ "$REDEPLOY" =~ ^[Ss]$ ]]; then
-        info "Fazendo redeploy..."
-        fly deploy -a "$APP_NAME"
-        info "Deploy concluído!"
-        info "Acesse: https://${APP_NAME}.fly.dev"
-        exit 0
-    else
-        error "Deploy cancelado. Use outro nome de aplicação."
+        if [[ "$REDEPLOY" =~ ^[Ss]$ ]]; then
+            info "Fazendo redeploy..."
+            fly deploy -a "$APP_NAME"
+            info "Garantindo dependências atualizadas (incluindo suporte a gráficos/PDFs)..."
+            fly ssh console -a "$APP_NAME" -C "pip install --no-cache-dir -r requirements.txt"
+            info "Dependências atualizadas com sucesso!"
+            info "Deploy concluído!"
+            info "Acesse: https://${APP_NAME}.fly.dev"
+            exit 0
+        else
+            error "Deploy cancelado. Use outro nome de aplicação."
         exit 1
     fi
 fi
@@ -121,6 +124,9 @@ fi
 echo ""
 info "Iniciando deploy..."
 fly deploy -a "$APP_NAME"
+info "Instalando dependências na instância (inclui Kaleido para PDFs)..."
+fly ssh console -a "$APP_NAME" -C "pip install --no-cache-dir -r requirements.txt"
+info "Dependências atualizadas!"
 
 # Inicializar banco de dados
 echo ""

@@ -1,9 +1,6 @@
-"""
-Serviço de Geração de Gráficos
-Cria gráficos de evolução usando Plotly
-"""
+"""Serviço de geração de gráficos usando Plotly."""
+import base64
 import plotly.graph_objects as go
-import plotly.express as px
 from plotly.subplots import make_subplots
 
 
@@ -122,16 +119,8 @@ class GraficoService:
         return fig.to_html(full_html=False, include_plotlyjs='cdn')
 
     @staticmethod
-    def criar_grafico_radar(avaliacao):
-        """
-        Cria gráfico radar (aranha) dos domínios de uma avaliação
-
-        Args:
-            avaliacao: Instância de Avaliacao
-
-        Returns:
-            str: HTML do gráfico Plotly
-        """
+    def _montar_figura_radar(avaliacao):
+        """Cria o objeto Figure do gráfico radar."""
         dominios_info = [
             ('SOC', 'Participação Social', avaliacao.escore_soc),
             ('VIS', 'Visão', avaliacao.escore_vis),
@@ -143,11 +132,10 @@ class GraficoService:
             ('OLF', 'Olfato e Paladar', avaliacao.escore_olf)
         ]
 
-        # Filtrar apenas domínios com dados
         categorias = []
         valores = []
 
-        for codigo, nome, escore in dominios_info:
+        for _, nome, escore in dominios_info:
             if escore is not None:
                 categorias.append(nome)
                 valores.append(escore)
@@ -156,7 +144,6 @@ class GraficoService:
             return None
 
         fig = go.Figure()
-
         fig.add_trace(go.Scatterpolar(
             r=valores,
             theta=categorias,
@@ -177,20 +164,11 @@ class GraficoService:
             title=f"Perfil Sensorial - {avaliacao.paciente.nome}",
             height=500
         )
-
-        return fig.to_html(full_html=False, include_plotlyjs='cdn')
+        return fig
 
     @staticmethod
-    def criar_grafico_barras_comparativo(avaliacao):
-        """
-        Cria gráfico de barras comparando escores com faixas de referência
-
-        Args:
-            avaliacao: Instância de Avaliacao
-
-        Returns:
-            str: HTML do gráfico Plotly
-        """
+    def _montar_figura_barras(avaliacao):
+        """Cria o objeto Figure para o gráfico de barras comparativo."""
         dominios_info = [
             ('Participação Social', avaliacao.escore_soc, avaliacao.classificacao_soc),
             ('Visão', avaliacao.escore_vis, avaliacao.classificacao_vis),
@@ -201,11 +179,9 @@ class GraficoService:
             ('Planejamento e Ideação', avaliacao.escore_pla, avaliacao.classificacao_pla)
         ]
 
-        # Se tem OLF, adicionar
         if avaliacao.escore_olf is not None:
             dominios_info.insert(3, ('Olfato e Paladar', avaliacao.escore_olf, avaliacao.classificacao_olf))
 
-        # Filtrar domínios com dados
         categorias = []
         valores = []
         cores = []
@@ -214,19 +190,19 @@ class GraficoService:
             if escore is not None:
                 categorias.append(nome)
                 valores.append(escore)
-
-                # Definir cor baseada na classificação
                 if classificacao == 'TIPICO':
-                    cores.append('#2ecc71')  # Verde
+                    cores.append('#2ecc71')
                 elif classificacao == 'PROVAVEL_DISFUNCAO':
-                    cores.append('#f39c12')  # Amarelo
+                    cores.append('#f39c12')
                 elif classificacao == 'DISFUNCAO_DEFINITIVA':
-                    cores.append('#e74c3c')  # Vermelho
+                    cores.append('#e74c3c')
                 else:
-                    cores.append('#95a5a6')  # Cinza
+                    cores.append('#95a5a6')
+
+        if not valores:
+            return None
 
         fig = go.Figure()
-
         fig.add_trace(go.Bar(
             x=categorias,
             y=valores,
@@ -240,10 +216,48 @@ class GraficoService:
             xaxis_title="Domínios",
             yaxis_title="Escore Bruto",
             height=500,
-            showlegend=False
+            showlegend=False,
+            margin=dict(l=40, r=40, t=70, b=120)
         )
+        return fig
 
-        # Adicionar linhas de referência (exemplo)
-        # Você pode adicionar linhas horizontais para mostrar thresholds
+    @staticmethod
+    def _gerar_dados_figura(figura, incluir_html=True, incluir_png=True):
+        """Converte uma figura plotly em representações reutilizáveis."""
+        if figura is None:
+            return {}
 
-        return fig.to_html(full_html=False, include_plotlyjs='cdn')
+        dados = {}
+        if incluir_html:
+            dados['html'] = figura.to_html(full_html=False, include_plotlyjs='cdn')
+
+        if incluir_png:
+            png_bytes = figura.to_image(format='png', scale=2)
+            dados['png_bytes'] = png_bytes
+            dados['png_base64'] = base64.b64encode(png_bytes).decode('utf-8')
+
+        return dados
+
+    @staticmethod
+    def obter_grafico_radar(avaliacao, incluir_html=True, incluir_png=True):
+        """Retorna diferentes formatos do gráfico radar."""
+        figura = GraficoService._montar_figura_radar(avaliacao)
+        return GraficoService._gerar_dados_figura(figura, incluir_html, incluir_png)
+
+    @staticmethod
+    def obter_grafico_barras(avaliacao, incluir_html=True, incluir_png=True):
+        """Retorna diferentes formatos do gráfico de barras comparativo."""
+        figura = GraficoService._montar_figura_barras(avaliacao)
+        return GraficoService._gerar_dados_figura(figura, incluir_html, incluir_png)
+
+    @staticmethod
+    def criar_grafico_radar(avaliacao):
+        """Mantém compatibilidade retornando apenas o HTML do gráfico radar."""
+        dados = GraficoService.obter_grafico_radar(avaliacao, incluir_html=True, incluir_png=False)
+        return dados.get('html')
+
+    @staticmethod
+    def criar_grafico_barras_comparativo(avaliacao):
+        """Mantém compatibilidade retornando apenas o HTML do gráfico de barras."""
+        dados = GraficoService.obter_grafico_barras(avaliacao, incluir_html=True, incluir_png=False)
+        return dados.get('html')

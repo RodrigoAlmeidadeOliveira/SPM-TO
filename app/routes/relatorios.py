@@ -23,15 +23,24 @@ def avaliacao(id):
     # Gerar gráficos
     grafico_radar = None
     grafico_barras = None
+    grafico_radar_img = None
+    grafico_barras_img = None
 
     if avaliacao_obj.status == 'concluida':
-        grafico_radar = GraficoService.criar_grafico_radar(avaliacao_obj)
-        grafico_barras = GraficoService.criar_grafico_barras_comparativo(avaliacao_obj)
+        dados_radar = GraficoService.obter_grafico_radar(avaliacao_obj)
+        dados_barras = GraficoService.obter_grafico_barras(avaliacao_obj)
+
+        grafico_radar = dados_radar.get('html')
+        grafico_barras = dados_barras.get('html')
+        grafico_radar_img = dados_radar.get('png_base64')
+        grafico_barras_img = dados_barras.get('png_base64')
 
     return render_template('relatorios/avaliacao.html',
                           avaliacao=avaliacao_obj,
                           grafico_radar=grafico_radar,
-                          grafico_barras=grafico_barras)
+                          grafico_barras=grafico_barras,
+                          grafico_radar_img=grafico_radar_img,
+                          grafico_barras_img=grafico_barras_img)
 
 
 @relatorios_bp.route('/avaliacao/<int:id>/pdf')
