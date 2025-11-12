@@ -11,6 +11,7 @@ from app.services.classificacao_service import ClassificacaoService
 from app.services.modulos_service import ModulosService
 from app.services.permission_service import PermissionService
 from app.utils.decorators import can_view_avaliacao, can_edit_avaliacao
+from app.utils.schema_utils import questao_has_column
 from sqlalchemy import func
 from datetime import datetime
 
@@ -314,7 +315,7 @@ def responder(id):
 
     # Configurar opções dinamicamente conforme o instrumento
     opcao_descricoes = dict(RespostaForm.DEFAULT_DESCRIPTIONS)
-    opcoes_customizadas = questao_atual.opcoes_resposta
+    opcoes_customizadas = questao_atual.opcoes_resposta if questao_has_column('opcoes_resposta') else None
     if isinstance(opcoes_customizadas, (list, tuple)) and opcoes_customizadas:
         choices = []
         descricoes = {}

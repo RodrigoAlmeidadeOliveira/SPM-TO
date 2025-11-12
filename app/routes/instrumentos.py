@@ -8,6 +8,7 @@ from sqlalchemy import or_, func
 from app import db
 from app.forms import InstrumentoForm, DominioForm, QuestaoForm, TabelaReferenciaForm
 from app.models import Instrumento, Dominio, Questao, TabelaReferencia
+from app.utils.schema_utils import questao_has_column
 
 instrumentos_bp = Blueprint('instrumentos', __name__)
 CONTEXTOS_PERMITIDOS = {'casa', 'escola', 'clinica', 'hospital', 'geral', 'comunidade'}
@@ -243,18 +244,21 @@ def nova_questao(dominio_id):
         elif existente_global:
             form.numero_global.errors.append('Já existe uma questão com este número global para o instrumento.')
         else:
+            opcoes_resposta_padrao = ESCALA_PADRAO_PERFIL if questao_has_column('opcoes_resposta') else None
+            metadados_info = {
+                'numero': numero,
+                'icone': form.icone.data,
+                'secao': dominio.codigo
+            } if questao_has_column('metadados') else None
+
             questao = Questao(
                 dominio_id=dominio.id,
                 numero=numero,
                 numero_global=numero_global,
                 texto=form.texto.data.strip(),
                 ativo=form.ativo.data,
-                opcoes_resposta=ESCALA_PADRAO_PERFIL,
-                metadados={
-                    'numero': numero,
-                    'icone': form.icone.data,
-                    'secao': dominio.codigo
-                }
+                opcoes_resposta=opcoes_resposta_padrao,
+                metadados=metadados_info
             )
             db.session.add(questao)
             db.session.commit()
@@ -280,7 +284,8 @@ def editar_questao(questao_id):
     instrumento = dominio.instrumento
     form = QuestaoForm(obj=questao)
     if request.method == 'GET':
-        form.icone.data = questao.metadados.get('icone', 'SEM_QUADRANTE') if questao.metadados else 'SEM_QUADRANTE'
+        metadados_existente = questao.metadados if questao_has_column('metadados') else None
+        form.icone.data = metadados_existente.get('icone', 'SEM_QUADRANTE') if metadados_existente else 'SEM_QUADRANTE'
 
     if form.validate_on_submit():
         numero = form.numero.data
@@ -305,12 +310,14 @@ def editar_questao(questao_id):
             questao.numero_global = numero_global
             questao.texto = form.texto.data.strip()
             questao.ativo = form.ativo.data
-            questao.opcoes_resposta = questao.opcoes_resposta or ESCALA_PADRAO_PERFIL
-            questao.metadados = {
-                'numero': numero,
-                'icone': form.icone.data,
-                'secao': dominio.codigo
-            }
+            if questao_has_column('opcoes_resposta'):
+                questao.opcoes_resposta = questao.opcoes_resposta or ESCALA_PADRAO_PERFIL
+            if questao_has_column('metadados'):
+                questao.metadados = {
+                    'numero': numero,
+                    'icone': form.icone.data,
+                    'secao': dominio.codigo
+                }
 
             db.session.commit()
             flash('Questão atualizada com sucesso!', 'success')
