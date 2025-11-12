@@ -2,9 +2,34 @@
 Script para popular o banco de dados com instrumentos, questões e tabelas de referência das planilhas SPM
 """
 import openpyxl
+import re
 from pathlib import Path
 from app import db
 from app.models import Instrumento, Dominio, Questao, TabelaReferencia, PlanoTemplateItem
+
+
+_ENTRADA_REF_RE = re.compile(
+    r"(?:'Entrada de Dados'|Entrada de Dados|\"Entrada de Dados\")!\$?([A-Z]+)\$?(\d+)",
+    re.IGNORECASE
+)
+
+
+def _resolver_texto_formula(texto, entrada_ws):
+    """Extrai o valor da célula referenciada por uma fórmula do Plano."""
+    if not entrada_ws or not texto or not isinstance(texto, str):
+        return None
+
+    match = _ENTRADA_REF_RE.search(texto)
+    if not match:
+        return None
+
+    coluna, linha = match.groups()
+    referencia = f"{coluna.upper()}{linha}"
+    celula = entrada_ws[referencia]
+    valor = celula.value if celula else None
+    if isinstance(valor, str):
+        return valor.strip()
+    return valor
 
 
 def seed_database():
@@ -232,22 +257,30 @@ def extrair_plano_planilha(planilha_path, instrumento, dominios_criados):
         instrumento: Instância de Instrumento
         dominios_criados: Lista de domínios associados ao instrumento
     """
-    wb = openpyxl.load_workbook(planilha_path)
+    wb_values = openpyxl.load_workbook(planilha_path, data_only=True)
+    wb_formulas = openpyxl.load_workbook(planilha_path, data_only=False)
 
-    if 'Plano' not in wb.sheetnames:
+    if 'Plano' not in wb_formulas.sheetnames:
         print("    AVISO: Planilha não possui aba 'Plano'")
         return
 
-    ws = wb['Plano']
+    ws_formulas = wb_formulas['Plano']
+    entrada_ws = wb_values['Entrada de Dados'] if 'Entrada de Dados' in wb_values.sheetnames else None
 
     dominios_por_nome = {d.nome.lower(): d for d in dominios_criados}
     dominio_atual = None
     ordem = 1
 
-    for row in ws.iter_rows(min_row=3, values_only=True):
-        texto = row[2] if len(row) >= 3 else None
+    for row in ws_formulas.iter_rows(min_row=3):
+        cell = row[2] if len(row) >= 3 else None
+        texto = cell.value if cell else None
         if not texto or not isinstance(texto, str):
             continue
+
+        if texto.startswith('='):
+            resolvido = _resolver_texto_formula(texto, entrada_ws)
+            if resolvido:
+                texto = resolvido
 
         texto = texto.strip()
         if not texto:
