@@ -372,7 +372,6 @@ def responder(id):
                 CalculoService.atualizar_escores_avaliacao(avaliacao)
                 ClassificacaoService.classificar_avaliacao(avaliacao)
                 flash('Resposta atualizada! Resultados recalculados.', 'success')
-                return redirect(url_for('avaliacoes.responder', id=id, q=questao_idx))
 
             # Verificar se é a última questão
             if questao_idx == len(questoes) - 1:

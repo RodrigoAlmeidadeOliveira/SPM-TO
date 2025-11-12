@@ -91,7 +91,11 @@ class ModulosService:
     @staticmethod
     def criar_scores_spm_casa(avaliacao):
         """Monta os escores de referência e do paciente para o SPM - Casa."""
-        if not avaliacao or not avaliacao.instrumento or not avaliacao.instrumento.codigo.startswith('PERFIL_SENS'):
+        if not avaliacao or not avaliacao.instrumento:
+            return None
+
+        codigo_instrumento = avaliacao.instrumento.codigo.upper() if avaliacao.instrumento.codigo else ''
+        if not codigo_instrumento.startswith('SPM'):
             return None
 
         dominios_ordem = ModulosService.SCORES_SPM_DOMINIOS
