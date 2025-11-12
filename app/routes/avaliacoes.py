@@ -314,10 +314,11 @@ def responder(id):
 
     # Configurar opções dinamicamente conforme o instrumento
     opcao_descricoes = dict(RespostaForm.DEFAULT_DESCRIPTIONS)
-    if questao_atual.opcoes_resposta:
+    opcoes_customizadas = questao_atual.opcoes_resposta
+    if isinstance(opcoes_customizadas, (list, tuple)) and opcoes_customizadas:
         choices = []
         descricoes = {}
-        for raw in questao_atual.opcoes_resposta:
+        for raw in opcoes_customizadas:
             if '|' in raw:
                 valor_opcao, label_text = raw.split('|', 1)
             else:
