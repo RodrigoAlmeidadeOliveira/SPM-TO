@@ -121,10 +121,11 @@ class ModulosService:
                 'row_class': referencia_cfg['row_class']
             })
 
+        patient_label = avaliacao.paciente.nome if avaliacao.paciente else 'Paciente'
         return {
             'domains': dominios_ordem,
             'patient_row': {
-                'label': 'NOME DO PACIENTE',
+                'label': patient_label,
                 'scores': valores_paciente,
                 'total': total_calculado,
                 'row_class': 'table-primary text-white fw-semibold'
