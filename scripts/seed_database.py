@@ -148,9 +148,9 @@ def seed_database():
             planilha_path = doctos_path / config['planilha']
             extrair_questoes_planilha(planilha_path, instrumento, dominios_criados)
 
-            PlanoItem.query.join(PlanoTemplateItem).filter(
-                PlanoTemplateItem.instrumento_id == instrumento.id
-            ).delete(synchronize_session=False)
+            template_ids = [item.id for item in PlanoTemplateItem.query.filter_by(instrumento_id=instrumento.id).all()]
+            if template_ids:
+                PlanoItem.query.filter(PlanoItem.template_item_id.in_(template_ids)).delete(synchronize_session=False)
             PlanoTemplateItem.query.filter_by(instrumento_id=instrumento.id).delete()
             db.session.flush()
             extrair_plano_planilha(planilha_path, instrumento, dominios_criados)
