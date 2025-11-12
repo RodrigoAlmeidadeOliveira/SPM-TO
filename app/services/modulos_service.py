@@ -59,6 +59,35 @@ class ModulosService:
         'ATENCAO': {'questoes': list(range(76, 87)), 'max_pontos': 50}
     }
 
+    SCORES_SPM_DOMINIOS = ['SOC', 'VIS', 'HEA', 'TOU', 'BOD', 'BAL', 'PLA']
+
+    SCORES_SPM_CASA_REFERENCES = [
+        {
+            'label': 'DISFUNÇÃO DEFINITIVA',
+            'scores': {
+                'SOC': 29, 'VIS': 24, 'HEA': 19, 'TOU': 26, 'BOD': 25, 'BAL': 24, 'PLA': 25
+            },
+            'total': 118,
+            'row_class': 'table-danger text-white'
+        },
+        {
+            'label': 'PROVÁVEL DISFUNÇÃO',
+            'scores': {
+                'SOC': 21, 'VIS': 16, 'HEA': 12, 'TOU': 17, 'BOD': 16, 'BAL': 17, 'PLA': 17
+            },
+            'total': 78,
+            'row_class': 'table-warning text-dark'
+        },
+        {
+            'label': 'TÍPICO',
+            'scores': {
+                'SOC': 20, 'VIS': 15, 'HEA': 11, 'TOU': 16, 'BOD': 15, 'BAL': 16, 'PLA': 16
+            },
+            'total': 73,
+            'row_class': 'table-success text-dark'
+        }
+    ]
+
     @staticmethod
     def calcular_escores_pedi(avaliacao_id):
         """

@@ -148,11 +148,44 @@ def pei(avaliacao_id):
         nome = item.template_item.dominio_nome
         plano_por_dominio.setdefault(nome, []).append(item.template_item.texto)
 
+    scores_spm_table = None
+    if avaliacao_obj.instrumento and avaliacao_obj.instrumento.codigo.startswith('PERFIL_SENS'):
+        dominios_ordem = ModulosService.SCORES_SPM_DOMINIOS
+        patient_values = []
+        paciente_total = 0
+        for code in dominios_ordem:
+            value = getattr(avaliacao_obj, f'escore_{code.lower()}')
+            patient_values.append(value)
+            if value is not None:
+                paciente_total += value
+        total_calculado = avaliacao_obj.escore_total
+        if total_calculado is None:
+            total_calculado = paciente_total
+        scores_spm_table = {
+            'domains': dominios_ordem,
+            'patient_row': {
+                'label': 'NOME DO PACIENTE',
+                'values': patient_values,
+                'total': total_calculado,
+                'row_class': 'table-primary text-white fw-semibold'
+            },
+            'reference_rows': [
+                {
+                    'label': ref['label'],
+                    'values': [ref['scores'].get(code) for code in dominios_ordem],
+                    'total': ref['total'],
+                    'row_class': ref['row_class']
+                }
+                for ref in ModulosService.SCORES_SPM_CASA_REFERENCES
+            ]
+        }
+
     return render_template('relatorios/pei.html',
                           avaliacao=avaliacao_obj,
                           dominios_respostas=dominios_respostas,
                           itens_criticos=itens_criticos,
-                          plano_por_dominio=plano_por_dominio)
+                          plano_por_dominio=plano_por_dominio,
+                          scores_spm_table=scores_spm_table)
 
 
 @relatorios_bp.route('/comparativo/<int:paciente_id>')
