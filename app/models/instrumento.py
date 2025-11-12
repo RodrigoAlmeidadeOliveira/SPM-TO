@@ -83,8 +83,8 @@ class Questao(db.Model):
     texto = db.Column(db.Text, nullable=False)
     tipo_resposta = db.Column(db.String(50), default='TEXTO_LONGO')
     obrigatoria = db.Column(db.Boolean, default=True, nullable=False)
-    opcoes_resposta = MutableList.as_mutable(db.JSON)
-    metadados = MutableDict.as_mutable(db.JSON)
+    opcoes_resposta = db.Column(MutableList.as_mutable(db.JSON), nullable=True)
+    metadados = db.Column(MutableDict.as_mutable(db.JSON), nullable=True)
     ativo = db.Column(db.Boolean, default=True, nullable=False)
 
     # Relacionamentos
