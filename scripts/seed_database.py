@@ -150,8 +150,12 @@ def seed_database():
 
             template_ids = [item.id for item in PlanoTemplateItem.query.filter_by(instrumento_id=instrumento.id).all()]
             if template_ids:
-                PlanoItem.query.filter(PlanoItem.template_item_id.in_(template_ids)).delete(synchronize_session=False)
-            PlanoTemplateItem.query.filter_by(instrumento_id=instrumento.id).delete()
+                db.session.execute(
+                    db.delete(PlanoItem).where(PlanoItem.template_item_id.in_(template_ids))
+                )
+            db.session.execute(
+                db.delete(PlanoTemplateItem).where(PlanoTemplateItem.instrumento_id == instrumento.id)
+            )
             db.session.flush()
             extrair_plano_planilha(planilha_path, instrumento, dominios_criados)
 
