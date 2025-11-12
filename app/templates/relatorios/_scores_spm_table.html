@@ -17,7 +17,7 @@
                 <tbody>
                     <tr class="{{ scores_spm_table.patient_row.row_class }}">
                         <td class="text-start"><strong>{{ scores_spm_table.patient_row.label }}</strong></td>
-                        {% for valor in scores_spm_table.patient_row.values %}
+                        {% for valor in scores_spm_table.patient_row.scores %}
                         <td class="text-center">{{ valor if valor is not none else '-' }}</td>
                         {% endfor %}
                         <td class="text-center">
@@ -27,7 +27,7 @@
                     {% for row in scores_spm_table.reference_rows %}
                     <tr class="{{ row.row_class }}">
                         <td class="text-start"><strong>{{ row.label }}</strong></td>
-                        {% for valor in row.values %}
+                        {% for valor in row.scores %}
                         <td class="text-center">{{ valor }}</td>
                         {% endfor %}
                         <td class="text-center">{{ row.total }}</td>

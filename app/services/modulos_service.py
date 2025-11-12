@@ -125,11 +125,19 @@ class ModulosService:
             'domains': dominios_ordem,
             'patient_row': {
                 'label': 'NOME DO PACIENTE',
-                'values': valores_paciente,
+                'scores': valores_paciente,
                 'total': total_calculado,
                 'row_class': 'table-primary text-white fw-semibold'
             },
-            'reference_rows': referencia
+            'reference_rows': [
+                {
+                    'label': row['label'],
+                    'scores': row['values'],
+                    'total': row['total'],
+                    'row_class': row['row_class']
+                }
+                for row in referencia
+            ]
         }
 
     @staticmethod
