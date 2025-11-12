@@ -80,6 +80,20 @@ class AvaliacaoForm(FlaskForm):
 class RespostaForm(FlaskForm):
     """Formulário para responder uma questão"""
 
+    DEFAULT_CHOICES = [
+        ('NUNCA', 'Nunca'),
+        ('OCASIONAL', 'Ocasional'),
+        ('FREQUENTE', 'Frequente'),
+        ('SEMPRE', 'Sempre'),
+    ]
+
+    DEFAULT_DESCRIPTIONS = {
+        'NUNCA': 'Não observado',
+        'OCASIONAL': 'Algumas vezes',
+        'FREQUENTE': 'Muitas vezes',
+        'SEMPRE': 'Sempre',
+    }
+
     questao_id = HiddenField('Questão ID', validators=[DataRequired()])
 
     valor = RadioField(
