@@ -5,7 +5,7 @@ import openpyxl
 import re
 from pathlib import Path
 from app import db
-from app.models import Instrumento, Dominio, Questao, TabelaReferencia, PlanoTemplateItem
+from app.models import Instrumento, Dominio, Questao, TabelaReferencia, PlanoTemplateItem, PlanoItem
 
 
 _ENTRADA_REF_RE = re.compile(
@@ -148,6 +148,9 @@ def seed_database():
             planilha_path = doctos_path / config['planilha']
             extrair_questoes_planilha(planilha_path, instrumento, dominios_criados)
 
+            PlanoItem.query.join(PlanoTemplateItem).filter(
+                PlanoTemplateItem.instrumento_id == instrumento.id
+            ).delete(synchronize_session=False)
             PlanoTemplateItem.query.filter_by(instrumento_id=instrumento.id).delete()
             db.session.flush()
             extrair_plano_planilha(planilha_path, instrumento, dominios_criados)
