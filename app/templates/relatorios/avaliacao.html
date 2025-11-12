@@ -304,6 +304,13 @@
     </div>
 
     <!-- Links Úteis -->
+    {% if scores_spm_table %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            {% include 'relatorios/_scores_spm_table.html' %}
+        </div>
+    </div>
+    {% endif %}
     <div class="row">
         <div class="col-md-12">
             <a href="{{ url_for('relatorios.pei', avaliacao_id=avaliacao.id) }}"

@@ -89,6 +89,46 @@ class ModulosService:
     ]
 
     @staticmethod
+    def criar_scores_spm_casa(avaliacao):
+        """Monta os escores de referência e do paciente para o SPM - Casa."""
+        if not avaliacao or not avaliacao.instrumento or not avaliacao.instrumento.codigo.startswith('PERFIL_SENS'):
+            return None
+
+        dominios_ordem = ModulosService.SCORES_SPM_DOMINIOS
+        valores_paciente = []
+        total_paciente = 0
+        for codigo in dominios_ordem:
+            atributo = f'escore_{codigo.lower()}'
+            valor = getattr(avaliacao, atributo, None)
+            valores_paciente.append(valor)
+            if isinstance(valor, (int, float)):
+                total_paciente += valor
+
+        total_calculado = getattr(avaliacao, 'escore_total', None)
+        if total_calculado is None:
+            total_calculado = total_paciente
+
+        referencia = []
+        for referencia_cfg in ModulosService.SCORES_SPM_CASA_REFERENCES:
+            referencia.append({
+                'label': referencia_cfg['label'],
+                'values': [referencia_cfg['scores'].get(codigo) for codigo in dominios_ordem],
+                'total': referencia_cfg['total'],
+                'row_class': referencia_cfg['row_class']
+            })
+
+        return {
+            'domains': dominios_ordem,
+            'patient_row': {
+                'label': 'NOME DO PACIENTE',
+                'values': valores_paciente,
+                'total': total_calculado,
+                'row_class': 'table-primary text-white fw-semibold'
+            },
+            'reference_rows': referencia
+        }
+
+    @staticmethod
     def calcular_escores_pedi(avaliacao_id):
         """
         Calcula escores do PEDI

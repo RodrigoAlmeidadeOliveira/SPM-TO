@@ -42,13 +42,18 @@ def avaliacao(id):
         if avaliacao_obj.instrumento and avaliacao_obj.instrumento.codigo.startswith('PERFIL_SENS'):
             perfil_sensorial_relatorio = ModulosService.gerar_relatorio_perfil_sensorial(avaliacao_obj.id)
 
+    scores_spm_table = None
+    if avaliacao_obj.status == 'concluida':
+        scores_spm_table = ModulosService.criar_scores_spm_casa(avaliacao_obj)
+
     return render_template('relatorios/avaliacao.html',
                           avaliacao=avaliacao_obj,
                           grafico_radar=grafico_radar,
                           grafico_barras=grafico_barras,
                           grafico_radar_img=grafico_radar_img,
                           grafico_barras_img=grafico_barras_img,
-                          perfil_sensorial_relatorio=perfil_sensorial_relatorio)
+                          perfil_sensorial_relatorio=perfil_sensorial_relatorio,
+                          scores_spm_table=scores_spm_table)
 
 
 @relatorios_bp.route('/avaliacao/<int:id>/pdf')
@@ -148,37 +153,7 @@ def pei(avaliacao_id):
         nome = item.template_item.dominio_nome
         plano_por_dominio.setdefault(nome, []).append(item.template_item.texto)
 
-    scores_spm_table = None
-    if avaliacao_obj.instrumento and avaliacao_obj.instrumento.codigo.startswith('PERFIL_SENS'):
-        dominios_ordem = ModulosService.SCORES_SPM_DOMINIOS
-        patient_values = []
-        paciente_total = 0
-        for code in dominios_ordem:
-            value = getattr(avaliacao_obj, f'escore_{code.lower()}')
-            patient_values.append(value)
-            if value is not None:
-                paciente_total += value
-        total_calculado = avaliacao_obj.escore_total
-        if total_calculado is None:
-            total_calculado = paciente_total
-        scores_spm_table = {
-            'domains': dominios_ordem,
-            'patient_row': {
-                'label': 'NOME DO PACIENTE',
-                'values': patient_values,
-                'total': total_calculado,
-                'row_class': 'table-primary text-white fw-semibold'
-            },
-            'reference_rows': [
-                {
-                    'label': ref['label'],
-                    'values': [ref['scores'].get(code) for code in dominios_ordem],
-                    'total': ref['total'],
-                    'row_class': ref['row_class']
-                }
-                for ref in ModulosService.SCORES_SPM_CASA_REFERENCES
-            ]
-        }
+    scores_spm_table = ModulosService.criar_scores_spm_casa(avaliacao_obj)
 
     return render_template('relatorios/pei.html',
                           avaliacao=avaliacao_obj,

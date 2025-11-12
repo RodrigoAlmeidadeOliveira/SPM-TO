@@ -1,0 +1,41 @@
+<div class="card border-info">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> SCORES SPM - Casa</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle mb-0">
+                <thead>
+                    <tr class="text-center">
+                        <th style="width: 20%;">Categoria</th>
+                        {% for dominio in scores_spm_table.domains %}
+                        <th>{{ dominio }}</th>
+                        {% endfor %}
+                        <th>TOT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="{{ scores_spm_table.patient_row.row_class }}">
+                        <td class="text-start"><strong>{{ scores_spm_table.patient_row.label }}</strong></td>
+                        {% for valor in scores_spm_table.patient_row.values %}
+                        <td class="text-center">{{ valor if valor is not none else '-' }}</td>
+                        {% endfor %}
+                        <td class="text-center">
+                            {{ scores_spm_table.patient_row.total if scores_spm_table.patient_row.total is not none else '-' }}
+                        </td>
+                    </tr>
+                    {% for row in scores_spm_table.reference_rows %}
+                    <tr class="{{ row.row_class }}">
+                        <td class="text-start"><strong>{{ row.label }}</strong></td>
+                        {% for valor in row.values %}
+                        <td class="text-center">{{ valor }}</td>
+                        {% endfor %}
+                        <td class="text-center">{{ row.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted mb-0"><small>Referência das faixas de pontuação para o instrumento SPM - Casa.</small></p>
+    </div>
+</div>
